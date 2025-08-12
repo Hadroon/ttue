@@ -1,30 +1,14 @@
 spec:
   name: ttue
   services:
-  - name: backend
-    source_dir: backend
-    dockerfile_path: Dockerfile
+  - name: app
+    source_dir: .
+    dockerfile_path: backend/Dockerfile
     github:
       repo: Hadroon/ttue
       branch: develop
       deploy_on_push: true
     http_port: 3000
-    instance_count: 1
-    instance_size_slug: basic-xxs
-    routes:
-    - path: /api
-    envs:
-    - key: NODE_ENV
-      value: production
-
-  - name: frontend
-    source_dir: frontend
-    dockerfile_path: Dockerfile
-    github:
-      repo: Hadroon/ttue
-      branch: develop
-      deploy_on_push: true
-    http_port: 80
     instance_count: 1
     instance_size_slug: basic-xxs
     routes:
