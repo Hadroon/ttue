@@ -2,7 +2,7 @@ name: ttue
 services:
 - name: backend
   source_dir: backend
-  dockerfile_path: backend/Dockerfile
+  dockerfile_path: Dockerfile
   github:
     repo: Hadroon/ttue
     branch: develop
@@ -18,7 +18,7 @@ services:
 
 - name: frontend
   source_dir: frontend
-  dockerfile_path: frontend/Dockerfile
+  dockerfile_path: Dockerfile
   github:
     repo: Hadroon/ttue
     branch: develop
