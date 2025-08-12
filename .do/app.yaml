@@ -1,4 +1,4 @@
-name: earth-forum
+name: ttue
 services:
 - name: backend
   source_dir: backend
