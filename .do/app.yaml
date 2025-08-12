@@ -4,7 +4,7 @@ services:
   source_dir: backend
   dockerfile_path: backend/Dockerfile
   github:
-    repo: Hadroon/earth-forum
+    repo: Hadroon/ttue
     branch: add-folder-str
     deploy_on_push: true
   http_port: 3000
@@ -20,7 +20,7 @@ services:
   source_dir: frontend
   dockerfile_path: frontend/Dockerfile
   github:
-    repo: Hadroon/earth-forum
+    repo: Hadroon/ttue
     branch: add-folder-str
     deploy_on_push: true
   http_port: 80
