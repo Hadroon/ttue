@@ -1,6 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, WritableSignal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HealthService } from './shared/services/health.service';
+import { HealthResponse, HealthService } from './shared/services/health.service';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +10,7 @@ import { HealthService } from './shared/services/health.service';
 })
 export class App {
   protected readonly title = signal('earth-forum-app');
-  healthStatus: string = '';
+  healthStatus: WritableSignal<HealthResponse> = signal({ status: '', timestamp: '' });
 
   constructor(private healthService: HealthService) {}
 
@@ -18,7 +18,7 @@ export class App {
     this.healthService.getHealth().subscribe({
       next: (response) => {
         console.log('Health status:', response);
-        this.healthStatus = response.status;
+        this.healthStatus.set(response);
       },
       error: (error) => {
         console.error('Error fetching health status:', error);

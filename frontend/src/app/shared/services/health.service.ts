@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface HealthResponse {
   status: string;
@@ -13,7 +14,7 @@ export interface HealthResponse {
 })
 export class HealthService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api';
+  private readonly baseUrl = environment.apiUrl;
 
   /**
    * Get health status from the backend API
