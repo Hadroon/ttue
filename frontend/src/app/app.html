@@ -211,8 +211,8 @@
       <h1>Hello-bello, {{ title() }}</h1>
       <p>Congratulations! Your app is running. 🎉</p>
       <button (click)="getHealth()">Get Health</button>
-      @if(healthStatus) {
-      <p class="health-status">Health Status: {{ healthStatus }}</p>
+      @if (healthStatus().status) {
+        <p class="health-status">Health Status: {{ healthStatus().status }}</p>
       }
     </div>
     <div class="divider" role="separator" aria-label="Divider"></div>
