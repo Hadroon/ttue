@@ -1,0 +1,166 @@
+/* ===== Home Component Styles ===== */
+
+/* Hero Section */
+.hero {
+  background: radial-gradient(1200px 600px at 80% -10%, rgba(110, 168, 255, 0.25), transparent), var(--bg);
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.lead {
+  color: var(--muted);
+  font-size: 18px;
+  max-width: 60ch;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.stat-list {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+}
+
+.stat {
+  display: block;
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Demo Card */
+.demo-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.demo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(110, 168, 255, 0.3);
+  font-size: 12px;
+}
+
+.demo-body {
+  padding: 16px;
+}
+
+.demo-checks {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  color: var(--muted);
+  display: grid;
+  gap: 6px;
+}
+
+.avatars {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+/* How it works Section */
+.how {
+  background: var(--panel);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.step {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  color: var(--muted);
+  box-shadow: var(--shadow);
+}
+
+.step h3 {
+  color: var(--text);
+  margin: .25rem 0;
+}
+
+.step .icon {
+  font-size: 24px;
+}
+
+/* Trust Section */
+.trust {
+  background: var(--panel);
+}
+
+/* CTA Section */
+.cta {
+  background: radial-gradient(600px 400px at 20% -10%, rgba(122, 240, 184, 0.25), transparent), var(--bg);
+}
+
+.cta-inner {
+  text-align: center;
+}
+
+.cta p {
+  color: var(--muted);
+  margin: .5rem 0 1rem;
+}
+
+/* Responsive styles for home component */
+@media (max-width: 992px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+  
+  .steps {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,218 @@
+<!-- ===== Header ===== -->
+<header class="site-header" role="banner">
+  <div class="container header-inner">
+    <a class="brand" href="#">
+      <span class="brand-logo" aria-hidden="true">⚖️</span>
+      <span class="brand-text">New Democracy</span>
+    </a>
+
+    <nav class="main-nav" aria-label="Primary">
+      <a href="#proposals">Explore Laws</a>
+      <a href="#how">How it works</a>
+      <a href="#about">About</a>
+    </nav>
+
+    <div class="header-cta">
+      <a class="btn ghost" href="#signin">Sign in</a>
+      <a class="btn primary" href="#create">Create proposal</a>
+    </div>
+
+    <button class="hamburger" aria-label="Open menu" (click)="toggleNav()">☰</button>
+  </div>
+</header>
+
+<main id="main" role="main">
+  <!-- ===== Hero ===== -->
+  <section class="section hero" id="home">
+    <div class="container hero-inner">
+      <div>
+        <h1>Shape better laws, together.</h1>
+        <p class="lead">
+          A citizen platform for drafting and improving laws with
+          <strong>expert review</strong>, <strong>evidence</strong>, and
+          <strong>transparent voting</strong> — built for quality participation.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary lg" href="#proposals">Explore proposals</a>
+          <a class="btn secondary lg" href="#create">Start a proposal</a>
+        </div>
+
+        <ul class="stat-list" aria-label="Platform stats">
+          <li>
+            <span class="stat">184,230</span>
+            <span class="stat-label">verified citizens</span>
+          </li>
+          <li>
+            <span class="stat">2,418</span>
+            <span class="stat-label">subject-matter experts</span>
+          </li>
+          <li>
+            <span class="stat">732</span>
+            <span class="stat-label">active proposals</span>
+          </li>
+        </ul>
+      </div>
+
+      <aside class="demo-card" aria-label="Proposal demo">
+        <div class="demo-head">
+          <span>Proposal draft</span>
+          <span class="pill">AI-assisted</span>
+        </div>
+        <div class="demo-body">
+          <h3>Public Tree Canopy Standard</h3>
+          <p>Establish a minimum canopy target of 30% per district by 2030 with maintenance funds and public dashboards.</p>
+          <ul class="demo-checks">
+            <li>Impact assessment ✓</li>
+            <li>Budget analysis ✓</li>
+            <li>Legal feasibility ✓</li>
+          </ul>
+          <div class="avatars" aria-hidden="true">
+            <span class="avatar">👩‍⚕️</span>
+            <span class="avatar">🧑‍🏫</span>
+            <span class="avatar">🌳</span>
+            <span class="avatar">⚖️</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== How it works ===== -->
+  <section class="section how" id="how">
+    <div class="container">
+      <h2>How it works</h2>
+      <div class="steps">
+        <article class="step">
+          <div class="icon" aria-hidden="true">📝</div>
+          <h3>Draft</h3>
+          <p>Start with a guided template or import a draft. Cite evidence as you go.</p>
+        </article>
+        <article class="step">
+          <div class="icon" aria-hidden="true">🧠</div>
+          <h3>Expert review</h3>
+          <p>Independent experts annotate feasibility, risks, and costs.</p>
+        </article>
+        <article class="step">
+          <div class="icon" aria-hidden="true">🗳️</div>
+          <h3>Deliberate</h3>
+          <p>Civility tools and reputation signals help good ideas rise.</p>
+        </article>
+        <article class="step">
+          <div class="icon" aria-hidden="true">📜</div>
+          <h3>Advance</h3>
+          <p>Qualified proposals move to binding vote or legislative inbox.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Featured proposals ===== -->
+  <section class="section" id="proposals">
+    <div class="container">
+      <div class="section-head">
+        <h2>Featured proposals</h2>
+        <a class="link" href="#all">See all</a>
+      </div>
+
+      <div class="grid" role="list">
+        <article class="card" role="listitem">
+          <div class="card-body">
+            <span class="chip">Environment</span>
+            <h3><a href="#proposal-urban-heat">Urban Greening to Cut Heat Islands</a></h3>
+            <p class="summary">Pocket parks and cool roofs in hot districts; prioritize schools & elder-care facilities.</p>
+            <div class="meta">
+              <div class="progress" role="img" aria-label="Support 78%"><div class="bar" style="width:78%"></div></div>
+              <span>⭐ 46 expert endorsements</span>
+              <time datetime="2025-08-21">Updated Aug 21, 2025</time>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="btn ghost" href="#proposal-urban-heat">Open</a>
+            <a class="btn primary" href="#support-urban-heat">Support</a>
+          </div>
+        </article>
+
+        <article class="card" role="listitem">
+          <div class="card-body">
+            <span class="chip">Health</span>
+            <h3><a href="#proposal-waitlists">Transparent Hospital Waitlists</a></h3>
+            <p class="summary">Real-time dashboards across hospitals + referral portability to reduce bottlenecks.</p>
+            <div class="meta">
+              <div class="progress" role="img" aria-label="Support 72%"><div class="bar" style="width:72%"></div></div>
+              <span>⭐ 58 expert endorsements</span>
+              <time datetime="2025-08-30">Updated Aug 30, 2025</time>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="btn ghost" href="#proposal-waitlists">Open</a>
+            <a class="btn primary" href="#support-waitlists">Support</a>
+          </div>
+        </article>
+
+        <article class="card" role="listitem">
+          <div class="card-body">
+            <span class="chip">Education</span>
+            <h3><a href="#proposal-ai-literacy">Civic & AI Literacy in High Schools</a></h3>
+            <p class="summary">Modern civics with debate labs and AI critical-thinking to fight misinformation.</p>
+            <div class="meta">
+              <div class="progress" role="img" aria-label="Support 64%"><div class="bar" style="width:64%"></div></div>
+              <span>⭐ 33 expert endorsements</span>
+              <time datetime="2025-08-27">Updated Aug 27, 2025</time>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="btn ghost" href="#proposal-ai-literacy">Open</a>
+            <a class="btn primary" href="#support-ai-literacy">Support</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Trust & safeguards ===== -->
+  <section class="section trust" id="safeguards">
+    <div class="container">
+      <h2>Quality & safeguards</h2>
+      <ul class="badges" role="list">
+        <li class="badge">✅ Identity verification</li>
+        <li class="badge">🔎 Evidence transparency</li>
+        <li class="badge">🎓 Expertise weighting</li>
+        <li class="badge">🤝 Reputation & civility</li>
+        <li class="badge">🛡️ AI moderation assist</li>
+        <li class="badge">🔐 Privacy by design</li>
+      </ul>
+      <p class="fineprint">Designed to elevate thoughtful contributions — not volume.</p>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="section cta" id="cta">
+    <div class="container cta-inner">
+      <h2>Ready to propose something better?</h2>
+      <p>Draft a law in minutes with guidance and real-time feedback.</p>
+      <div>
+        <a class="btn primary lg" href="#create">Create proposal</a>
+        <a class="btn secondary lg" href="#learn">Learn more</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== Footer ===== -->
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-inner">
+    <div>
+      <a class="brand" href="#">
+        <span class="brand-logo" aria-hidden="true">⚖️</span>
+        <span class="brand-text">New Democracy</span>
+      </a>
+      <p class="fineprint">An open, nonpartisan civic project for high-quality participation.</p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="#terms">Terms</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#impressum">Impressum</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</footer>
