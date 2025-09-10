@@ -1,0 +1,92 @@
+/* ===== Header Component Styles ===== */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: saturate(120%) blur(10px);
+  background-color: color-mix(in oklab, rgb(247, 249, 255) 55%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  min-height: 64px;
+}
+
+.brand {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brand-logo {
+  font-size: 22px;
+}
+
+.brand-text {
+  font-weight: 800;
+}
+
+.main-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.main-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.main-nav a:hover {
+  color: var(--text);
+}
+
+.header-cta {
+  display: flex;
+  gap: 10px;
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font-size: 20px;
+}
+
+/* Responsive styles for header */
+@media (max-width: 992px) {
+  .header-inner {
+    grid-template-columns: auto auto auto;
+  }
+  
+  .main-nav {
+    display: none;
+  }
+  
+  .hamburger {
+    display: block;
+  }
+  
+  :host(.nav-open) .main-nav {
+    display: flex;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: var(--panel);
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 640px) {
+  .header-cta {
+    display: none;
+  }
+}

@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Header } from '../header/header';
 
 @Component({
   selector: 'app-how-it-works',
-  imports: [RouterLink],
+  imports: [RouterLink, Header],
   templateUrl: './how-it-works.html',
   styleUrl: './how-it-works.css'
 })
