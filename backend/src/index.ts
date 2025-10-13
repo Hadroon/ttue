@@ -1,8 +1,11 @@
 import { serve } from "bun";
 import { readdir } from "fs/promises";
 import { join } from "path";
+import { config, logConfig } from "./config/app.config";
 
-const port = Number(process.env.PORT || 3000);
+// Log configuration on startup
+logConfig();
+
 const publicDir = join(process.cwd(), "public");
 
 // Check if public directory exists
@@ -14,7 +17,7 @@ try {
 }
 
 serve({
-  port,
+  port: config.port,
   async fetch(req) {
     const url = new URL(req.url);
     
@@ -28,6 +31,39 @@ serve({
         }), {
           headers: { "Content-Type": "application/json" },
         });
+      }
+      if (url.pathname === "/api/welcome" && req.method === "POST") {
+        try {
+          console.log("Received /api/welcome request");
+          const { password } = await req.json();
+          if (password === "csigga") {
+            return new Response(JSON.stringify({ 
+              success: true,
+              data: true,
+              message: "Welcome! Access granted."
+            }), {
+              headers: { "Content-Type": "application/json" },
+            });
+          } else {
+            return new Response(JSON.stringify({ 
+              success: false,
+              data: false,
+              error: "Invalid password"
+            }), {
+              status: 401,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+        } catch (error) {
+          return new Response(JSON.stringify({ 
+            success: false,
+            data: false,
+            error: "Invalid request format"
+          }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
       }
       
       // Add more API routes here
@@ -99,6 +135,6 @@ function getContentType(filePath: string): string {
   return contentTypes[ext || ''] || 'application/octet-stream';
 }
 
-console.log(`🚀 Bun server with Angular frontend listening on http://localhost:${port}`);
-console.log(`📡 API endpoints available at http://localhost:${port}/api/*`);
-console.log(`🌐 Frontend available at http://localhost:${port}/`);
+console.log(`🚀 Bun server with Angular frontend listening on http://localhost:${config.port}`);
+console.log(`📡 API endpoints available at http://localhost:${config.port}/api/*`);
+console.log(`🌐 Frontend available at http://localhost:${config.port}/`);

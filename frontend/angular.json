@@ -44,7 +44,34 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/shared/environments/environment.ts",
+                  "with": "src/app/shared/environments/environment.prod.ts"
+                }
+              ]
+            },
+            "staging": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/shared/environments/environment.ts",
+                  "with": "src/app/shared/environments/environment.staging.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -59,6 +86,9 @@
           "configurations": {
             "production": {
               "buildTarget": "earth-forum-app:build:production"
+            },
+            "staging": {
+              "buildTarget": "earth-forum-app:build:staging"
             },
             "development": {
               "buildTarget": "earth-forum-app:build:development"
