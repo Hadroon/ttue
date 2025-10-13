@@ -7,7 +7,7 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 COPY frontend/ ./
-RUN npm run build --configuration=production
+RUN npm run build:prod
 
 # Bun backend stage  
 FROM oven/bun:1
