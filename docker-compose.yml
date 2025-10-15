@@ -1,19 +1,21 @@
 version: "3.9"
 
 services:
-  backend:
-    build: ./backend
+  app:
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3000
+      - DATABASE_URL=${DATABASE_URL:-postgresql://localhost:5432/ttue_dev}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:4200,http://localhost:3000}
     ports:
-      - "3000:3000" # optional for local debugging
+      - "3000:3000"
     restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    depends_on:
-      - backend
-    ports:
-      - "8080:80"
-    restart: unless-stopped
+    volumes:
+      - ./backend/src:/app/src  # Hot reload for backend changes
+      # Frontend changes require rebuild since it's compiled into the image
+    env_file:
+      - .env.local

@@ -4,7 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:prod": "ng serve --configuration production",
+    "start:staging": "ng serve --configuration staging",
     "build": "ng build",
+    "build:prod": "ng build --configuration production",
+    "build:staging": "ng build --configuration staging",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:earth-forum-app": "node dist/earth-forum-app/server/server.mjs"
@@ -21,10 +25,12 @@
   },
   "private": true,
   "dependencies": {
+    "@angular/cdk": "^20.2.8",
     "@angular/common": "^20.1.0",
     "@angular/compiler": "^20.1.0",
     "@angular/core": "^20.1.0",
     "@angular/forms": "^20.1.0",
+    "@angular/material": "^20.2.8",
     "@angular/platform-browser": "^20.1.0",
     "@angular/platform-server": "^20.1.0",
     "@angular/router": "^20.1.0",

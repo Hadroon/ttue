@@ -1,0 +1,237 @@
+/* ===== How It Works Component Styles ===== */
+
+/* Header (compact variant) */
+.header-inner {
+  min-height: 60px;
+}
+
+/* Hero Section */
+.hero {
+  background: radial-gradient(900px 400px at 85% -10%, rgba(110, 168, 255, 0.25), transparent), var(--bg);
+}
+
+.kicker {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: .12em;
+}
+
+.lead {
+  color: var(--muted);
+  max-width: 64ch;
+}
+
+/* Mosaic Grid Layout */
+.mosaic {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  grid-auto-rows: 1fr;
+}
+
+.tile {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  min-height: 220px;
+}
+
+.tile .head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.num {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: rgba(110, 168, 255, 0.3);
+  border: 1px solid var(--border);
+}
+
+.glyph {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.rows {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px;
+}
+
+.list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* Variable grid spans */
+.span-7 {
+  grid-column: span 7;
+}
+
+.span-5 {
+  grid-column: span 5;
+}
+
+.span-6 {
+  grid-column: span 6;
+}
+
+.span-4 {
+  grid-column: span 4;
+}
+
+/* Inline graphic cards */
+.viz {
+  margin-top: auto;
+  background: linear-gradient(180deg, rgba(110, 168, 255, 0.15), transparent), var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.spark {
+  height: 46px;
+  width: 100%;
+}
+
+/* Side rail */
+.rail {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  position: sticky;
+  top: 84px;
+  height: fit-content;
+}
+
+.rail h3 {
+  margin-bottom: 6px;
+}
+
+.mini-map {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mini-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+/* FAQ */
+.faq {
+  display: grid;
+  gap: 12px;
+}
+
+details {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* CTA */
+.cta {
+  background: radial-gradient(600px 400px at 20% -10%, rgba(122, 240, 184, 0.25), transparent), var(--bg);
+  text-align: center;
+}
+
+/* Responsive Layout */
+@media (max-width: 1024px) {
+  .mosaic {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  
+  .span-7 {
+    grid-column: span 8;
+  }
+  
+  .span-6 {
+    grid-column: span 8;
+  }
+  
+  .span-5 {
+    grid-column: span 8;
+  }
+  
+  .span-4 {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 700px) {
+  .mosaic {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .span-7,
+  .span-6,
+  .span-5,
+  .span-4 {
+    grid-column: span 4;
+  }
+  
+  .rail {
+    position: static;
+    margin-top: 16px;
+  }
+}
+
+/* Two-column layout for main content */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

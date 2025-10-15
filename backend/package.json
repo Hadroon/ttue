@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts"
+    "dev": "bun --env-file=../.env.local run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "start:staging": "bun --env-file=../.env.staging run src/index.ts",
+    "start:prod": "bun --env-file=../.env.production run src/index.ts"
   },
   "dependencies": {}
 }
