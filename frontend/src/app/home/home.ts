@@ -4,6 +4,8 @@ import { Header } from '../shared/components';
 import { ApiService } from '../shared/services/api.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 interface Challenge {
   id: string;
@@ -30,7 +32,7 @@ interface Idea {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Header, FormsModule],
+  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })

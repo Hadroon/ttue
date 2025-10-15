@@ -2,12 +2,12 @@
 <!-- @if(!environment.production || welcome()) { -->
 @if(welcome()) {
 <app-header></app-header>
-<main id="main" role="main"> 
+<main id="main" role="main">
   <!-- ===== Hero ===== -->
   <section class="section hero" id="home">
     <div class="container hero-inner">
       <div>
-        <h1>Shape better laws, together.</h1>
+        <h1>Shape better future, together.</h1>
         <p class="lead">
           A citizen platform for drafting and improving laws with
           <strong>expert review</strong>, <strong>evidence</strong>, and
@@ -42,7 +42,8 @@
         </div>
         <div class="demo-body">
           <h3>Public Tree Canopy Standard</h3>
-          <p>Establish a minimum canopy target of 30% per district by 2030 with maintenance funds and public dashboards.</p>
+          <p>Establish a minimum canopy target of 30% per district by 2030 with maintenance funds and public dashboards.
+          </p>
           <ul class="demo-checks">
             <li>Impact assessment ✓</li>
             <li>Budget analysis ✓</li>
@@ -66,7 +67,7 @@
       <div class="steps">
         <article class="step step-highlight">
           <div class="icon" aria-hidden="true">💡</div>
-          <h3>Explore & Challenge</h3>
+          <h3>Ideas & Challenge</h3>
           <p>Join policy challenges, share innovative ideas, and collaborate on solutions to pressing problems.</p>
           <a href="#ideas-challenges" class="step-link">Browse challenges →</a>
         </article>
@@ -103,18 +104,11 @@
       </div>
 
       <div class="ideas-challenges-tabs">
-        <button 
-          class="tab-btn" 
-          [class.active]="activeTab === 'challenges'"
-          data-tab="challenges" 
+        <button class="tab-btn" [class.active]="activeTab === 'challenges'" data-tab="challenges"
           (click)="switchTab('challenges')">
           Active Challenges
         </button>
-        <button 
-          class="tab-btn" 
-          [class.active]="activeTab === 'ideas'"
-          data-tab="ideas" 
-          (click)="switchTab('ideas')">
+        <button class="tab-btn" [class.active]="activeTab === 'ideas'" data-tab="ideas" (click)="switchTab('ideas')">
           Community Ideas
         </button>
       </div>
@@ -123,48 +117,48 @@
       <div class="tab-content" [class.active]="activeTab === 'challenges'" id="challenges-tab">
         <div class="challenges-grid">
           @for (challenge of challenges; track challenge.id) {
-            <article class="challenge-card">
-              <div class="challenge-header">
-                <div class="challenge-meta">
-                  <span class="chip">{{ challenge.category }}</span>
-                  <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
-                    {{ challenge.urgency }}
-                  </span>
+          <article class="challenge-card">
+            <div class="challenge-header">
+              <div class="challenge-meta">
+                <span class="chip">{{ challenge.category }}</span>
+                <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
+                  {{ challenge.urgency }}
+                </span>
+              </div>
+              @if (challenge.rewardPool) {
+              <div class="reward-pool">{{ challenge.rewardPool }}</div>
+              }
+            </div>
+
+            <div class="challenge-body">
+              <h3>{{ challenge.title }}</h3>
+              <p class="challenge-description">{{ challenge.description }}</p>
+
+              <div class="challenge-stats">
+                <div class="stat-item">
+                  <span class="stat-icon">👥</span>
+                  <span>{{ challenge.participantCount }} participants</span>
                 </div>
-                @if (challenge.rewardPool) {
-                  <div class="reward-pool">{{ challenge.rewardPool }}</div>
+                @if (challenge.deadline) {
+                <div class="stat-item">
+                  <span class="stat-icon">⏱️</span>
+                  <span>{{ formatDeadline(challenge.deadline) }}</span>
+                </div>
                 }
               </div>
-              
-              <div class="challenge-body">
-                <h3>{{ challenge.title }}</h3>
-                <p class="challenge-description">{{ challenge.description }}</p>
-                
-                <div class="challenge-stats">
-                  <div class="stat-item">
-                    <span class="stat-icon">👥</span>
-                    <span>{{ challenge.participantCount }} participants</span>
-                  </div>
-                  @if (challenge.deadline) {
-                    <div class="stat-item">
-                      <span class="stat-icon">⏱️</span>
-                      <span>{{ formatDeadline(challenge.deadline) }}</span>
-                    </div>
-                  }
-                </div>
 
-                <div class="challenge-tags">
-                  @for (tag of challenge.tags; track tag) {
-                    <span class="tag">#{{ tag }}</span>
-                  }
-                </div>
+              <div class="challenge-tags">
+                @for (tag of challenge.tags; track tag) {
+                <span class="tag">#{{ tag }}</span>
+                }
               </div>
+            </div>
 
-              <div class="challenge-actions">
-                <a class="btn ghost" [href]="'#challenge-' + challenge.id">Learn more</a>
-                <a class="btn primary" [href]="'#join-' + challenge.id">Join challenge</a>
-              </div>
-            </article>
+            <div class="challenge-actions">
+              <a class="btn ghost" [href]="'#challenge-' + challenge.id">Learn more</a>
+              <a class="btn primary" [href]="'#join-' + challenge.id">Join challenge</a>
+            </div>
+          </article>
           }
         </div>
       </div>
@@ -187,39 +181,39 @@
 
         <div class="ideas-grid">
           @for (idea of ideas; track idea.id) {
-            <article class="idea-card">
-              <div class="idea-header">
-                <div class="idea-meta">
-                  <span class="chip">{{ idea.category }}</span>
-                  <span class="status-badge" [class]="getStatusClass(idea.status)">
-                    {{ idea.status }}
-                  </span>
-                </div>
-                <div class="idea-votes">
-                  <button class="vote-btn" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
-                    <span class="vote-icon">⬆</span>
-                    <span class="vote-count">{{ idea.votes }}</span>
-                  </button>
-                </div>
+          <article class="idea-card">
+            <div class="idea-header">
+              <div class="idea-meta">
+                <span class="chip">{{ idea.category }}</span>
+                <span class="status-badge" [class]="getStatusClass(idea.status)">
+                  {{ idea.status }}
+                </span>
               </div>
+              <div class="idea-votes">
+                <button class="vote-btn" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
+                  <span class="vote-icon">⬆</span>
+                  <span class="vote-count">{{ idea.votes }}</span>
+                </button>
+              </div>
+            </div>
 
-              <div class="idea-body">
-                <h3>{{ idea.title }}</h3>
-                <p class="idea-description">{{ idea.description }}</p>
-                
-                <div class="idea-author">
-                  <span>by {{ idea.author }}</span>
-                  <time [dateTime]="idea.createdAt.toISOString()">
-                    {{ idea.createdAt.toLocaleDateString() }}
-                  </time>
-                </div>
-              </div>
+            <div class="idea-body">
+              <h3>{{ idea.title }}</h3>
+              <p class="idea-description">{{ idea.description }}</p>
 
-              <div class="idea-actions">
-                <a class="btn ghost" [href]="'#idea-' + idea.id">View details</a>
-                <a class="btn secondary" [href]="'#discuss-' + idea.id">Discuss</a>
+              <div class="idea-author">
+                <span>by {{ idea.author }}</span>
+                <time [dateTime]="idea.createdAt.toISOString()">
+                  {{ idea.createdAt.toLocaleDateString() }}
+                </time>
               </div>
-            </article>
+            </div>
+
+            <div class="idea-actions">
+              <a class="btn ghost" [href]="'#idea-' + idea.id">View details</a>
+              <a class="btn secondary" [href]="'#discuss-' + idea.id">Discuss</a>
+            </div>
+          </article>
           }
         </div>
       </div>
@@ -247,9 +241,12 @@
           <div class="card-body">
             <span class="chip">Environment</span>
             <h3><a href="#proposal-urban-heat">Urban Greening to Cut Heat Islands</a></h3>
-            <p class="summary">Pocket parks and cool roofs in hot districts; prioritize schools & elder-care facilities.</p>
+            <p class="summary">Pocket parks and cool roofs in hot districts; prioritize schools & elder-care facilities.
+            </p>
             <div class="meta">
-              <div class="progress" role="img" aria-label="Support 78%"><div class="bar" style="width:78%"></div></div>
+              <div class="progress" role="img" aria-label="Support 78%">
+                <div class="bar" style="width:78%"></div>
+              </div>
               <span>⭐ 46 expert endorsements</span>
               <time datetime="2025-08-21">Updated Aug 21, 2025</time>
             </div>
@@ -266,7 +263,9 @@
             <h3><a href="#proposal-waitlists">Transparent Hospital Waitlists</a></h3>
             <p class="summary">Real-time dashboards across hospitals + referral portability to reduce bottlenecks.</p>
             <div class="meta">
-              <div class="progress" role="img" aria-label="Support 72%"><div class="bar" style="width:72%"></div></div>
+              <div class="progress" role="img" aria-label="Support 72%">
+                <div class="bar" style="width:72%"></div>
+              </div>
               <span>⭐ 58 expert endorsements</span>
               <time datetime="2025-08-30">Updated Aug 30, 2025</time>
             </div>
@@ -283,7 +282,9 @@
             <h3><a href="#proposal-ai-literacy">Civic & AI Literacy in High Schools</a></h3>
             <p class="summary">Modern civics with debate labs and AI critical-thinking to fight misinformation.</p>
             <div class="meta">
-              <div class="progress" role="img" aria-label="Support 64%"><div class="bar" style="width:64%"></div></div>
+              <div class="progress" role="img" aria-label="Support 64%">
+                <div class="bar" style="width:64%"></div>
+              </div>
               <span>⭐ 33 expert endorsements</span>
               <time datetime="2025-08-27">Updated Aug 27, 2025</time>
             </div>
@@ -332,7 +333,7 @@
     <div>
       <a class="brand" routerLink="/">
         <span class="brand-logo" aria-hidden="true">⚖️</span>
-        <span class="brand-text">New Democracy</span>
+        <span class="brand-text">Time to unite Earth</span>
       </a>
       <p class="fineprint">An open, nonpartisan civic project for high-quality participation.</p>
     </div>
@@ -346,8 +347,36 @@
 </footer>
 }
 @else {
-  <p>Welcome to New Democracy, a platform for civic engagement and participation.</p>
-  <p>Would you like to reach the forum?</p>
-  <input type="text" [(ngModel)]="welcomePassword" placeholder="Password" />
-  <button (click)="enterForum()">Enter</button>
+<div class="welcome-form">
+  <div class="welcome-header">
+    <h2>🚧 Under Construction</h2>
+    <div style="text-align: left;">
+
+      <p class="welcome-subtitle">Welcome to the site, a platform for civic engagement and participation.</p>
+      <p style="margin-top: 16px;" class="welcome-subtitle">If you want to enter, please provide the passcode.</p>
+    </div>
+  </div>
+  
+  <form class="example-form">
+    <mat-form-field class="example-full-width">
+      <mat-label>Enter Passcode</mat-label>
+      <input matInput 
+             type="password"
+             [(ngModel)]="welcomePassword" 
+             (keydown.enter)="enterForum()"
+             placeholder="Passcode">
+    </mat-form-field>
+    
+    <button type="button" 
+            class="enter-btn" 
+            (click)="enterForum()"
+            [disabled]="!welcomePassword">
+      Enter Site
+    </button>
+  </form>
+</div>
+<!-- <p>Welcome to New Democracy, a platform for civic engagement and participation.</p>
+<p>Would you like to reach the forum?</p>
+<input type="text" [(ngModel)]="welcomePassword" placeholder="Password" />
+<button (click)="enterForum()">Enter</button> -->
 }
