@@ -1,6 +1,97 @@
 /* ===== Home Component Styles ===== */
 
 /* Hero Section */
+
+.welcome-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 450px;
+  padding: 32px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  z-index: 1000;
+}
+
+.welcome-header {
+  margin-bottom: 24px;
+}
+
+.welcome-header h2 {
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+}
+
+.welcome-subtitle {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.example-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.example-full-width {
+  width: 100%;
+}
+
+.enter-btn {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.enter-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.enter-btn:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive adjustments for welcome form */
+@media (max-width: 480px) {
+  .welcome-form {
+    padding: 24px;
+    max-width: 95%;
+  }
+  
+  .welcome-header h2 {
+    font-size: 20px;
+  }
+  
+  .welcome-subtitle {
+    font-size: 14px;
+  }
+}
+
 .hero {
   background: radial-gradient(1200px 600px at 80% -10%, rgba(110, 168, 255, 0.25), transparent), var(--bg);
 }

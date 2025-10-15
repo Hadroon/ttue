@@ -96,6 +96,7 @@ a {
 .btn.primary {
   background: var(--brand);
   border-color: var(--brand-600);
+  color: white;
 }
 
 .btn.primary:hover {
