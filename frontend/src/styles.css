@@ -12,6 +12,19 @@
   --accent: #7af0b8;
   --border: rgba(255, 255, 255, .08);
   --shadow: 0 8px 30px rgba(0, 0, 0, .3);
+    /* --bg: #f7f8fa;
+  --surface: #ffffff;
+  --ink: #0f172a; 
+  --muted: #64748b; 
+  --primary: #2563eb; 
+  --primary-600: #1d4ed8;
+  --accent: #14b8a6; 
+  --success-bg: #e8f9f1;
+  --success: #0f766e;
+  --danger-bg: #ffe8e8;
+  --danger: #b91c1c;
+  --border: #e5e7eb;
+  --chip: #eef2ff;  */
 }
 
 @media (prefers-color-scheme: light) {
