@@ -1,0 +1,394 @@
+.workbench {
+  display: block;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.compose-hero {
+  background: radial-gradient(1200px 600px at 70% -20%, rgba(80, 140, 255, 0.25), transparent), var(--bg);
+}
+
+.compose-hero-inner {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 32px;
+  align-items: stretch;
+}
+
+.compose-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.compose-vote {
+  align-self: center;
+}
+
+.compose-vote .summary {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vote-actions {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0 12px;
+}
+
+.vote-btn {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.1s ease;
+}
+
+.vote-btn .vote-count {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.vote-btn:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.vote-btn.active {
+  border-color: var(--brand-600);
+  background: rgba(78, 140, 255, 0.15);
+  color: var(--text);
+}
+
+.vote-btn.positive.active .vote-count {
+  color: var(--accent);
+}
+
+.vote-btn.negative.active .vote-count {
+  color: #ef4444;
+}
+
+.compose-board {
+  background: var(--panel);
+}
+
+.compose-grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 24px;
+}
+
+.editor-panel,
+.diff-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+
+.panel-head p {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 6px 0 0;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.link-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--brand);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.link-btn:hover {
+  background: rgba(110, 168, 255, 0.15);
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.tool-btn {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.1s ease;
+}
+
+.tool-btn:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.editor-surface {
+  min-height: 380px;
+  padding: 24px;
+  line-height: 1.7;
+  font-size: 16px;
+  outline: none;
+}
+
+.editor-surface:focus {
+  box-shadow: inset 0 0 0 1px var(--brand);
+  border-radius: 12px;
+}
+
+.editor-surface:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.panel-footer {
+  padding: 18px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.muted-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.diff-body {
+  padding: 20px 24px 0;
+  display: grid;
+  gap: 18px;
+}
+
+.diff-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.legend-item.added {
+  background: rgba(10, 180, 120, 0.18);
+  color: var(--accent);
+}
+
+.legend-item.removed {
+  background: rgba(239, 68, 68, 0.18);
+  color: #ef4444;
+}
+
+.legend-item.unchanged {
+  background: rgba(120, 125, 160, 0.18);
+  color: var(--muted);
+}
+
+.diff-content {
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  min-height: 180px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.diff-piece {
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.diff-piece.diff-added {
+  background: rgba(11, 184, 123, 0.2);
+  color: var(--text);
+}
+
+.diff-piece.diff-removed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fecaca;
+}
+
+.snapshot-title {
+  font-size: 16px;
+  margin: 0;
+}
+
+.snapshot-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.snapshot-list li {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.snapshot-label {
+  font-weight: 600;
+}
+
+.snapshot-summary {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.snapshot-date {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.comments-section {
+  background: var(--bg);
+}
+
+.comments-container {
+  display: grid;
+  gap: 24px;
+}
+
+.comment-composer textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 14px;
+  color: var(--text);
+  resize: vertical;
+  min-height: 120px;
+  font-size: 15px;
+}
+
+.comment-composer textarea:focus {
+  outline: 2px solid var(--brand);
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.comment-list {
+  display: grid;
+  gap: 16px;
+}
+
+.comment-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 12px;
+}
+
+.comment-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.comment-role,
+.comment-meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.comment-body {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.comment-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.site-footer {
+  margin-top: 40px;
+}
+
+@media (max-width: 1080px) {
+  .compose-hero-inner,
+  .compose-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compose-vote {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 768px) {
+  .vote-actions {
+    flex-direction: column;
+  }
+
+  .footer-actions {
+    flex-direction: column;
+  }
+}

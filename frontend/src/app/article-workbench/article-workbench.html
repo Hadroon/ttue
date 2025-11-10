@@ -1,0 +1,196 @@
+<app-header></app-header>
+
+<main class="workbench" id="main" role="main">
+  <section class="section hero compose-hero">
+    <div class="container compose-hero-inner">
+      <div class="compose-hero-copy">
+        <h1>Compose long-form proposals with precision.</h1>
+        <p class="lead">Use the workbench to craft evidence-rich drafts, compare revisions, and prepare your article for expert review before it reaches the community feed.</p>
+        <div class="hero-actions">
+          <button type="button" class="btn primary lg" (click)="publishDraft()">Publish current draft</button>
+          <button type="button" class="btn secondary lg" (click)="saveSnapshot()">Save snapshot</button>
+        </div>
+        <ul class="stat-list" aria-label="Draft metrics">
+          <li>
+            <span class="stat">{{ diffStats().added }}</span>
+            <span class="stat-label">words added vs. last snapshot</span>
+          </li>
+          <li>
+            <span class="stat">{{ diffStats().removed }}</span>
+            <span class="stat-label">words trimmed</span>
+          </li>
+          <li>
+            <span class="stat">{{ revisions().length }}</span>
+            <span class="stat-label">tracked revisions</span>
+          </li>
+        </ul>
+      </div>
+
+      <aside class="compose-vote card" aria-label="Community mood">
+        <div class="card-body">
+          <span class="chip">Community preview</span>
+          <h3>Would you support this article?</h3>
+          <p class="summary">Vote to signal readiness for public deliberation. You can change your mind anytime before publication.</p>
+          <div class="vote-actions">
+            <button type="button"
+                    class="vote-btn positive"
+                    [class.active]="userVote() === 'support'"
+                    (click)="castVote('support')">
+              <span class="vote-count">{{ supportVotes() }}</span>
+              <span>Support</span>
+            </button>
+            <button type="button"
+                    class="vote-btn negative"
+                    [class.active]="userVote() === 'oppose'"
+                    (click)="castVote('oppose')">
+              <span class="vote-count">{{ opposeVotes() }}</span>
+              <span>Oppose</span>
+            </button>
+          </div>
+          <p class="fineprint">Voting tallies refresh in real time for collaborators with edit access.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section compose-board" id="editor">
+    <div class="container compose-grid">
+      <article class="card editor-panel" aria-label="Editor panel">
+        <header class="panel-head">
+          <div>
+            <h2>Draft workspace</h2>
+            <p>Format content, cite evidence, and refine your narrative for publication.</p>
+          </div>
+          <div class="panel-actions">
+            <button type="button" class="link-btn" (click)="formatBlock('H2')">H2</button>
+            <button type="button" class="link-btn" (click)="formatBlock('P')">Paragraph</button>
+            <button type="button" class="link-btn" (click)="formatBlock('BLOCKQUOTE')">Quote</button>
+          </div>
+        </header>
+
+        <div class="editor-toolbar" role="toolbar" aria-label="Formatting controls">
+          @for (action of formattingActions; track action.command) {
+          <button type="button"
+                  class="tool-btn"
+                  [attr.aria-label]="action.label"
+                  (click)="applyFormatting(action.command)">{{ action.icon }}</button>
+          }
+          <div class="toolbar-divider" aria-hidden="true"></div>
+          <button type="button" class="tool-btn" aria-label="Insert link" (click)="insertLink()">Link</button>
+          <button type="button" class="tool-btn" aria-label="Clear formatting" (click)="clearFormatting()">Clear</button>
+        </div>
+
+        <div class="editor-surface" #editorArea contenteditable="true" spellcheck="true" (input)="onEditorInput()" aria-label="Article editor" data-placeholder="Start drafting your article...">
+        </div>
+
+        <footer class="panel-footer">
+          <div class="footer-actions">
+            <button type="button" class="btn secondary" (click)="revertToSnapshot()">Revert to snapshot</button>
+            <button type="button" class="btn ghost" (click)="resetDraft()">Reset to template</button>
+          </div>
+          <small class="muted-note">Snapshots capture the exact markup for legal auditing and change logs.</small>
+        </footer>
+      </article>
+
+      <article class="card diff-panel" aria-label="Diff panel">
+        <header class="panel-head">
+          <div>
+            <h2>Live diff</h2>
+            <p>Inspect how the draft diverges from the last saved snapshot.</p>
+          </div>
+        </header>
+        <section class="diff-body">
+          <div class="diff-legend">
+            <span class="legend-item added">Additions</span>
+            <span class="legend-item removed">Removals</span>
+            <span class="legend-item unchanged">Unchanged</span>
+          </div>
+          <div class="diff-content" aria-live="polite">
+            @if(diffSegments().length === 0) {
+              <p class="muted-note">No differences detected. Make edits in the draft to see changes.</p>
+            }
+            @else {
+              @for (segment of diffSegments(); track $index) {
+                <span class="diff-piece"
+                      [class.diff-added]="segment.kind === 'added'"
+                      [class.diff-removed]="segment.kind === 'removed'"
+                      >{{ segment.text }}</span>
+              }
+            }
+          </div>
+        </section>
+        <footer class="panel-footer">
+          <h3 class="snapshot-title">Snapshots</h3>
+          <ul class="snapshot-list">
+            @for (revision of revisions(); track revision.id) {
+            <li>
+              <div class="snapshot-label">{{ revision.label }}</div>
+              <div class="snapshot-summary">{{ revision.summary }}</div>
+              <div class="snapshot-date">{{ revision.createdAtLabel }}</div>
+            </li>
+            }
+          </ul>
+        </footer>
+      </article>
+    </div>
+  </section>
+
+  <section class="section comments-section" id="comments">
+    <div class="container comments-container">
+      <header class="section-head">
+        <div>
+          <h2>Reviewer comments</h2>
+          <p class="section-subtitle">Collect targeted feedback before opening the article to the public forum.</p>
+        </div>
+      </header>
+
+      <div class="comment-composer card">
+        <div class="card-body">
+          <h3>Add a comment</h3>
+          <textarea rows="4"
+                    placeholder="Share rationale, risks, or evidence references..."
+                    [(ngModel)]="commentDraft"></textarea>
+          <div class="composer-actions">
+            <button type="button" class="btn primary" (click)="submitComment()">Post comment</button>
+            <span class="muted-note">Comments are visible to invited collaborators only.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="comment-list">
+        @for (comment of comments(); track comment.id) {
+        <article class="comment-card">
+          <header class="comment-head">
+            <div>
+              <h3>{{ comment.author }}</h3>
+              <span class="comment-role">{{ comment.role }}</span>
+            </div>
+            <div class="comment-meta">{{ comment.timestampLabel }}</div>
+          </header>
+          <p class="comment-body">{{ comment.content }}</p>
+          <footer class="comment-footer">
+            <button type="button" class="link-btn" (click)="upvoteComment(comment.id)">^ Support ({{ comment.votes }})</button>
+          </footer>
+        </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div>
+        <a class="brand" routerLink="/">
+          <span class="brand-logo" aria-hidden="true">⚖️</span>
+          <span class="brand-text">Time to unite Earth</span>
+        </a>
+        <p class="fineprint">Collaborative drafting tools for accountable civic legislation.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="#guides">Guides</a>
+        <a href="#policies">Policies</a>
+        <a href="#support">Support</a>
+      </nav>
+    </div>
+  </footer>
+</main>
