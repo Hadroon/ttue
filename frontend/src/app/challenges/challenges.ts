@@ -1,31 +1,15 @@
-import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Component } from '@angular/core';
 import { Header } from '../shared/components';
-import { ApiService } from '../shared/services/api.service';
-import { FormsModule } from '@angular/forms';
-import { environment } from '../shared/environments/environment';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { Challenge, Idea } from '../shared/models/baseModels';
 
 @Component({
-  selector: 'app-home',
-  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule],
-  templateUrl: './home.html',
-  styleUrl: './home.css'
+  selector: 'app-challenges',
+  imports: [Header],
+  templateUrl: './challenges.html',
+  styleUrl: './challenges.css'
 })
-export class Home implements OnInit {
-  environment = environment;
-  apiService = inject(ApiService);
+export class Challenges {
   activeTab: 'challenges' | 'ideas' = 'challenges';
-  welcome : WritableSignal<boolean> = signal(false);
-  welcomePassword = '';
-
-  ngOnInit() {
-    let needWelcome = window.location.hostname?.toString().includes('localhost')
-    this.welcome.set(needWelcome);
-}
 
   challenges: Challenge[] = [
     {
@@ -109,6 +93,21 @@ export class Home implements OnInit {
     }
   }
 
+  formatDeadline(deadline?: Date): string {
+    if (!deadline) return '';
+    const now = new Date();
+    const timeDiff = deadline.getTime() - now.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+    if (daysDiff < 0) return 'Deadline passed';
+    if (daysDiff === 0) return 'Due today';
+    if (daysDiff === 1) return 'Due tomorrow';
+    if (daysDiff < 30) return `${daysDiff} days left`;
+
+    const monthsDiff = Math.ceil(daysDiff / 30);
+    return `${monthsDiff} month${monthsDiff > 1 ? 's' : ''} left`;
+  }
+
   getStatusClass(status: string): string {
     switch (status) {
       case 'Implemented': return 'status-implemented';
@@ -118,42 +117,10 @@ export class Home implements OnInit {
     }
   }
 
-  formatDeadline(deadline?: Date): string {
-    if (!deadline) return '';
-    const now = new Date();
-    const timeDiff = deadline.getTime() - now.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    
-    if (daysDiff < 0) return 'Deadline passed';
-    if (daysDiff === 0) return 'Due today';
-    if (daysDiff === 1) return 'Due tomorrow';
-    if (daysDiff < 30) return `${daysDiff} days left`;
-    
-    const monthsDiff = Math.ceil(daysDiff / 30);
-    return `${monthsDiff} month${monthsDiff > 1 ? 's' : ''} left`;
-  }
-
   onVoteIdea(ideaId: string) {
     const idea = this.ideas.find(i => i.id === ideaId);
     if (idea) {
       idea.votes++;
     }
-  }
-
-  enterForum() {
-    this.apiService.checkWelcome(this.welcomePassword).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.welcome.set(true);
-        } else {
-          console.error('Welcome check failed:', response.error || response.message);
-          // Optionally show error message to user
-        }
-      },
-      error: (error) => {
-        console.error('Error checking welcome:', error);
-        // Optionally show error message to user
-      }
-    });
   }
 }
