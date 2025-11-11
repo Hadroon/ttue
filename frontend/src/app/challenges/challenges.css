@@ -256,6 +256,7 @@
 /* Ideas & Challenges Section */
 .ideas-challenges {
   background: var(--bg);
+  padding: 24px 0 48px;
 }
 
 .section-subtitle {
