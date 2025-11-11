@@ -1,4 +1,5 @@
-import { Component, inject, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Header } from '../shared/components';
 import { ApiService } from '../shared/services/api.service';
@@ -36,12 +37,17 @@ interface Idea {
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
-export class Home {
+export class Home implements OnInit {
   environment = environment;
   apiService = inject(ApiService);
   activeTab: 'challenges' | 'ideas' = 'challenges';
   welcome : WritableSignal<boolean> = signal(false);
   welcomePassword = '';
+
+  ngOnInit() {
+    let needWelcome = window.location.hostname?.toString().includes('localhost')
+    this.welcome.set(needWelcome);
+}
 
   challenges: Challenge[] = [
     {
