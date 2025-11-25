@@ -1,221 +1,230 @@
-<!-- Law Page: Editor + Diff + Comments -->
-<section class="law-page">
-  <!-- Header / Toolbar -->
-  <header class="law-header">
-    <div class="law-header__left">
-      <input class="law-title" placeholder="Enter law title…" aria-label="Law title" />
-      <div class="law-status">
-        <span class="chip chip--draft" title="Draft">Draft</span>
-        <span class="chip chip--inreview" title="In Review">In Review</span>
-        <!-- Example tags -->
-        <span class="tag">#environment</span>
-        <span class="tag">#taxation</span>
-      </div>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>New Democracy — Ideas</title>
+  <style>
+    :root{
+      /* Complementary color palette (soft blues, teals, and corals) */
+      --bg:#f7f9fc; --panel:#ffffff; --panel-2:#f2f7ff; --text:#0f172a; --muted:#667694;
+      --brand:#2b6cff; --accent:#00a3a3; --highlight:#ff715b; --ok:#16a34a; --warn:#f59e0b; --danger:#e11d48;
+      --chip:#eef3ff; --chip-br:#dbe5ff; --link:#1e4fff;
+      --radius:16px; --radius-sm:12px; --shadow:0 8px 24px rgba(15,23,42,.06);
+      --border:#e6edf7; --border-strong:#d7e3f8;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:Inter, system-ui, sans-serif; background:linear-gradient(180deg,#f9fbff,#f3f7ff); color:var(--text)}
+    a{color:var(--link); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1100px; margin:0 auto; padding:24px}
 
-    <div class="law-header__right">
-      <div class="version-picker">
-        <label for="versionA">Compare:</label>
-        <select id="versionA" aria-label="From version">
-          <option value="v3">v3 (current)</option>
-          <option value="v2">v2</option>
-          <option value="v1">v1</option>
-        </select>
-        <span class="sep">⟂</span>
-        <label for="versionB" class="sr-only">To version</label>
-        <select id="versionB" aria-label="To version">
-          <option value="v2">v2</option>
-          <option value="v1">v1</option>
-        </select>
-      </div>
+    header{position:sticky; top:0; backdrop-filter:blur(8px); background:rgba(255,255,255,.85); z-index:10; border-bottom:1px solid var(--border)}
+    .header-inner{display:flex; align-items:center; gap:16px; padding:14px 24px}
+    .logo{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
+    .logo-mark{width:28px; height:28px; border-radius:8px; background:conic-gradient(from 210deg at 50% 50%, var(--brand), var(--accent) 40%, var(--highlight) 70%, var(--brand) 100%); box-shadow:0 6px 16px rgba(43,108,255,.25)}
+    nav{margin-left:auto; display:flex; gap:14px}
+    nav a{padding:8px 10px; border-radius:10px; color:#0f172a; transition:.2s}
+    nav a.active{background:#eef3ff; color:var(--brand); border:1px solid var(--chip-br)}
+    nav a:hover{color:var(--accent)}
+    .breadcrumbs{width:100%; color:var(--muted); font-size:13px; padding:0 24px 8px}
 
-      <div class="toolbar-actions">
-        <button class="btn btn--ghost" aria-label="Preview">Preview</button>
-        <button class="btn btn--secondary" aria-label="Save draft">Save Draft</button>
-        <button class="btn btn--primary" aria-label="Publish">Publish</button>
-      </div>
+    .toolbar{display:grid; grid-template-columns: 1fr auto auto; gap:12px; margin:18px 0 24px}
+    .search{position:relative}
+    .search input{width:100%; padding:12px 14px 12px 40px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--panel); color:var(--text); box-shadow:var(--shadow)}
+    .search .icon{position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.6}
+
+    .btn, .chip{border:1px solid var(--border); background:var(--panel); color:var(--text); padding:10px 14px; border-radius:12px; display:inline-flex; align-items:center; gap:8px; cursor:pointer; box-shadow:var(--shadow); transition:all .2s}
+    .btn:hover{background:var(--panel-2); transform:translateY(-1px)}
+    .btn.primary{background:linear-gradient(180deg,var(--brand),var(--accent)); color:white; border:none}
+    .btn.ghost{background:transparent; box-shadow:none}
+
+    .chip{background:var(--chip); border-color:var(--chip-br); color:var(--brand); font-size:13px}
+    .chip[data-active="true"]{outline:2px solid var(--accent); box-shadow:0 0 0 4px rgba(0,163,163,.12)}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px} 
+
+    .card{display:grid; grid-template-rows:auto 1fr; gap:10px; padding:16px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); transition:.2s}
+    .card:hover{border-color:var(--accent); transform:translateY(-2px)}
+    .card .title{font-weight:700; line-height:1.25; color:#0b1220; margin:0}
+    .card .summary{color:#16324b; margin:0}
+    .card:hover{border-color:var(--accent); transform:translateY(-2px)}
+    .card .title{font-weight:700; line-height:1.25; color:#0b1220; margin:0}
+    .card .summary{color:#16324b; margin:0}
+    .card .meta{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px}
+    .card .tags{display:flex; flex-wrap:wrap; gap:6px}
+    .vote-badge{position:absolute; top:12px; right:12px; display:flex; align-items:center; gap:6px; background:#e6fffb; color:#065f5b; border:1px solid #b6f3ef; padding:6px 10px; border-radius:999px; font-weight:600}
+    .vote-badge button{border:none; background:transparent; cursor:pointer; font-size:14px; line-height:1}
+    .vote-badge .score{min-width:24px; text-align:center}
+    .footer-row{display:flex; align-items:center; justify-content:space-between}
+    .avatar{width:24px; height:24px; border-radius:999px; background:linear-gradient(135deg,var(--brand),var(--accent)); opacity:.85}
+    .byline{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px} 
+    .card:hover{border-color:var(--accent); transform:translateY(-2px)}
+
+    .vote{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:#f6f8ff; border:1px solid var(--border); border-radius:12px; padding:10px}
+    .vote button{width:32px; height:32px; border-radius:10px; border:1px solid var(--border); background:#ffffff; color:var(--accent); cursor:pointer; transition:.2s}
+    .vote button:hover{background:#e0f7f7}
+    .vote .up.active{border-color:var(--accent); background:#ccfbf1}
+    .vote .down.active{border-color:var(--highlight); background:#ffe4e1}
+    .vote .score{font-weight:700; font-size:14px; color:var(--text)}
+
+    .content h3{margin:0 0 8px}
+    .content h3 a{color:#0f172a}
+    .meta{display:flex; flex-wrap:wrap; gap:10px; color:var(--muted); font-size:13px; margin-bottom:8px}
+    .summary{color:#1f2937; line-height:1.6; margin-bottom:10px}
+
+    .meta-row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .left{display:flex; align-items:center; gap:10px}
+    .tag{background:var(--chip); border:1px solid var(--chip-br); color:var(--accent); padding:4px 10px; border-radius:999px; font-size:12px}
+
+    details.conn{background:#f7f9ff; border:1px dashed var(--chip-br); padding:12px; border-radius:12px}
+    details.conn summary{cursor:pointer; color:var(--brand); font-weight:600}
+    details.conn[open]{background:#f0f8f8; border-color:var(--accent)}
+    .conn-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px}
+
+    .pagination{display:flex; justify-content:center; gap:8px; margin:18px 0}
+    .pagination .btn{padding:8px 12px}
+
+    @media(max-width:720px){.toolbar{grid-template-columns:1fr;} .card{grid-template-columns:56px 1fr} .conn-grid{grid-template-columns:1fr}}
+  .card-wrap{display:grid; gap:8px; position:relative}
+    .meta-bar{position:relative; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 12px; background:var(--panel); border:1px dashed var(--chip-br); border-radius:12px; box-shadow:var(--shadow)}
+    .meta-bar::before{content:""; position:absolute; top:-6px; left:24px; width:12px; height:12px; background:var(--panel); border-left:1px dashed var(--chip-br); border-top:1px dashed var(--chip-br); transform:rotate(45deg)}
+    .meta-left, .meta-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .vote-chip{background:#e6fffb; border:1px solid #b6f3ef; color:#065f5b; padding:4px 8px; border-radius:999px; font-weight:700}
+    .open{padding:6px 10px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner container">
+      <div class="logo"><span class="logo-mark"></span> New Democracy</div>
+      <nav>
+        <a href="#">Home</a>
+        <a href="#" class="active">Ideas</a>
+        <a href="#">Challenges</a>
+        <a href="#">How it works</a>
+      </nav>
     </div>
+    <div class="breadcrumbs">Home · Ideas</div>
   </header>
 
-  <!-- Main Split: Editor/Diff + Comments -->
-  <div class="law-main">
-    <div class="workbench">
-      <!-- Tabs -->
-      <nav class="tabs" aria-label="Editor modes">
-        <button class="tab tab--active" aria-selected="true">Edit</button>
-        <button class="tab">Compare</button>
-        <button class="tab">Preview</button>
-      </nav>
+  <main class="container">
+    <section class="toolbar">
+      <div class="search">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-3.9-3.9M10.8 19a8.2 8.2 0 1 1 0-16.4 8.2 8.2 0 0 1 0 16.4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input id="searchInput" placeholder="Search ideas, authors, tags…" />
+      </div>
+      <div class="tags" id="tagBar"></div>
+      <div style="display:flex; gap:8px">
+        <button class="btn ghost" id="sortLatest">Latest</button>
+        <button class="btn ghost" id="sortTop">Top</button>
+        <button class="btn ghost" id="sortTrending">Trending</button>
+        <button class="btn primary" id="addIdea">+ New Idea</button>
+      </div>
+    </section>
 
-      <!-- Edit Mode -->
-      <div class="panel panel--edit">
-        <!-- WYSIWYG toolbar (mock) -->
-        <div class="wysiwyg">
-          <div class="wysiwyg__toolbar" role="toolbar" aria-label="Formatting options">
-            <button class="ti" title="Bold"><strong>B</strong></button>
-            <button class="ti" title="Italic"><em>I</em></button>
-            <button class="ti" title="Underline"><u>U</u></button>
-            <span class="spacer"></span>
-            <button class="ti" title="Bulleted list">• List</button>
-            <button class="ti" title="Numbered list">1. List</button>
-            <span class="spacer"></span>
-            <button class="ti" title="Quote">“”</button>
-            <button class="ti" title="Link">🔗</button>
-            <button class="ti" title="Cite/Footnote">†</button>
-            <span class="spacer"></span>
-            <button class="ti" title="AI Assist">✨ Improve</button>
+    <section class="grid" id="ideasGrid">
+      <div class="card-wrap">
+        <article class="card">
+          <h3 class="title">Transparent Municipal Budgets</h3>
+          <p class="summary">Publish line-item budgets on a public ledger so citizens can track spending in near real time.</p>
+        </article>
+        <div class="meta-bar">
+          <div class="meta-left">
+            <span class="vote-chip">▲ 112</span>
+            <span class="by">Alex Kovács</span>
+            <time datetime="2025-10-12">Oct 12, 2025</time>
           </div>
-
-          <!-- Editable area (placeholder contenteditable) -->
-          <div class="wysiwyg__editor" contenteditable="true" role="textbox" aria-multiline="true">
-            <h2>Section 1 — Purpose</h2>
-            <p>This law aims to promote social and environmental responsibility through differentiated taxation that funds public research and remediation.</p>
-            <h3>Section 2 — Definitions</h3>
-            <ul>
-              <li><strong>High-impact pollution</strong> means …</li>
-              <li><strong>Plastic-origin revenue</strong> means …</li>
-            </ul>
-            <h3>Section 3 — Measures</h3>
-            <ol>
-              <li>Companies eroding social integrity pay an additional levy of …</li>
-              <li>Companies that pollute pay an incremental tax of …</li>
-              <li>Oil companies tied to plastic production contribute …</li>
-            </ol>
+          <div class="meta-right">
+            <span class="tag">#transparency</span>
+            <span class="tag">#municipal</span>
+            <span class="tag">#open-data</span>
+            <a href="#" class="open">Open</a>
           </div>
         </div>
       </div>
 
-      <!-- Compare Mode (example UI) -->
-      <div class="panel panel--compare" hidden>
-        <div class="diff-controls">
-          <label class="switch">
-            <input type="checkbox" />
-            <span>Inline / Side-by-side</span>
-          </label>
-        </div>
-        <!-- Inline diff mock -->
-        <article class="diff diff--inline" aria-label="Text difference inline">
-          <p>
-            This law aims to promote <span class="diff--del">corporate</span> <span class="diff--add">social</span> and environmental responsibility
-            through differentiated taxation that funds public research <span class="diff--add">, innovation,</span> and remediation.
-          </p>
-          <p>
-            <span class="diff--del">Companies that pollute</span> <span class="diff--add">Entities exceeding emission thresholds</span> pay an incremental tax …
-          </p>
+      <div class="card-wrap">
+        <article class="card">
+          <h3 class="title">Deliberation Juries for Draft Laws</h3>
+          <p class="summary">Randomly selected citizen juries refine draft legislation; structured pro/contra briefs inform voting.</p>
         </article>
+        <div class="meta-bar">
+          <div class="meta-left">
+            <span class="vote-chip">▲ 86</span>
+            <span class="by">Maya Tóth</span>
+            <time datetime="2025-09-27">Sep 27, 2025</time>
+          </div>
+          <div class="meta-right">
+            <span class="tag">#civic-tech</span>
+            <span class="tag">#deliberation</span>
+            <a href="#" class="open">Open</a>
+          </div>
+        </div>
       </div>
 
-      <!-- Preview Mode (read-only) -->
-      <div class="panel panel--preview" hidden>
-        <article class="preview">
-          <h1>Law on Environmental and Social Responsibility Taxation</h1>
-          <h2>Section 1 — Purpose</h2>
-          <p>Read-only rendering matching the editor styles…</p>
+      <div class="card-wrap">
+        <article class="card">
+          <h3 class="title">Green Roofs Exchange Program</h3>
+          <p class="summary">Tradable tax credits for verified green-roof retrofits to cool cities and boost biodiversity.</p>
         </article>
+        <div class="meta-bar">
+          <div class="meta-left">
+            <span class="vote-chip">▲ 61</span>
+            <span class="by">Eszter Nagy</span>
+            <time datetime="2025-10-15">Oct 15, 2025</time>
+          </div>
+          <div class="meta-right">
+            <span class="tag">#climate</span>
+            <span class="tag">#urbanism</span>
+            <a href="#" class="open">Open</a>
+          </div>
+        </div>
       </div>
 
-      <!-- Context cards under editor -->
-      <section class="context-grid">
+      <div class="card-wrap">
         <article class="card">
-          <h4>Connected Ideas</h4>
-          <ul class="list-dots">
-            <li>Plastic reduction incentives</li>
-            <li>Green R&D vouchers</li>
-          </ul>
+          <h3 class="title">Universal Basic Mobility Pass</h3>
+          <p class="summary">Provide baseline public transit & micromobility credits with CO₂ reduction incentives.</p>
         </article>
-        <article class="card">
-          <h4>Relevant Studies</h4>
-          <ul class="list-dots">
-            <li>OECD environmental taxation 2024</li>
-            <li>EU ETS impact meta-analysis</li>
-          </ul>
-        </article>
-        <article class="card">
-          <h4>Previous Proposals</h4>
-          <ul class="list-dots">
-            <li>Amendment #12 — Scope clarifications</li>
-            <li>Amendment #9 — Allocation formula</li>
-          </ul>
-        </article>
-      </section>
+        <div class="meta-bar">
+          <div class="meta-left">
+            <span class="vote-chip">▲ 34</span>
+            <span class="by">Réka Szalai</span>
+            <time datetime="2025-10-05">Oct 5, 2025</time>
+          </div>
+          <div class="meta-right">
+            <span class="tag">#mobility</span>
+            <span class="tag">#equity</span>
+            <a href="#" class="open">Open</a>
+          </div>
+        </div>
+      </div>
 
-      <!-- Metadata -->
-      <footer class="meta">
-        <div class="meta__row">
-          <div class="meta__item"><strong>Author:</strong> Jane Citizen</div>
-          <div class="meta__item"><strong>Created:</strong> 2025-10-10</div>
-          <div class="meta__item"><strong>Last updated:</strong> 2025-10-29</div>
+      <div class="card-wrap">
+        <article class="card">
+          <h3 class="title">Right‑to‑Repair for City IoT</h3>
+          <p class="summary">Mandate open parts & diagnostics for public infrastructure sensors to avoid vendor lock‑in.</p>
+        </article>
+        <div class="meta-bar">
+          <div class="meta-left">
+            <span class="vote-chip">▲ 190</span>
+            <span class="by">Jonas Farkas</span>
+            <time datetime="2025-08-22">Aug 22, 2025</time>
+          </div>
+          <div class="meta-right">
+            <span class="tag">#right-to-repair</span>
+            <span class="tag">#infrastructure</span>
+            <a href="#" class="open">Open</a>
+          </div>
         </div>
-        <div class="timeline">
-          <div class="timeline__step is-done">Draft</div>
-          <div class="timeline__step is-active">In Review</div>
-          <div class="timeline__step">Committee</div>
-          <div class="timeline__step">Approved</div>
-        </div>
-      </footer>
+      </div>
+    </section>
+    <div class="pagination">
+      <button class="btn" id="prevPage">← Prev</button>
+      <button class="btn" id="nextPage">Next →</button>
     </div>
-
-    <!-- Comments Sidebar -->
-    <aside class="comments" aria-label="Comments">
-      <div class="comments__header">
-        <h3>Comments</h3>
-        <div class="filters">
-          <button class="chip chip--ghost">All</button>
-          <button class="chip chip--ghost">Resolved</button>
-          <button class="chip chip--ghost">My comments</button>
-        </div>
-      </div>
-
-      <div class="comment composer">
-        <textarea placeholder="Add a comment… (select text to quote)" aria-label="Add a comment"></textarea>
-        <div class="composer__actions">
-          <button class="btn btn--ghost">Cancel</button>
-          <button class="btn btn--primary">Comment</button>
-        </div>
-      </div>
-
-      <!-- Threaded comments -->
-      <article class="comment">
-        <header class="comment__head">
-          <img class="avatar" src="https://placehold.co/40" alt="Alex avatar" />
-          <div>
-            <div class="comment__author">Alex</div>
-            <div class="comment__meta">2h ago • quoted “pay an incremental tax”</div>
-          </div>
-          <button class="btn btn--tiny">Resolve</button>
-        </header>
-        <p class="comment__body">Consider aligning the threshold with EU ETS Phase IV.</p>
-        <div class="comment__actions">
-          <button class="link">Reply</button>
-          <button class="link">Upvote (12)</button>
-        </div>
-        <!-- Reply -->
-        <div class="comment comment--child">
-          <header class="comment__head">
-            <img class="avatar" src="https://placehold.co/40" alt="Maya avatar" />
-            <div>
-              <div class="comment__author">Maya</div>
-              <div class="comment__meta">1h ago</div>
-            </div>
-          </header>
-          <p class="comment__body">Agree. Also specify the indexation method.</p>
-        </div>
-      </article>
-
-      <article class="comment">
-        <header class="comment__head">
-          <img class="avatar" src="https://placehold.co/40" alt="Sam avatar" />
-          <div>
-            <div class="comment__author">Sam</div>
-            <div class="comment__meta">Yesterday</div>
-          </div>
-        </header>
-        <p class="comment__body">Please add a definition for “social integrity.”</p>
-        <div class="comment__actions">
-          <button class="link">Reply</button>
-          <button class="link">Upvote (4)</button>
-        </div>
-      </article>
-    </aside>
-  </div>
-</section>
+  </main>
+</body>
+</html>

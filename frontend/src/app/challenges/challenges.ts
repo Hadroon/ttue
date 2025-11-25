@@ -21,7 +21,8 @@ export class Challenges {
       participantCount: 347,
       rewardPool: '$50,000',
       deadline: new Date('2025-12-15'),
-      tags: ['climate', 'adaptation', 'urban-planning', 'emergency-response']
+      tags: ['climate', 'adaptation', 'urban-planning', 'emergency-response'],
+      votes: 124
     },
     {
       id: 'digital-equity',
@@ -32,7 +33,8 @@ export class Challenges {
       participantCount: 892,
       rewardPool: '$25,000',
       deadline: new Date('2025-11-30'),
-      tags: ['digital-divide', 'accessibility', 'education', 'infrastructure']
+      tags: ['digital-divide', 'accessibility', 'education', 'infrastructure'],
+      votes: 85
     },
     {
       id: 'affordable-housing',
@@ -43,7 +45,8 @@ export class Challenges {
       participantCount: 1456,
       rewardPool: '$75,000',
       deadline: new Date('2026-01-31'),
-      tags: ['housing', 'affordability', 'zoning', 'sustainability']
+      tags: ['housing', 'affordability', 'zoning', 'sustainability'],
+      votes: 203
     }
   ];
 
@@ -56,7 +59,8 @@ export class Challenges {
       votes: 234,
       category: 'Energy',
       status: 'Under Review',
-      createdAt: new Date('2025-08-15')
+      createdAt: new Date('2025-08-15'),
+      challengeId: 'climate-adaptation'
     },
     {
       id: 'mobile-voting',
@@ -76,7 +80,8 @@ export class Challenges {
       votes: 156,
       category: 'Environment',
       status: 'New',
-      createdAt: new Date('2025-09-01')
+      createdAt: new Date('2025-09-01'),
+      challengeId: 'climate-adaptation'
     }
   ];
 
@@ -122,5 +127,22 @@ export class Challenges {
     if (idea) {
       idea.votes++;
     }
+  }
+
+  onVoteChallenge(challengeId: string) {
+    const challenge = this.challenges.find(c => c.id === challengeId);
+    if (challenge) {
+      if (challenge.voted) {
+        challenge.votes--;
+        challenge.voted = false;
+      } else {
+        challenge.votes++;
+        challenge.voted = true;
+      }
+    }
+  }
+
+  getIdeasCount(challengeId: string): number {
+    return this.ideas.filter(i => i.challengeId === challengeId).length;
   }
 }

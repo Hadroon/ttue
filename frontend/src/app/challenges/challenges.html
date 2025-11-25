@@ -29,45 +29,59 @@
         <div class="challenges-grid">
           @for (challenge of challenges; track challenge.id) {
           <article class="challenge-card">
-            <div class="challenge-header">
-              <div class="challenge-meta">
-                <span class="chip">{{ challenge.category }}</span>
-                <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
-                  {{ challenge.urgency }}
-                </span>
-              </div>
-              @if (challenge.rewardPool) {
-              <div class="reward-pool">{{ challenge.rewardPool }}</div>
-              }
+            <div class="challenge-vote">
+              <button class="vote-btn-large" [class.voted]="challenge.voted" (click)="onVoteChallenge(challenge.id)" [attr.aria-label]="'Vote for ' + challenge.title">
+                <span class="vote-icon">▲</span>
+                <span class="vote-count">{{ challenge.votes }}</span>
+              </button>
             </div>
-
-            <div class="challenge-body">
-              <h3>{{ challenge.title }}</h3>
-              <p class="challenge-description">{{ challenge.description }}</p>
-
-              <div class="challenge-stats">
-                <div class="stat-item">
-                  <span class="stat-icon">👥</span>
-                  <span>{{ challenge.participantCount }} participants</span>
+            <div class="challenge-content">
+              <div class="challenge-header">
+                <div class="challenge-meta">
+                  <span class="chip">{{ challenge.category }}</span>
+                  <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
+                    {{ challenge.urgency }}
+                  </span>
                 </div>
-                @if (challenge.deadline) {
-                <div class="stat-item">
-                  <span class="stat-icon">⏱️</span>
-                  <span>{{ formatDeadline(challenge.deadline) }}</span>
+                <div class="challenge-header-right">
+                  @if (challenge.rewardPool) {
+                  <div class="reward-pool">{{ challenge.rewardPool }}</div>
+                  }
                 </div>
-                }
               </div>
 
-              <div class="challenge-tags">
-                @for (tag of challenge.tags; track tag) {
-                <span class="tag">#{{ tag }}</span>
-                }
-              </div>
-            </div>
+              <div class="challenge-body">
+                <h3>{{ challenge.title }}</h3>
+                <p class="challenge-description">{{ challenge.description }}</p>
 
-            <div class="challenge-actions">
-              <a class="btn ghost" [href]="'#challenge-' + challenge.id">Learn more</a>
-              <a class="btn primary" [href]="'#join-' + challenge.id">Join challenge</a>
+                <div class="challenge-stats">
+                  <div class="stat-item">
+                    <span class="stat-icon">👥</span>
+                    <span>{{ challenge.participantCount }} participants</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-icon">💡</span>
+                    <span>{{ getIdeasCount(challenge.id) }} ideas</span>
+                  </div>
+                  @if (challenge.deadline) {
+                  <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span>{{ formatDeadline(challenge.deadline) }}</span>
+                  </div>
+                  }
+                </div>
+
+                <div class="challenge-tags">
+                  @for (tag of challenge.tags; track tag) {
+                  <span class="tag">#{{ tag }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="challenge-actions">
+                <a class="btn ghost" [href]="'#challenge-' + challenge.id">Learn more</a>
+                <a class="btn primary" [href]="'#join-' + challenge.id">Join challenge</a>
+              </div>
             </div>
           </article>
           }

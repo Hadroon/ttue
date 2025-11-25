@@ -37,7 +37,8 @@ export class Home implements OnInit {
       participantCount: 347,
       rewardPool: '$50,000',
       deadline: new Date('2025-12-15'),
-      tags: ['climate', 'adaptation', 'urban-planning', 'emergency-response']
+      tags: ['climate', 'adaptation', 'urban-planning', 'emergency-response'],
+      votes: 124
     },
     {
       id: 'digital-equity',
@@ -48,7 +49,8 @@ export class Home implements OnInit {
       participantCount: 892,
       rewardPool: '$25,000',
       deadline: new Date('2025-11-30'),
-      tags: ['digital-divide', 'accessibility', 'education', 'infrastructure']
+      tags: ['digital-divide', 'accessibility', 'education', 'infrastructure'],
+      votes: 85
     },
     {
       id: 'affordable-housing',
@@ -59,7 +61,8 @@ export class Home implements OnInit {
       participantCount: 1456,
       rewardPool: '$75,000',
       deadline: new Date('2026-01-31'),
-      tags: ['housing', 'affordability', 'zoning', 'sustainability']
+      tags: ['housing', 'affordability', 'zoning', 'sustainability'],
+      votes: 203
     }
   ];
 

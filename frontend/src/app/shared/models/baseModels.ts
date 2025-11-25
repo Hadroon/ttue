@@ -7,6 +7,7 @@ export interface Idea {
   category: string;
   status: 'New' | 'Under Review' | 'In Development' | 'Implemented';
   createdAt: Date;
+  challengeId?: string;
 }
 
 export interface Challenge {
@@ -19,4 +20,6 @@ export interface Challenge {
   rewardPool?: string;
   deadline?: Date;
   tags: string[];
+  votes: number;
+  voted?: boolean;
 }

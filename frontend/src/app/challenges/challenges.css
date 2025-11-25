@@ -320,6 +320,79 @@
   padding: 20px;
   box-shadow: var(--shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  gap: 20px;
+}
+
+.challenge-vote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.vote-btn-large {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 60px;
+}
+
+.vote-btn-large:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.vote-btn-large.voted {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: transparent;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  animation: uplift 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.vote-btn-large .vote-icon {
+  font-size: 24px;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.vote-btn-large.voted .vote-icon {
+  color: white;
+}
+
+.vote-btn-large .vote-count {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+  transition: color 0.2s ease;
+}
+
+.vote-btn-large.voted .vote-count {
+  color: white;
+}
+
+@keyframes uplift {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2) translateY(-5px); }
+  100% { transform: scale(1) translateY(-2px); }
+}
+
+.vote-btn-large:active {
+  transform: scale(0.95);
+}
+
+.challenge-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .challenge-card:hover {
@@ -332,6 +405,12 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
+}
+
+.challenge-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .challenge-meta {
