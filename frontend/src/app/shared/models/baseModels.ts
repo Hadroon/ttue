@@ -23,3 +23,17 @@ export interface Challenge {
   votes: number;
   voted?: boolean;
 }
+
+export interface Comment {
+  id: string;
+  author: string;
+  authorRole?: string;
+  content: string;
+  createdAt: Date;
+  votes: number;
+  voted?: boolean;
+  parentId?: string;
+  replies?: Comment[];
+  challengeId?: string;
+  ideaId?: string;
+}

@@ -83,6 +83,13 @@
                   <a class="btn ghost" [href]="'#challenge-' + challenge.id">Learn more</a>
                   <a class="btn primary" [href]="'#join-' + challenge.id">Join challenge</a>
                 </div>
+
+                <app-comments
+                  [entityId]="challenge.id"
+                  [entityType]="'challenge'"
+                  [allComments]="comments"
+                  [compact]="true">
+                </app-comments>
               </div>
             </article>
 

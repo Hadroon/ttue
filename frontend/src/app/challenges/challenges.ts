@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { Header, ChallengeIdeas } from '../shared/components';
-import { Challenge, Idea } from '../shared/models/baseModels';
+import { Header, ChallengeIdeas, Comments } from '../shared/components';
+import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 
 @Component({
   selector: 'app-challenges',
-  imports: [Header, ChallengeIdeas],
+  imports: [Header, ChallengeIdeas, Comments],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })
@@ -82,6 +82,96 @@ export class Challenges {
       status: 'New',
       createdAt: new Date('2025-09-01'),
       challengeId: 'climate-adaptation'
+    }
+  ];
+
+  comments: Comment[] = [
+    {
+      id: 'comment-1',
+      author: 'Dr. Michael Rodriguez',
+      authorRole: 'Climate Expert',
+      content: 'This is a critical challenge. We need to consider both immediate interventions and long-term infrastructure changes. I recommend breaking this into phased approaches.',
+      createdAt: new Date('2025-11-15'),
+      votes: 42,
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'comment-2',
+      author: 'Sarah Kim',
+      content: 'Has anyone looked at what Amsterdam and Rotterdam are doing? Their water management systems could be excellent case studies.',
+      createdAt: new Date('2025-11-18'),
+      votes: 28,
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'reply-1',
+      author: 'Dr. Michael Rodriguez',
+      authorRole: 'Climate Expert',
+      content: 'Excellent point! The Dutch "Room for the River" program is particularly relevant. I can share some research papers if interested.',
+      createdAt: new Date('2025-11-18'),
+      votes: 15,
+      parentId: 'comment-2',
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'comment-3',
+      author: 'James Chen',
+      content: 'What\'s the expected timeline for implementation? Some of these strategies require decades of infrastructure work.',
+      createdAt: new Date('2025-11-20'),
+      votes: 12,
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'comment-4',
+      author: 'Maria Gonzalez',
+      authorRole: 'Policy Advisor',
+      content: 'We should also consider the equity implications. Climate adaptation measures often benefit wealthier neighborhoods first.',
+      createdAt: new Date('2025-11-21'),
+      votes: 35,
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'comment-5',
+      author: 'Alex Thompson',
+      content: 'The digital divide is getting worse, not better. Rural communities are being left behind completely.',
+      createdAt: new Date('2025-11-10'),
+      votes: 18,
+      challengeId: 'digital-equity'
+    },
+    {
+      id: 'comment-6',
+      author: 'Jennifer Park',
+      authorRole: 'Tech Policy Expert',
+      content: 'We need to think beyond just infrastructure. Digital literacy programs are equally important.',
+      createdAt: new Date('2025-11-12'),
+      votes: 24,
+      challengeId: 'digital-equity'
+    },
+    {
+      id: 'comment-7',
+      author: 'David Brown',
+      content: 'Zoning reform is the elephant in the room. Without addressing restrictive zoning, no amount of funding will solve this.',
+      createdAt: new Date('2025-11-08'),
+      votes: 56,
+      challengeId: 'affordable-housing'
+    },
+    {
+      id: 'reply-2',
+      author: 'Lisa Martinez',
+      content: 'Agreed. Minneapolis upzoned the entire city and saw significant improvements. We should study their model.',
+      createdAt: new Date('2025-11-09'),
+      votes: 31,
+      parentId: 'comment-7',
+      challengeId: 'affordable-housing'
+    },
+    {
+      id: 'comment-8',
+      author: 'Robert Johnson',
+      authorRole: 'Housing Advocate',
+      content: 'Community land trusts have been successful in several cities. They remove speculation from the equation.',
+      createdAt: new Date('2025-11-14'),
+      votes: 22,
+      challengeId: 'affordable-housing'
     }
   ];
 
