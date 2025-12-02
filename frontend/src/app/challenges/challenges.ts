@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { Header } from '../shared/components';
+import { Header, ChallengeIdeas } from '../shared/components';
 import { Challenge, Idea } from '../shared/models/baseModels';
 
 @Component({
   selector: 'app-challenges',
-  imports: [Header],
+  imports: [Header, ChallengeIdeas],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })

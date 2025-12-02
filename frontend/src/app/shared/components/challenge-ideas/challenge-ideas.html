@@ -1,0 +1,88 @@
+<div class="challenge-ideas-container" [class.expanded]="isExpanded">
+  @if (filteredIdeas.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">💡</div>
+      <p class="empty-message">No ideas submitted yet</p>
+      <p class="empty-submessage">Be the first to propose a solution for this challenge!</p>
+      <a class="btn primary sm" href="#submit-idea">Submit your idea</a>
+    </div>
+  } @else {
+    <div class="ideas-header">
+      <div class="ideas-count">
+        <span class="count-icon">💡</span>
+        <span class="count-text">
+          Ideas emerging from this challenge · {{ filteredIdeas.length }}
+        </span>
+      </div>
+      
+      @if (isExpanded) {
+        <div class="ideas-controls">
+          <div class="control-group">
+            <label for="filter-status-{{ challengeId }}">Status:</label>
+            <select id="filter-status-{{ challengeId }}" (change)="onFilterChange($event)" [(ngModel)]="filterStatus">
+              <option value="all">All</option>
+              <option value="New">New</option>
+              <option value="Under Review">Under Review</option>
+              <option value="In Development">In Development</option>
+              <option value="Implemented">Implemented</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="sort-ideas-{{ challengeId }}">Sort:</label>
+            <select id="sort-ideas-{{ challengeId }}" (change)="onSortChange($event)" [(ngModel)]="sortBy">
+              <option value="votes">Most voted</option>
+              <option value="recent">Most recent</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+        </div>
+      }
+      
+      @if (compact && filteredIdeas.length > 3) {
+        <button class="toggle-btn" (click)="toggleExpand()" [attr.aria-expanded]="isExpanded">
+          {{ isExpanded ? 'Show less' : 'Show all ' + filteredIdeas.length }}
+          <span class="toggle-icon">{{ isExpanded ? '▲' : '▼' }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="ideas-grid" [class.compact]="!isExpanded">
+      @for (idea of displayedIdeas; track idea.id) {
+        <article class="idea-card-mini">
+          <div class="idea-card-header">
+            <div class="idea-meta">
+              <span class="status-badge-mini" [class]="getStatusClass(idea.status)">
+                <span class="status-icon">{{ getStatusIcon(idea.status) }}</span>
+                {{ idea.status }}
+              </span>
+            </div>
+            <div class="idea-vote-mini">
+              <button class="vote-btn-mini" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
+                <span class="vote-icon">▲</span>
+                <span class="vote-count">{{ idea.votes }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="idea-card-body">
+            <h4 class="idea-title">{{ idea.title }}</h4>
+            <p class="idea-description-mini">{{ idea.description }}</p>
+
+            <div class="idea-footer">
+              <span class="idea-author-mini">by {{ idea.author }}</span>
+              <time class="idea-date" [dateTime]="idea.createdAt.toISOString()">
+                {{ idea.createdAt.toLocaleDateString() }}
+              </time>
+            </div>
+          </div>
+
+          @if (isExpanded) {
+            <div class="idea-card-actions">
+              <a class="btn-link" [href]="'#idea-' + idea.id">View details →</a>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</div>
