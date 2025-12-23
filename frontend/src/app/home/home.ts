@@ -1,17 +1,17 @@
 import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Header } from '../shared/components';
+import { Header, ChallengeGrid2x2 } from '../shared/components';
 import { ApiService } from '../shared/services/api.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Challenge, Idea } from '../shared/models/baseModels';
+import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule],
+  imports: [RouterLink, Header, ChallengeGrid2x2, FormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -75,7 +75,8 @@ export class Home implements OnInit {
       votes: 234,
       category: 'Energy',
       status: 'Under Review',
-      createdAt: new Date('2025-08-15')
+      createdAt: new Date('2025-08-15'),
+      challengeId: 'climate-adaptation'
     },
     {
       id: 'mobile-voting',
@@ -95,7 +96,48 @@ export class Home implements OnInit {
       votes: 156,
       category: 'Environment',
       status: 'New',
-      createdAt: new Date('2025-09-01')
+      createdAt: new Date('2025-09-01'),
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'urban-cooling',
+      title: 'Smart Urban Cooling Networks',
+      description: 'Deploy interconnected green corridors and reflective surfaces to reduce urban heat islands in densely populated areas.',
+      author: 'Dr. James Liu',
+      votes: 98,
+      category: 'Environment',
+      status: 'New',
+      createdAt: new Date('2025-09-12'),
+      challengeId: 'climate-adaptation'
+    }
+  ];
+
+  comments: Comment[] = [
+    {
+      id: 'comment-1',
+      author: 'Dr. Michael Green',
+      authorRole: 'Climate Expert',
+      content: 'This challenge addresses critical infrastructure gaps. We need to prioritize flood prevention systems in vulnerable districts.',
+      createdAt: new Date('2025-11-15'),
+      votes: 42,
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'comment-2',
+      author: 'Sarah Thompson',
+      content: 'Great initiative! I suggest including community feedback sessions to identify local priorities.',
+      createdAt: new Date('2025-11-20'),
+      votes: 28,
+      challengeId: 'climate-adaptation'
+    },
+    {
+      id: 'comment-3',
+      author: 'Prof. Anna Martinez',
+      authorRole: 'Urban Planner',
+      content: 'We should integrate this with existing urban development plans to maximize efficiency and avoid redundancy.',
+      createdAt: new Date('2025-11-25'),
+      votes: 35,
+      challengeId: 'climate-adaptation'
     }
   ];
 
@@ -141,6 +183,36 @@ export class Home implements OnInit {
     if (idea) {
       idea.votes++;
     }
+  }
+
+  onVoteComment(commentId: string) {
+    const comment = this.comments.find(c => c.id === commentId);
+    if (comment) {
+      comment.votes++;
+    }
+  }
+
+  getIdeasForChallenge(challengeId: string): Idea[] {
+    return this.ideas.filter(idea => idea.challengeId === challengeId);
+  }
+
+  getCommentsForChallenge(challengeId: string): Comment[] {
+    return this.comments.filter(comment => comment.challengeId === challengeId);
+  }
+
+  onChallengeClick(challengeId: string) {
+    console.log('Challenge clicked:', challengeId);
+    // Navigate to challenge detail page or open modal
+  }
+
+  onIdeaClick(ideaId: string) {
+    console.log('Idea clicked:', ideaId);
+    // Navigate to idea detail page or open modal
+  }
+
+  onViewAllComments(challengeId: string) {
+    console.log('View all comments for challenge:', challengeId);
+    // Navigate to full discussion page
   }
 
   enterForum() {

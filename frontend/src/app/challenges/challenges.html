@@ -3,9 +3,9 @@
 <app-header></app-header>
 <main id="main" role="main">
   <!-- ===== Filter bar ===== -->
-   <section>
+  <section>
     <!-- Here comes the filter bar -->
-   </section>
+  </section>
   <!-- ===== Ideas & Challenges ===== -->
   <section class="ideas-challenges" id="ideas-challenges">
     <div class="container">
@@ -14,7 +14,8 @@
         <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
       </div>
 
-      <div class="ideas-challenges-tabs">
+      <!-- NOTE: Tabs are currently disabled; both sections are shown together. -->
+      <!-- <div class="ideas-challenges-tabs">
         <button class="tab-btn" [class.active]="activeTab === 'challenges'" data-tab="challenges"
           (click)="switchTab('challenges')">
           Active Challenges
@@ -22,89 +23,28 @@
         <button class="tab-btn" [class.active]="activeTab === 'ideas'" data-tab="ideas" (click)="switchTab('ideas')">
           Community Ideas
         </button>
-      </div>
+      </div> -->
 
       <!-- Challenges Tab -->
       <div class="tab-content" [class.active]="activeTab === 'challenges'" id="challenges-tab">
         <div class="challenges-grid">
           @for (challenge of challenges; track challenge.id) {
           <div class="challenge-with-ideas">
-            <article class="challenge-card">
-              <div class="challenge-vote">
-                <button class="vote-btn-large" [class.voted]="challenge.voted" (click)="onVoteChallenge(challenge.id)" [attr.aria-label]="'Vote for ' + challenge.title">
-                  <span class="vote-icon">▲</span>
-                  <span class="vote-count">{{ challenge.votes }}</span>
-                </button>
-              </div>
-              <div class="challenge-content">
-                <div class="challenge-header">
-                  <div class="challenge-meta">
-                    <span class="chip">{{ challenge.category }}</span>
-                    <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
-                      {{ challenge.urgency }}
-                    </span>
-                  </div>
-                  <div class="challenge-header-right">
-                    @if (challenge.rewardPool) {
-                    <div class="reward-pool">{{ challenge.rewardPool }}</div>
-                    }
-                  </div>
-                </div>
-
-                <div class="challenge-body">
-                  <h3>{{ challenge.title }}</h3>
-                  <p class="challenge-description">{{ challenge.description }}</p>
-
-                  <div class="challenge-stats">
-                    <div class="stat-item">
-                      <span class="stat-icon">👥</span>
-                      <span>{{ challenge.participantCount }} participants</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="stat-icon">💡</span>
-                      <span>{{ getIdeasCount(challenge.id) }} ideas</span>
-                    </div>
-                    @if (challenge.deadline) {
-                    <div class="stat-item">
-                      <span class="stat-icon">⏱️</span>
-                      <span>{{ formatDeadline(challenge.deadline) }}</span>
-                    </div>
-                    }
-                  </div>
-
-                  <div class="challenge-tags">
-                    @for (tag of challenge.tags; track tag) {
-                    <span class="tag">#{{ tag }}</span>
-                    }
-                  </div>
-                </div>
-
-                <div class="challenge-actions">
-                  <a class="btn ghost" [href]="'#challenge-' + challenge.id">Learn more</a>
-                  <a class="btn primary" [href]="'#join-' + challenge.id">Join challenge</a>
-                </div>
-
-                <app-comments
-                  [entityId]="challenge.id"
-                  [entityType]="'challenge'"
-                  [allComments]="comments"
-                  [compact]="true">
-                </app-comments>
-              </div>
-            </article>
-
-            <app-challenge-ideas 
-              [challengeId]="challenge.id" 
-              [allIdeas]="ideas"
-              [compact]="true">
+            <app-challenge-card [challenge]="challenge" [ideasCount]="getIdeasCount(challenge.id)"
+              (voteChallenge)="onVoteChallenge($event)">
+            </app-challenge-card>
+            <app-challenge-ideas [challengeId]="challenge.id" [allIdeas]="ideas" [compact]="true">
             </app-challenge-ideas>
+            <app-comments [entityId]="challenge.id" [entityType]="'challenge'" [allComments]="comments"
+              [compact]="true">
+            </app-comments>
           </div>
           }
         </div>
       </div>
-
+      <!-- NOTE: Tabs are currently disabled; both sections are shown together. -->
       <!-- Ideas Tab -->
-      <div class="tab-content" [class.active]="activeTab === 'ideas'" id="ideas-tab">
+      <!-- <div class="tab-content" [class.active]="activeTab === 'ideas'" id="ideas-tab">
         <div class="ideas-header">
           <div class="ideas-actions">
             <a class="btn primary" href="#submit-idea">Submit your idea</a>
@@ -156,7 +96,7 @@
           </article>
           }
         </div>
-      </div>
+      </div> -->
     </div>
   </section>
 

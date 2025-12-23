@@ -12,9 +12,9 @@
   --accent: #7af0b8;
   --border: rgba(255, 255, 255, .08);
   --shadow: 0 8px 30px rgba(0, 0, 0, .3);
-    /* --bg: #f7f8fa;
-  --surface: #ffffff;
-  --ink: #0f172a; 
+    /* --bg: #f7f8fa; */
+  /* --surface: #ffffff; */
+  /* --ink: #0f172a; 
   --muted: #64748b; 
   --primary: #2563eb; 
   --primary-600: #1d4ed8;
@@ -98,9 +98,9 @@ a {
   transition: transform .06s ease, background .2s ease;
 }
 
-.btn:hover {
+/* .btn:hover {
   transform: translateY(-1px);
-}
+} */
 
 .btn.ghost {
   background: transparent;

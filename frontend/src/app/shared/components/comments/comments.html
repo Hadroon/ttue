@@ -6,6 +6,7 @@
     </div>
 
     <div class="comments-controls">
+      @if(!compact) {
       <div class="control-group">
         <label for="sort-comments-{{ entityId }}">Sort:</label>
         <select id="sort-comments-{{ entityId }}" (change)="onSortChange($event)" [(ngModel)]="sortBy">
@@ -14,7 +15,7 @@
           <option value="oldest">Oldest first</option>
         </select>
       </div>
-      
+    }
       <button class="btn primary sm" (click)="toggleCommentBox()">
         {{ showCommentBox ? 'Cancel' : 'Add comment' }}
       </button>
@@ -129,7 +130,7 @@
       }
     </div>
 
-    @if (compact && filteredComments.length > displayedComments.length) {
+    @if (!compact && filteredComments.length > displayedComments.length) {
       <div class="show-more">
         <a class="btn ghost sm" href="#view-all-comments">
           View all {{ filteredComments.length }} comments

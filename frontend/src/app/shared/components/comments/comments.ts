@@ -65,7 +65,7 @@ export class Comments implements OnInit {
 
   updateDisplayedComments() {
     if (this.compact) {
-      this.displayedComments = this.filteredComments.slice(0, 3);
+      this.displayedComments = this.filteredComments.slice(0, 1);
     } else {
       this.displayedComments = this.filteredComments;
     }

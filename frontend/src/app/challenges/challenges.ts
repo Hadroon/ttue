@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { Header, ChallengeIdeas, Comments } from '../shared/components';
+import { Header, ChallengeIdeas, Comments, ChallengeCard } from '../shared/components';
 import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 
 @Component({
   selector: 'app-challenges',
-  imports: [Header, ChallengeIdeas, Comments],
+  imports: [Header, ChallengeIdeas, Comments, ChallengeCard],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })
@@ -177,30 +177,6 @@ export class Challenges {
 
   switchTab(tabName: 'challenges' | 'ideas') {
     this.activeTab = tabName;
-  }
-
-  getUrgencyClass(urgency: string): string {
-    switch (urgency) {
-      case 'Critical': return 'urgency-critical';
-      case 'High': return 'urgency-high';
-      case 'Medium': return 'urgency-medium';
-      default: return 'urgency-low';
-    }
-  }
-
-  formatDeadline(deadline?: Date): string {
-    if (!deadline) return '';
-    const now = new Date();
-    const timeDiff = deadline.getTime() - now.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-    if (daysDiff < 0) return 'Deadline passed';
-    if (daysDiff === 0) return 'Due today';
-    if (daysDiff === 1) return 'Due tomorrow';
-    if (daysDiff < 30) return `${daysDiff} days left`;
-
-    const monthsDiff = Math.ceil(daysDiff / 30);
-    return `${monthsDiff} month${monthsDiff > 1 ? 's' : ''} left`;
   }
 
   getStatusClass(status: string): string {

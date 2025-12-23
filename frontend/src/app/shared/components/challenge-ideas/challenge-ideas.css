@@ -2,10 +2,12 @@
 
 .challenge-ideas-container {
   padding: 20px 20px 20px 24px;
-  background: var(--card);
+  /* background: rgba(110,168,255,0.10); */
+  background: rgba(245,200,140,0.12);
+  /* background: red; */
   border: 1px solid var(--border);
   border-left: none;
-  border-radius: 0 16px 16px 0;
+  border-radius: 0 16px 0 0;
   box-shadow: var(--shadow);
   transition: all 0.3s ease;
   position: relative;
@@ -409,9 +411,9 @@
 
 /* Dark/Light Mode Support */
 @media (prefers-color-scheme: light) {
-  .challenge-ideas-container {
+  /* .challenge-ideas-container {
     background: rgba(0, 0, 0, 0.02);
-  }
+  } */
 
   .challenge-ideas-container.expanded {
     background: rgba(0, 0, 0, 0.04);
