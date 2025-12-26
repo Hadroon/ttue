@@ -1,0 +1,53 @@
+.challenge-with-ideas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 0;
+  align-items: stretch;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+:host ::ng-deep .challenge-with-ideas app-challenge-card {
+  border-radius: 16px 0 0 0;
+}
+
+:host ::ng-deep .challenge-with-ideas app-challenge-ideas {
+  min-width: 380px;
+  border-radius: 0 0 0 0;
+}
+
+:host ::ng-deep .challenge-with-ideas app-comments {
+  grid-column: 1 / 3;
+  border-radius: 0 0 16px 16px;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .challenges-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .challenge-with-ideas {
+    grid-template-columns: 1fr;
+  }
+
+  :host ::ng-deep .challenge-with-ideas app-challenge-ideas {
+    min-width: auto;
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  :host ::ng-deep .challenge-with-ideas app-comments {
+    grid-column: 1;
+    border-radius: 0 0 16px 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .challenge-with-ideas {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

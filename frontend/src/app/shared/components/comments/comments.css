@@ -337,7 +337,7 @@
 }
 
 /* Buttons */
-.btn {
+/* .btn {
   display: inline-block;
   padding: 10px 20px;
   border-radius: 8px;
@@ -348,9 +348,9 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
-}
+} */
 
-.btn.primary {
+/* .btn.primary {
   background: linear-gradient(135deg, var(--brand), #10b981);
   color: #0a0a0a;
   box-shadow: 0 2px 8px rgba(122, 240, 184, 0.3);
@@ -366,7 +366,7 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-}
+} */
 
 .btn.ghost {
   background: transparent;

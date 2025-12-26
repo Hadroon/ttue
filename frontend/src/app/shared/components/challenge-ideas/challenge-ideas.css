@@ -333,7 +333,7 @@
 }
 
 /* Button Styles */
-.btn {
+/* .btn {
   display: inline-block;
   padding: 10px 20px;
   border-radius: 8px;
@@ -344,11 +344,11 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
-}
+} */
 
-.btn.primary {
+/* .btn.primary {
   background: linear-gradient(135deg, var(--brand), #10b981);
-  color: #0a0a0a;
+  color: #ffffff;
   box-shadow: 0 2px 8px rgba(122, 240, 184, 0.3);
 }
 
@@ -356,14 +356,18 @@
   background: linear-gradient(135deg, #7af0b8, var(--brand));
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(122, 240, 184, 0.4);
-}
+} */
 
-.btn.sm {
+/* .btn.sm {
   padding: 8px 16px;
   font-size: 13px;
-}
+} */
 
 @media (max-width: 768px) {
+    .challenge-ideas-container {
+    padding: 12px;
+    border-radius: 0 0 0 0;
+  }
   .ideas-header {
     flex-direction: column;
     align-items: stretch;
@@ -386,6 +390,7 @@
 @media (max-width: 480px) {
   .challenge-ideas-container {
     padding: 12px;
+    border-radius: 0 0 0 0;
   }
 
   .idea-card-mini {

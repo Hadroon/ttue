@@ -29,16 +29,12 @@
       <div class="tab-content" [class.active]="activeTab === 'challenges'" id="challenges-tab">
         <div class="challenges-grid">
           @for (challenge of challenges; track challenge.id) {
-          <div class="challenge-with-ideas">
-            <app-challenge-card [challenge]="challenge" [ideasCount]="getIdeasCount(challenge.id)"
+            <app-challenge-item 
+              [challenge]="challenge" 
+              [allIdeas]="ideas" 
+              [allComments]="comments"
               (voteChallenge)="onVoteChallenge($event)">
-            </app-challenge-card>
-            <app-challenge-ideas [challengeId]="challenge.id" [allIdeas]="ideas" [compact]="true">
-            </app-challenge-ideas>
-            <app-comments [entityId]="challenge.id" [entityType]="'challenge'" [allComments]="comments"
-              [compact]="true">
-            </app-comments>
-          </div>
+            </app-challenge-item>
           }
         </div>
       </div>

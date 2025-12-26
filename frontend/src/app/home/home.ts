@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Header, ChallengeGrid2x2 } from '../shared/components';
+import { Header, ChallengeGrid2x2, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem } from '../shared/components';
 import { ApiService } from '../shared/services/api.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
@@ -11,7 +11,7 @@ import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Header, ChallengeGrid2x2, FormsModule, MatFormFieldModule, MatInputModule],
+  imports: [RouterLink, Header, ChallengeGrid2x2, FormsModule, MatFormFieldModule, MatInputModule, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -26,6 +26,23 @@ export class Home implements OnInit {
     let needWelcome = window.location.hostname?.toString().includes('localhost')
     this.welcome.set(needWelcome);
 }
+
+  // getIdeasCount(challengeId: string): number {
+  //   return this.ideas.filter(i => i.challengeId === challengeId).length;
+  // }
+
+    onVoteChallenge(challengeId: string) {
+    const challenge = this.challenges.find(c => c.id === challengeId);
+    if (challenge) {
+      if (challenge.voted) {
+        challenge.votes--;
+        challenge.voted = false;
+      } else {
+        challenge.votes++;
+        challenge.voted = true;
+      }
+    }
+  }
 
   challenges: Challenge[] = [
     {
@@ -99,17 +116,17 @@ export class Home implements OnInit {
       createdAt: new Date('2025-09-01'),
       challengeId: 'climate-adaptation'
     },
-    {
-      id: 'urban-cooling',
-      title: 'Smart Urban Cooling Networks',
-      description: 'Deploy interconnected green corridors and reflective surfaces to reduce urban heat islands in densely populated areas.',
-      author: 'Dr. James Liu',
-      votes: 98,
-      category: 'Environment',
-      status: 'New',
-      createdAt: new Date('2025-09-12'),
-      challengeId: 'climate-adaptation'
-    }
+    // {
+    //   id: 'urban-cooling',
+    //   title: 'Smart Urban Cooling Networks',
+    //   description: 'Deploy interconnected green corridors and reflective surfaces to reduce urban heat islands in densely populated areas.',
+    //   author: 'Dr. James Liu',
+    //   votes: 98,
+    //   category: 'Environment',
+    //   status: 'New',
+    //   createdAt: new Date('2025-09-12'),
+    //   challengeId: 'climate-adaptation'
+    // }
   ];
 
   comments: Comment[] = [

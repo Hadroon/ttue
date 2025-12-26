@@ -103,7 +103,7 @@
         <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
       </div>
 
-      <div class="ideas-challenges-tabs">
+      <!-- <div class="ideas-challenges-tabs">
         <button class="tab-btn" [class.active]="activeTab === 'challenges'" data-tab="challenges"
           (click)="switchTab('challenges')">
           Active Challenges
@@ -111,132 +111,37 @@
         <button class="tab-btn" [class.active]="activeTab === 'ideas'" data-tab="ideas" (click)="switchTab('ideas')">
           Community Ideas
         </button>
-      </div>
+      </div> -->
 
       <!-- Challenges Tab -->
-      <div class="tab-content" [class.active]="activeTab === 'challenges'" id="challenges-tab">
         <div class="challenges-grid">
           @for (challenge of challenges; track challenge.id) {
-          <article class="challenge-card">
-            <div class="challenge-header">
-              <div class="challenge-meta">
-                <span class="chip">{{ challenge.category }}</span>
-                <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
-                  {{ challenge.urgency }}
-                </span>
-              </div>
-              @if (challenge.rewardPool) {
-              <div class="reward-pool">{{ challenge.rewardPool }}</div>
-              }
-            </div>
-
-            <div class="challenge-body">
-              <h3>{{ challenge.title }}</h3>
-              <p class="challenge-description">{{ challenge.description }}</p>
-
-              <div class="challenge-stats">
-                <div class="stat-item">
-                  <span class="stat-icon">👥</span>
-                  <span>{{ challenge.participantCount }} participants</span>
-                </div>
-                @if (challenge.deadline) {
-                <div class="stat-item">
-                  <span class="stat-icon">⏱️</span>
-                  <span>{{ formatDeadline(challenge.deadline) }}</span>
-                </div>
-                }
-              </div>
-
-              <div class="challenge-tags">
-                @for (tag of challenge.tags; track tag) {
-                <span class="tag">#{{ tag }}</span>
-                }
-              </div>
-            </div>
-
-            <div class="challenge-actions">
-              <a class="btn ghost" [href]="'#challenge-' + challenge.id">Learn more</a>
-              <a class="btn primary" [href]="'#join-' + challenge.id">Join challenge</a>
-            </div>
-          </article>
+            <app-challenge-item 
+              [challenge]="challenge" 
+              [allIdeas]="ideas" 
+              [allComments]="comments"
+              (voteChallenge)="onVoteChallenge($event)">
+            </app-challenge-item>
           }
         </div>
-      </div>
-
-      <!-- Ideas Tab -->
-      <div class="tab-content" [class.active]="activeTab === 'ideas'" id="ideas-tab">
-        <div class="ideas-header">
-          <div class="ideas-actions">
-            <a class="btn primary" href="#submit-idea">Submit your idea</a>
-            <div class="sort-options">
-              <label for="sort-ideas">Sort by:</label>
-              <select id="sort-ideas">
-                <option value="votes">Most voted</option>
-                <option value="recent">Most recent</option>
-                <option value="status">Status</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="ideas-grid">
-          @for (idea of ideas; track idea.id) {
-          <article class="idea-card">
-            <div class="idea-header">
-              <div class="idea-meta">
-                <span class="chip">{{ idea.category }}</span>
-                <span class="status-badge" [class]="getStatusClass(idea.status)">
-                  {{ idea.status }}
-                </span>
-              </div>
-              <div class="idea-votes">
-                <button class="vote-btn" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
-                  <span class="vote-icon">⬆</span>
-                  <span class="vote-count">{{ idea.votes }}</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="idea-body">
-              <h3>{{ idea.title }}</h3>
-              <p class="idea-description">{{ idea.description }}</p>
-
-              <div class="idea-author">
-                <span>by {{ idea.author }}</span>
-                <time [dateTime]="idea.createdAt.toISOString()">
-                  {{ idea.createdAt.toLocaleDateString() }}
-                </time>
-              </div>
-            </div>
-
-            <div class="idea-actions">
-              <a class="btn ghost" [href]="'#idea-' + idea.id">View details</a>
-              <a class="btn secondary" [href]="'#discuss-' + idea.id">Discuss</a>
-            </div>
-          </article>
-          }
-        </div>
-      </div>
-
-      <div class="section-footer">
+      <!-- <div class="section-footer">
         <a class="link" href="#all-challenges">View all challenges</a>
         <span class="separator">•</span>
         <a class="link" href="#all-ideas">Browse all ideas</a>
         <span class="separator">•</span>
         <a class="link" href="#leaderboard">Community leaderboard</a>
-      </div>
+      </div> -->
     </div>
   </section>
 
   <!-- ===== Challenge Detail Grid ===== -->
-  <section class="section" id="challenge-detail" style="background: var(--panel);">
-    <div class="container">
-      <div class="section-head">
+  <!-- <section class="section" id="challenge-detail" style="background: var(--panel);"> -->
+      <!-- <div class="section-head">
         <h2>Challenge Spotlight</h2>
         <p class="section-subtitle">Explore a featured challenge with related ideas and community discussion</p>
-      </div>
+      </div> -->
 
-      <app-challenge-grid-2x2
+      <!-- <app-challenge-grid-2x2
         [challenge]="challenges[0]"
         [ideas]="getIdeasForChallenge(challenges[0]?.id || '')"
         [comments]="getCommentsForChallenge(challenges[0]?.id || '')"
@@ -245,9 +150,8 @@
         (voteIdea)="onVoteIdea($event)"
         (voteComment)="onVoteComment($event)"
         (viewAllComments)="onViewAllComments($event)">
-      </app-challenge-grid-2x2>
-    </div>
-  </section>
+      </app-challenge-grid-2x2> -->
+  <!-- </section> -->
 
   <!-- ===== Featured proposals ===== -->
   <section class="section" id="proposals">

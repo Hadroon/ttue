@@ -12,20 +12,20 @@
   --accent: #7af0b8;
   --border: rgba(255, 255, 255, .08);
   --shadow: 0 8px 30px rgba(0, 0, 0, .3);
-    /* --bg: #f7f8fa; */
-  /* --surface: #ffffff; */
-  /* --ink: #0f172a; 
-  --muted: #64748b; 
-  --primary: #2563eb; 
-  --primary-600: #1d4ed8;
-  --accent: #14b8a6; 
-  --success-bg: #e8f9f1;
-  --success: #0f766e;
-  --danger-bg: #ffe8e8;
-  --danger: #b91c1c;
-  --border: #e5e7eb;
-  --chip: #eef2ff;  */
 }
+/* --bg: #f7f8fa; */
+/* --surface: #ffffff; */
+/* --ink: #0f172a; 
+--muted: #64748b; 
+--primary: #2563eb; 
+--primary-600: #1d4ed8;
+--accent: #14b8a6; 
+--success-bg: #e8f9f1;
+--success: #0f766e;
+--danger-bg: #ffe8e8;
+--danger: #b91c1c;
+--border: #e5e7eb;
+--chip: #eef2ff;  */
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -85,7 +85,7 @@ a {
 }
 
 /* ===== Buttons ===== */
-.btn {
+/* .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -96,13 +96,13 @@ a {
   text-decoration: none;
   box-shadow: var(--shadow);
   transition: transform .06s ease, background .2s ease;
-}
+} */
 
 /* .btn:hover {
   transform: translateY(-1px);
 } */
 
-.btn.ghost {
+/* .btn.ghost {
   background: transparent;
 }
 
@@ -123,6 +123,44 @@ a {
 .btn.lg {
   padding: 14px 18px;
   font-weight: 600;
+} */
+
+.btn {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  /* font-weight: 600; */
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn.primary {
+  background: var(--brand-600);
+  /* background: #121938; */
+  /* background: linear-gradient(135deg, var(--brand), #10b981); */
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(122, 240, 184, 0.3);
+}
+
+/* .btn.primary:hover {
+  background: linear-gradient(135deg, #7af0b8, var(--brand));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(122, 240, 184, 0.4);
+} */
+
+.btn.sm {
+  padding: 8px 16px;
+  /* font-size: 13px; */
+}
+
+.btn.secondary {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 /* ===== Footer ===== */
