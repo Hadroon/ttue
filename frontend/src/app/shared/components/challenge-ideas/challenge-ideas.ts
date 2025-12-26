@@ -2,11 +2,12 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Idea } from '../../models/baseModels';
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: 'app-challenge-ideas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './challenge-ideas.html',
   styleUrl: './challenge-ideas.css'
 })

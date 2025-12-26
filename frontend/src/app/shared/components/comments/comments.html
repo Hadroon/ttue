@@ -1,7 +1,8 @@
 <div class="comments-container">
   <div class="comments-header">
     <div class="comments-count">
-      <span class="count-icon">💬</span>
+      <!-- <span class="count-icon">💬</span> -->
+      <mat-icon class="material-symbols-outlined">comment</mat-icon>
       <span class="count-text">{{ filteredComments.length }} comment{{ filteredComments.length !== 1 ? 's' : '' }}</span>
     </div>
 
@@ -40,7 +41,7 @@
 
   @if (filteredComments.length === 0) {
     <div class="empty-state">
-      <div class="empty-icon">💬</div>
+      <!-- <div class="empty-icon">💬</div> -->
       <p class="empty-message">No comments yet</p>
       <p class="empty-submessage">Be the first to share your thoughts!</p>
     </div>

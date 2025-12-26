@@ -1,5 +1,8 @@
 /* Global styles for the Earth Forum application */
 
+/* Import Material Icons */
+@import url('https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined');
+
 /* ===== CSS Custom Properties (Tokens) ===== */
 :root {
   --bg: #0b1020;
@@ -12,6 +15,14 @@
   --accent: #7af0b8;
   --border: rgba(255, 255, 255, .08);
   --shadow: 0 8px 30px rgba(0, 0, 0, .3);
+  --yellow: #feb91f;
+  --blue: #2387ab;
+  --green: #5a9e39;
+  --orange: #fd8723;
+  --yellow-rgba: rgba(254, 185, 31, 0.1);
+  --blue-rgba: rgba(35, 135, 171, 1);
+  --green-rgba: rgba(90, 158, 57, 0.1);
+  --orange-rgba: rgba(253, 135, 35, 0.1);
 }
 /* --bg: #f7f8fa; */
 /* --surface: #ffffff; */
@@ -313,3 +324,41 @@ a {
 
 html, body { height: 100%; }
 /* body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; } */
+
+/* Ensure Material Icons render correctly */
+/* .material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+} */
+
+/* mat-icon {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+  vertical-align: middle;
+} */

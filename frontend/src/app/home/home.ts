@@ -8,10 +8,11 @@ import { environment } from '../shared/environments/environment';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Challenge, Idea, Comment } from '../shared/models/baseModels';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Header, ChallengeGrid2x2, FormsModule, MatFormFieldModule, MatInputModule, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem],
+  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule, ChallengeItem, MatIconModule],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })

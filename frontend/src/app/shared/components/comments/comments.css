@@ -26,6 +26,8 @@
   /* background: rgba(255, 214, 165, 0.14);  */
   /* background: rgba(230, 220, 200, 0.20);  */
   background: rgba(110,168,255,0.10); 
+  /* background: var(--blue-rgba);  */
+
 
   /* border-top: 2px solid var(--accent); */
   border-radius: 0 0 16px 16px;
@@ -146,7 +148,6 @@
 /* Empty State */
 .empty-state {
   text-align: center;
-  padding: 40px 16px;
 }
 
 .empty-icon {
