@@ -1,6 +1,23 @@
 <app-header></app-header>
 
 <main class="workbench" id="main" role="main">
+  <nav class="page-nav" role="navigation" aria-label="In-page navigation">
+    <div class="page-nav-inner">
+      <button type="button" 
+              class="nav-link" 
+              [class.active]="activeSection() === 'draft'"
+              (click)="scrollToSection('draft')">Draft</button>
+      <button type="button" 
+              class="nav-link" 
+              [class.active]="activeSection() === 'diff'"
+              (click)="scrollToSection('diff')">Diff</button>
+      <button type="button" 
+              class="nav-link" 
+              [class.active]="activeSection() === 'comments'"
+              (click)="scrollToSection('comments')">Comments</button>
+    </div>
+  </nav>
+
   <section class="section hero compose-hero">
     <div class="container compose-hero-inner">
       <div class="compose-hero-copy">
@@ -53,9 +70,9 @@
     </div>
   </section>
 
-  <section class="section compose-board" id="editor">
+  <section class="section compose-board" id="draft">
     <div class="container compose-grid">
-      <article class="card editor-panel" aria-label="Editor panel">
+      <article class="card editor-panel" id="editor" aria-label="Editor panel">
         <header class="panel-head">
           <div>
             <h2>Draft workspace</h2>
@@ -103,7 +120,7 @@
         }
       </article>
 
-      <article class="card diff-panel" aria-label="Diff panel">
+      <article class="card diff-panel" id="diff" aria-label="Diff panel">
         <header class="panel-head">
           <div>
             <h2>Live diff</h2>

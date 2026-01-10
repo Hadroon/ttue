@@ -1,9 +1,11 @@
 /* ===== Header Component Styles ===== */
 
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 40;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   backdrop-filter: saturate(120%) blur(10px);
   background-color: color-mix(in oklab, rgb(247, 249, 255) 55%, transparent);
   border-bottom: 1px solid var(--border);

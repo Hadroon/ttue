@@ -43,6 +43,7 @@ export class ArticleWorkbench implements AfterViewInit {
 
   readonly isBrowser: boolean;
   readonly isEditing: WritableSignal<boolean> = signal(false);
+  readonly activeSection: WritableSignal<string> = signal('draft');
 
   readonly previousDraft: WritableSignal<string> = signal(this.publishedHtml);
   readonly draftHtml: WritableSignal<string> = signal(this.draftSeedHtml);
@@ -142,6 +143,26 @@ export class ArticleWorkbench implements AfterViewInit {
           this.editorArea.nativeElement.innerHTML = this.draftHtml();
         }
       }, 0);
+    }
+  }
+
+  scrollToSection(sectionId: string): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navHeight = 64; // Height of page-nav
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - navHeight - 20;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+
+      this.activeSection.set(sectionId);
     }
   }
 
