@@ -42,6 +42,7 @@ export class ArticleWorkbench implements AfterViewInit {
   private readonly draftSeedHtml = `<h2>Citywide Climate Resilience and Justice Act</h2><p>Section I. Establish a Climate Resilience Fund to accelerate coastal, heat, and wildfire defenses in every district, beginning with communities facing the highest risk over the last five years.</p><p>The fund shall dedicate no less than 45% to frontline neighborhoods and must publish quarterly dashboards that track project progress, contractor diversity, and measurable risk reductions.</p><p>Section II. Direct the Infrastructure Directorate to map vulnerable assets, publish open procurement schedules, and co-design mitigation timelines with resident councils.</p><ul><li>Phase critical hospital and utility hardening within 18 months.</li><li>Deliver safe evacuation routes and cooling access by the second summer after passage.</li><li>Provide translation and accessibility for every public meeting.</li></ul><p>Section III. Establish a standing Community Adaptation Assembly with voting seats for residents, planners, public health professionals, and small business owners.</p><p>The Assembly shall publish binding recommendations, diff reports comparing revisions, and score departmental compliance each quarter.</p>`;
 
   readonly isBrowser: boolean;
+  readonly isEditing: WritableSignal<boolean> = signal(false);
 
   readonly previousDraft: WritableSignal<string> = signal(this.publishedHtml);
   readonly draftHtml: WritableSignal<string> = signal(this.draftSeedHtml);
@@ -130,6 +131,18 @@ export class ArticleWorkbench implements AfterViewInit {
     }
 
     this.draftHtml.set(this.editorArea.nativeElement.innerHTML);
+  }
+
+  toggleEditMode(): void {
+    this.isEditing.set(!this.isEditing());
+    if (this.isEditing()) {
+      // Sync content to DOM when entering edit mode
+      setTimeout(() => {
+        if (this.editorArea) {
+          this.editorArea.nativeElement.innerHTML = this.draftHtml();
+        }
+      }, 0);
+    }
   }
 
   applyFormatting(command: string): void {

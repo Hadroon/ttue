@@ -62,12 +62,18 @@
             <p>Format content, cite evidence, and refine your narrative for publication.</p>
           </div>
           <div class="panel-actions">
+            <button type="button" class="btn" [class.primary]="!isEditing()" (click)="toggleEditMode()">
+              {{ isEditing() ? 'Done Editing' : 'Edit' }}
+            </button>
+            @if (isEditing()) {
             <button type="button" class="link-btn" (click)="formatBlock('H2')">H2</button>
             <button type="button" class="link-btn" (click)="formatBlock('P')">Paragraph</button>
             <button type="button" class="link-btn" (click)="formatBlock('BLOCKQUOTE')">Quote</button>
+            }
           </div>
         </header>
 
+        @if (isEditing()) {
         <div class="editor-toolbar" role="toolbar" aria-label="Formatting controls">
           @for (action of formattingActions; track action.command) {
           <button type="button"
@@ -82,7 +88,11 @@
 
         <div class="editor-surface" #editorArea contenteditable="true" spellcheck="true" (input)="onEditorInput()" aria-label="Article editor" data-placeholder="Start drafting your article...">
         </div>
+        } @else {
+        <div class="editor-view" [innerHTML]="draftHtml()" aria-label="Article preview"></div>
+        }
 
+        @if (isEditing()) {
         <footer class="panel-footer">
           <div class="footer-actions">
             <button type="button" class="btn secondary" (click)="revertToSnapshot()">Revert to snapshot</button>
@@ -90,6 +100,7 @@
           </div>
           <small class="muted-note">Snapshots capture the exact markup for legal auditing and change logs.</small>
         </footer>
+        }
       </article>
 
       <article class="card diff-panel" aria-label="Diff panel">
