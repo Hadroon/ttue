@@ -1,6 +1,37 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgres:16
+    container_name: earth-forum-postgres
+    environment:
+      POSTGRES_DB: ttue_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - earth-forum-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: earth-forum-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
   app:
     build: 
       context: .
@@ -8,7 +39,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - DATABASE_URL=${DATABASE_URL:-postgresql://localhost:5432/ttue_dev}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/ttue_dev}
       - LOG_LEVEL=${LOG_LEVEL:-debug}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:4200,http://localhost:3000}
     ports:
@@ -19,3 +50,10 @@ services:
       # Frontend changes require rebuild since it's compiled into the image
     env_file:
       - .env.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  earth-forum-pgdata:
+    driver: local
