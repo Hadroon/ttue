@@ -9,6 +9,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { AddChallengeModalComponent } from '../shared/components/add-challenge-modal/add-challenge-modal';
 
 @Component({
   selector: 'app-home',
@@ -19,6 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
 export class Home implements OnInit {
   environment = environment;
   apiService = inject(ApiService);
+  dialog = inject(MatDialog);
   activeTab: 'challenges' | 'ideas' = 'challenges';
   welcome : WritableSignal<boolean> = signal(false);
   welcomePassword = '';
@@ -56,19 +59,15 @@ export class Home implements OnInit {
 
   onVoteChallenge(challengeId: number) {
     this.apiService.voteChallenge(challengeId).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          const challenge = this.challenges().find(c => c.id === challengeId);
-          if (challenge) {
-            if (response.data.voted) {
-              challenge.votes++;
-              challenge.voted = true;
-            } else {
-              challenge.votes--;
-              challenge.voted = false;
-            }
-          }
-        }
+      next: (response: { message: string; voted: boolean }) => {
+        const voted = response.voted;
+        this.challenges.update(challenges => 
+          challenges.map(c => 
+            c.id === challengeId 
+              ? { ...c, votes: c.votes + (voted ? 1 : -1), voted }
+              : c
+          )
+        );
       },
       error: (error) => {
         console.error('Error voting on challenge:', error);
@@ -238,6 +237,22 @@ export class Home implements OnInit {
       error: (error) => {
         console.error('Error checking welcome:', error);
         // Optionally show error message to user
+      }
+    });
+  }
+
+  openAddChallengeModal() {
+    const dialogRef = this.dialog.open(AddChallengeModalComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      panelClass: 'add-challenge-modal'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.success) {
+        console.log('Challenge created:', result.challenge);
+        // Reload challenges to show the new one
+        this.loadChallenges();
       }
     });
   }

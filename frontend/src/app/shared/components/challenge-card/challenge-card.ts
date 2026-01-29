@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, Signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Challenge } from '../../models/baseModels';
 
@@ -10,7 +10,7 @@ import { Challenge } from '../../models/baseModels';
   styleUrl: './challenge-card.css'
 })
 export class ChallengeCard {
-  @Input() challenge!: Challenge;
+  challenge = input.required<Challenge>();
   @Input() ideasCount: number = 0;
   @Output() voteChallenge = new EventEmitter<number>();
 
@@ -39,6 +39,6 @@ export class ChallengeCard {
   }
 
   onVote() {
-    this.voteChallenge.emit(this.challenge.id);
+    this.voteChallenge.emit(this.challenge().id);
   }
 }

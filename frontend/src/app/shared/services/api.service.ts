@@ -411,7 +411,7 @@ export class ApiService {
   /**
    * Get all challenges with pagination
    */
-  getChallenges(page: number = 1, limit: number = 2): Observable<Challenge[]> {
+  getChallenges(page: number = 1, limit: number = 5): Observable<Challenge[]> {
     return this.http.get<Challenge[]>(`${this.baseUrl}/challenges`, {
       params: { 
         page: page.toString(), 
@@ -446,7 +446,7 @@ export class ApiService {
    * Vote on a challenge
    */
   voteChallenge(challengeId: number) {
-    return this.http.post<ApiResponse<{ message: string; voted: boolean }>>(
+    return this.http.post<{ message: string; voted: boolean }>(
       `${this.baseUrl}/challenges/vote`,
       { challengeId }
     );

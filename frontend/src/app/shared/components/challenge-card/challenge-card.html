@@ -1,8 +1,8 @@
 <article class="challenge-card">
   <div class="challenge-vote">
-    <button class="vote-btn-large" [class.voted]="challenge.voted" (click)="onVote()" [attr.aria-label]="'Vote for ' + challenge.title">
+    <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()" [attr.aria-label]="'Vote for ' + challenge().title">
       <span class="vote-icon">▲</span>
-      <span class="vote-count">{{ challenge.votes }}</span>
+      <span class="vote-count">{{ challenge().votes }}</span>
     </button>
   </div>
   <div class="challenge-content">
@@ -21,8 +21,8 @@
     </div>
 
     <div class="challenge-body">
-      <h3>{{ challenge.title }}</h3>
-      <p class="challenge-description">{{ challenge.description }}</p>
+      <h3>{{ challenge().title }}</h3>
+      <p class="challenge-description">{{ challenge().description }}</p>
 
       <!-- <div class="challenge-stats">
         <div class="stat-item">
@@ -41,21 +41,21 @@
         }
       </div> -->
                     <div class="challenge-tags">
-        @for (tag of challenge.tags; track tag) {
+        @for (tag of challenge().tags; track tag) {
         <span class="tag">#{{ tag }}</span>
         }
       </div>
     </div>
 
                     <!-- <app-comments
-                  [entityId]="challenge.id"
+                  [entityId]="challenge().id"
                   [entityType]="'challenge'"
                   [allComments]="comments"
                   [compact]="true">
                 </app-comments> -->
     <div class="challenge-actions">
-      <a class="btn secondary sm" [href]="'#challenge-' + challenge.id">Learn more</a>
-      <a class="btn primary sm" [href]="'#join-' + challenge.id">Join challenge</a>
+      <a class="btn secondary sm" [href]="'#challenge-' + challenge().id">Learn more</a>
+      <a class="btn primary sm" [href]="'#join-' + challenge().id">Join challenge</a>
     </div>
   </div>
 </article>

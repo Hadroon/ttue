@@ -99,8 +99,14 @@
   <section class="section ideas-challenges" id="ideas-challenges">
     <div class="container">
       <div class="section-head">
-        <h2>Ideas & Challenges</h2>
-        <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
+        <div>
+          <h2>Ideas & Challenges</h2>
+          <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
+        </div>
+        <div class="section-head-actions">
+          <a class="link" routerLink="/challenges">See all</a>
+          <button class="btn primary" (click)="openAddChallengeModal()">Add challenge</button>
+        </div>
       </div>
 
       <!-- <div class="ideas-challenges-tabs">
@@ -116,6 +122,7 @@
       <!-- Challenges Tab -->
         <div class="challenges-grid">
           @for (challenge of challenges(); track challenge.id) {
+            <!-- TODO: redesign buttons, background color but darker -->
             <app-challenge-item 
               [challenge]="challenge" 
               [allIdeas]="ideas" 
