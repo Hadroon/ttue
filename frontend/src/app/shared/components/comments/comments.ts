@@ -1,8 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Comment } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
+import { AuthGuardService } from '../../services/auth-guard.service';
 
 @Component({
   selector: 'app-comments',
@@ -16,6 +17,8 @@ export class Comments implements OnInit {
   @Input() entityType: 'challenge' | 'idea' = 'challenge';
   @Input() allComments: Comment[] = [];
   @Input() compact: boolean = false;
+
+  private authGuard = inject(AuthGuardService);
 
   filteredComments: Comment[] = [];
   displayedComments: Comment[] = [];
@@ -79,6 +82,12 @@ export class Comments implements OnInit {
   }
 
   toggleCommentBox() {
+    if (!this.showCommentBox) {
+      // Opening comment box - check auth
+      if (!this.authGuard.requireAuth('comment on this')) {
+        return; // Auth modal shown, don't open comment box
+      }
+    }
     this.showCommentBox = !this.showCommentBox;
     if (!this.showCommentBox) {
       this.newCommentText = '';
@@ -86,6 +95,11 @@ export class Comments implements OnInit {
   }
 
   submitComment() {
+    // Double-check auth before submitting
+    if (!this.authGuard.requireAuth('comment on this')) {
+      return;
+    }
+
     if (this.newCommentText.trim()) {
       const newComment: Comment = {
         id: 'comment-' + Date.now(),
@@ -105,6 +119,10 @@ export class Comments implements OnInit {
   }
 
   startReply(commentId: string) {
+    // Check auth before allowing reply
+    if (!this.authGuard.requireAuth('reply to this comment')) {
+      return;
+    }
     this.replyToId = commentId;
     this.replyText = '';
   }
@@ -115,6 +133,11 @@ export class Comments implements OnInit {
   }
 
   submitReply(parentId: string) {
+    // Double-check auth before submitting
+    if (!this.authGuard.requireAuth('reply to this comment')) {
+      return;
+    }
+
     if (this.replyText.trim()) {
       const newReply: Comment = {
         id: 'reply-' + Date.now(),
@@ -135,6 +158,11 @@ export class Comments implements OnInit {
   }
 
   onVoteComment(commentId: string) {
+    // Check auth before voting
+    if (!this.authGuard.requireAuth('vote on comments')) {
+      return;
+    }
+
     const comment = this.allComments.find(c => c.id === commentId);
     if (comment) {
       if (comment.voted) {

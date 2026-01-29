@@ -5,6 +5,7 @@ import { config, logConfig } from "./config/app.config";
 import { db, testConnection } from "./db";
 import { sql } from "drizzle-orm";
 import { handleRegister, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
+import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
 import { handleCreatePost, handleGetPosts, handleGetPost, handleUpdatePost, handleDeletePost } from "./routes/posts";
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVotePost, handleVoteComment, handleGetPostVote } from "./routes/votes";
@@ -96,6 +97,14 @@ serve({
       }
       if (url.pathname === "/api/auth/profile" && req.method === "PUT") {
         return handleUpdateProfile(req);
+      }
+      
+      // Google OAuth routes
+      if (url.pathname === "/api/auth/google" && req.method === "POST") {
+        return handleGoogleAuth(req);
+      }
+      if (url.pathname === "/api/auth/google/config" && req.method === "GET") {
+        return handleGetGoogleConfig(req);
       }
       
       // Posts routes

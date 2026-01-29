@@ -6,9 +6,12 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash"), // Nullable for OAuth users
   displayName: text("display_name"),
   bio: text("bio"),
+  avatarUrl: text("avatar_url"), // For Google profile picture
+  googleId: text("google_id").unique(), // Google OAuth ID
+  authProvider: text("auth_provider").default("local").notNull(), // 'local' or 'google'
   reputation: integer("reputation").default(0).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -16,6 +19,7 @@ export const users = pgTable("users", {
 }, (table) => ({
   usernameIdx: index("username_idx").on(table.username),
   emailIdx: index("email_idx").on(table.email),
+  googleIdIdx: index("google_id_idx").on(table.googleId),
 }));
 
 // Posts table

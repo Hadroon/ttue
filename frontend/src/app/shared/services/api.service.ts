@@ -8,6 +8,8 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  displayName?: string;
+  avatarUrl?: string;
   reputation: number;
   created_at: string;
   updated_at: string;
@@ -303,6 +305,22 @@ export class ApiService {
       email,
       password
     });
+  }
+
+  /**
+   * Login with Google ID token
+   */
+  loginWithGoogle(idToken: string) {
+    return this.http.post<ApiResponse<{ user: User; token: string; isNewUser: boolean }>>(`${this.baseUrl}/auth/google`, {
+      idToken
+    });
+  }
+
+  /**
+   * Get Google OAuth configuration (client ID)
+   */
+  getGoogleConfig() {
+    return this.http.get<{ clientId: string | null; enabled: boolean }>(`${this.baseUrl}/auth/google/config`);
   }
 
   /**

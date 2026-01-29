@@ -1,0 +1,16 @@
+<div class="google-signin-container">
+  @if (isEnabled()) {
+    <div #googleButton></div>
+    
+    @if (isLoading()) {
+      <div class="loading-overlay">
+        <span class="loading-spinner"></span>
+        <span>Signing in...</span>
+      </div>
+    }
+  }
+  
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+  }
+</div>

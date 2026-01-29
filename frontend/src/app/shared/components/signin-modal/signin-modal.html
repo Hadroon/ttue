@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>{{ data?.title || 'Sign In' }}</h2>
+
+<mat-dialog-content>
+  @if (data && data.message) {
+    <p class="modal-message">{{ data.message }}</p>
+  }
+  <app-google-signin-button
+    (loginSuccess)="onGoogleLoginSuccess($event)"
+    (loginError)="onGoogleLoginError($event)">
+  </app-google-signin-button>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+</mat-dialog-actions>

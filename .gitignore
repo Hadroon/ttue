@@ -1,3 +1,5 @@
 node_modules
 .sail
 notes.txt
+.env
+.env.*

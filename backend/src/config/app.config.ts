@@ -20,6 +20,10 @@ export interface AppConfig {
     rateLimitWindowMs: number;
     rateLimitMaxRequests: number;
   };
+  google: {
+    clientId?: string;
+    clientSecret?: string;
+  };
   features: {
     registration: boolean;
     passwordReset: boolean;
@@ -51,6 +55,10 @@ function getConfig(): AppConfig {
       bcryptRounds: Number(process.env.BCRYPT_ROUNDS) || 12,
       rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
       rateLimitMaxRequests: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
     features: {
       registration: process.env.FEATURE_REGISTRATION !== 'false',
