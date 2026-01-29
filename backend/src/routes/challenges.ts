@@ -9,6 +9,12 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
   const userId = authResult instanceof Response ? null : (authResult.user?.userId ?? null);
 
   try {
+    // Parse pagination parameters from query string
+    const url = new URL(req.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const offset = (page - 1) * limit;
+
     const allChallenges = await db
       .select({
         id: challenges.id,
@@ -25,7 +31,9 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
         updatedAt: challenges.updatedAt,
       })
       .from(challenges)
-      .orderBy(desc(challenges.votes), desc(challenges.createdAt));
+      .orderBy(desc(challenges.votes), desc(challenges.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     // If user is authenticated, check which challenges they've voted on
     let userVotes: number[] = [];

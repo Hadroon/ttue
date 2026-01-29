@@ -409,10 +409,15 @@ export class ApiService {
   // Challenge methods
 
   /**
-   * Get all challenges
+   * Get all challenges with pagination
    */
-  getChallenges(): Observable<Challenge[]> {
-    return this.http.get<Challenge[]>(`${this.baseUrl}/challenges`);
+  getChallenges(page: number = 1, limit: number = 2): Observable<Challenge[]> {
+    return this.http.get<Challenge[]>(`${this.baseUrl}/challenges`, {
+      params: { 
+        page: page.toString(), 
+        limit: limit.toString() 
+      }
+    });
   }
 
   /**
