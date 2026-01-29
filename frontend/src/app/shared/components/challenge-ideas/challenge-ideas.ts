@@ -12,7 +12,7 @@ import { MatIconModule } from "@angular/material/icon";
   styleUrl: './challenge-ideas.css'
 })
 export class ChallengeIdeas implements OnInit {
-  @Input() challengeId!: string;
+  @Input() challengeId!: string | number;
   @Input() allIdeas: Idea[] = [];
   @Input() compact: boolean = true;
 

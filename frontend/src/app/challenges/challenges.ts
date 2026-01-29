@@ -13,7 +13,7 @@ export class Challenges {
 
   challenges: Challenge[] = [
     {
-      id: 'climate-adaptation',
+      id: 1,
       category: 'Environment',
       title: 'Climate Adaptation Strategies',
       description: 'Develop comprehensive policy frameworks for cities to adapt to climate change impacts including flooding, heat waves, and extreme weather events.',
@@ -25,7 +25,7 @@ export class Challenges {
       votes: 124
     },
     {
-      id: 'digital-equity',
+      id: 2,
       category: 'Technology',
       title: 'Digital Equity and Access',
       description: 'Create policies ensuring equitable access to digital infrastructure, devices, and digital literacy programs for underserved communities.',
@@ -37,7 +37,7 @@ export class Challenges {
       votes: 85
     },
     {
-      id: 'affordable-housing',
+      id: 3,
       category: 'Housing',
       title: 'Affordable Housing Innovation',
       description: 'Design innovative policy solutions to address the affordable housing crisis while promoting sustainable development.',
@@ -195,7 +195,7 @@ export class Challenges {
     }
   }
 
-  onVoteChallenge(challengeId: string) {
+  onVoteChallenge(challengeId: number) {
     const challenge = this.challenges.find(c => c.id === challengeId);
     if (challenge) {
       if (challenge.voted) {
@@ -208,7 +208,7 @@ export class Challenges {
     }
   }
 
-  getIdeasCount(challengeId: string): number {
-    return this.ideas.filter(i => i.challengeId === challengeId).length;
+  getIdeasCount(challengeId: number): number {
+    return this.ideas.filter(i => i.challengeId === challengeId.toString()).length;
   }
 }

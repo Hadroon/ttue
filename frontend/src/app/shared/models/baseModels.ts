@@ -11,7 +11,7 @@ export interface Idea {
 }
 
 export interface Challenge {
-  id: string;
+  id: number;
   category: string;
   title: string;
   description: string;

@@ -22,67 +22,59 @@ export class Home implements OnInit {
   activeTab: 'challenges' | 'ideas' = 'challenges';
   welcome : WritableSignal<boolean> = signal(false);
   welcomePassword = '';
+  challenges = signal<Challenge[]>([]);
+  isLoadingChallenges = false;
 
   ngOnInit() {
     let needWelcome = window.location.hostname?.toString().includes('localhost')
     this.welcome.set(needWelcome);
+    this.loadChallenges();
+  }
+
+  loadChallenges() {
+    this.isLoadingChallenges = true;
+    this.apiService.getChallenges().subscribe({
+      next: (challenges) => {
+        console.log('Loaded challenges:', challenges);
+        this.challenges.set(challenges.map(c => ({
+          ...c,
+          deadline: c.deadline ? new Date(c.deadline) : undefined
+        })));
+        this.isLoadingChallenges = false;
+        console.log('Processed challenges:', this.challenges());
+      },
+      error: (error) => {
+        console.error('Error loading challenges:', error);
+        this.isLoadingChallenges = false;
+      }
+    });
 }
 
   // getIdeasCount(challengeId: string): number {
   //   return this.ideas.filter(i => i.challengeId === challengeId).length;
   // }
 
-    onVoteChallenge(challengeId: string) {
-    const challenge = this.challenges.find(c => c.id === challengeId);
-    if (challenge) {
-      if (challenge.voted) {
-        challenge.votes--;
-        challenge.voted = false;
-      } else {
-        challenge.votes++;
-        challenge.voted = true;
+  onVoteChallenge(challengeId: number) {
+    this.apiService.voteChallenge(challengeId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const challenge = this.challenges().find(c => c.id === challengeId);
+          if (challenge) {
+            if (response.data.voted) {
+              challenge.votes++;
+              challenge.voted = true;
+            } else {
+              challenge.votes--;
+              challenge.voted = false;
+            }
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error voting on challenge:', error);
       }
-    }
+    });
   }
-
-  challenges: Challenge[] = [
-    {
-      id: 'climate-adaptation',
-      category: 'Environment',
-      title: 'Climate Adaptation Strategies',
-      description: 'Develop comprehensive policy frameworks for cities to adapt to climate change impacts including flooding, heat waves, and extreme weather events.',
-      urgency: 'Critical',
-      participantCount: 347,
-      rewardPool: '$50,000',
-      deadline: new Date('2025-12-15'),
-      tags: ['climate', 'adaptation', 'urban-planning', 'emergency-response'],
-      votes: 124
-    },
-    {
-      id: 'digital-equity',
-      category: 'Technology',
-      title: 'Digital Equity and Access',
-      description: 'Create policies ensuring equitable access to digital infrastructure, devices, and digital literacy programs for underserved communities.',
-      urgency: 'High',
-      participantCount: 892,
-      rewardPool: '$25,000',
-      deadline: new Date('2025-11-30'),
-      tags: ['digital-divide', 'accessibility', 'education', 'infrastructure'],
-      votes: 85
-    },
-    {
-      id: 'affordable-housing',
-      category: 'Housing',
-      title: 'Affordable Housing Innovation',
-      description: 'Design innovative policy solutions to address the affordable housing crisis while promoting sustainable development.',
-      urgency: 'Critical',
-      participantCount: 1456,
-      rewardPool: '$75,000',
-      deadline: new Date('2026-01-31'),
-      tags: ['housing', 'affordability', 'zoning', 'sustainability'],
-      votes: 203
-    }
-  ];
 
   ideas: Idea[] = [
     {
@@ -210,15 +202,15 @@ export class Home implements OnInit {
     }
   }
 
-  getIdeasForChallenge(challengeId: string): Idea[] {
-    return this.ideas.filter(idea => idea.challengeId === challengeId);
+  getIdeasForChallenge(challengeId: number): Idea[] {
+    return this.ideas.filter(idea => idea.challengeId === challengeId.toString());
   }
 
-  getCommentsForChallenge(challengeId: string): Comment[] {
-    return this.comments.filter(comment => comment.challengeId === challengeId);
+  getCommentsForChallenge(challengeId: number): Comment[] {
+    return this.comments.filter(comment => comment.challengeId === challengeId.toString());
   }
 
-  onChallengeClick(challengeId: string) {
+  onChallengeClick(challengeId: number) {
     console.log('Challenge clicked:', challengeId);
     // Navigate to challenge detail page or open modal
   }
@@ -228,7 +220,7 @@ export class Home implements OnInit {
     // Navigate to idea detail page or open modal
   }
 
-  onViewAllComments(challengeId: string) {
+  onViewAllComments(challengeId: number) {
     console.log('View all comments for challenge:', challengeId);
     // Navigate to full discussion page
   }

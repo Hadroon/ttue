@@ -16,11 +16,11 @@ export class ChallengeGrid2x2 {
   @Input() maxIdeas: number = 2;
   @Input() maxComments: number = 3;
 
-  @Output() challengeClick = new EventEmitter<string>();
+  @Output() challengeClick = new EventEmitter<number>();
   @Output() ideaClick = new EventEmitter<string>();
   @Output() voteIdea = new EventEmitter<string>();
   @Output() voteComment = new EventEmitter<string>();
-  @Output() viewAllComments = new EventEmitter<string>();
+  @Output() viewAllComments = new EventEmitter<number>();
 
   get filteredIdeas(): Idea[] {
     return this.ideas.slice(0, this.maxIdeas);

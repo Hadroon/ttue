@@ -13,7 +13,7 @@ import { AuthGuardService } from '../../services/auth-guard.service';
   styleUrl: './comments.css'
 })
 export class Comments implements OnInit {
-  @Input() entityId!: string;
+  @Input() entityId!: string | number;
   @Input() entityType: 'challenge' | 'idea' = 'challenge';
   @Input() allComments: Comment[] = [];
   @Input() compact: boolean = false;
@@ -107,8 +107,8 @@ export class Comments implements OnInit {
         content: this.newCommentText,
         createdAt: new Date(),
         votes: 0,
-        challengeId: this.entityType === 'challenge' ? this.entityId : undefined,
-        ideaId: this.entityType === 'idea' ? this.entityId : undefined
+        challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
+        ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined
       };
       
       this.allComments.push(newComment);
@@ -146,8 +146,8 @@ export class Comments implements OnInit {
         createdAt: new Date(),
         votes: 0,
         parentId: parentId,
-        challengeId: this.entityType === 'challenge' ? this.entityId : undefined,
-        ideaId: this.entityType === 'idea' ? this.entityId : undefined
+        challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
+        ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined
       };
       
       this.allComments.push(newReply);

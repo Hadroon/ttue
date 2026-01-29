@@ -51,6 +51,22 @@ export interface Vote {
   created_at: string;
 }
 
+export interface Challenge {
+  id: number;
+  category: string;
+  title: string;
+  description: string;
+  urgency: 'Low' | 'Medium' | 'High' | 'Critical';
+  participantCount: number;
+  rewardPool?: string;
+  deadline?: Date | string;
+  tags: string[];
+  votes: number;
+  voted?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PostRevision {
   id: number;
   post_id: number;
@@ -388,5 +404,46 @@ export class ApiService {
    */
   incrementPostViews(postId: number): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/posts/${postId}/view`, {});
+  }
+
+  // Challenge methods
+
+  /**
+   * Get all challenges
+   */
+  getChallenges(): Observable<Challenge[]> {
+    return this.http.get<Challenge[]>(`${this.baseUrl}/challenges`);
+  }
+
+  /**
+   * Get a single challenge by ID
+   */
+  getChallenge(challengeId: number): Observable<Challenge> {
+    return this.http.get<Challenge>(`${this.baseUrl}/challenges/${challengeId}`);
+  }
+
+  /**
+   * Create a new challenge
+   */
+  createChallenge(data: {
+    category: string;
+    title: string;
+    description: string;
+    urgency: string;
+    rewardPool?: string;
+    deadline?: string;
+    tags?: string[];
+  }) {
+    return this.http.post<ApiResponse<Challenge>>(`${this.baseUrl}/challenges`, data);
+  }
+
+  /**
+   * Vote on a challenge
+   */
+  voteChallenge(challengeId: number) {
+    return this.http.post<ApiResponse<{ message: string; voted: boolean }>>(
+      `${this.baseUrl}/challenges/vote`,
+      { challengeId }
+    );
   }
 }

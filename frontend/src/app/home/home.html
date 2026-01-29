@@ -115,7 +115,7 @@
 
       <!-- Challenges Tab -->
         <div class="challenges-grid">
-          @for (challenge of challenges; track challenge.id) {
+          @for (challenge of challenges(); track challenge.id) {
             <app-challenge-item 
               [challenge]="challenge" 
               [allIdeas]="ideas" 

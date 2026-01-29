@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, boolean, index, uniqueIndex, json } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Users table
@@ -110,12 +110,45 @@ export const postTags = pgTable("post_tags", {
   postTagUnique: uniqueIndex("post_tag_unique").on(table.postId, table.tagId),
 }));
 
+// Challenges table
+export const challenges = pgTable("challenges", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  urgency: text("urgency").notNull(), // 'Low', 'Medium', 'High', 'Critical'
+  participantCount: integer("participant_count").default(0).notNull(),
+  rewardPool: text("reward_pool"),
+  deadline: timestamp("deadline"),
+  tags: json("tags").$type<string[]>().default([]).notNull(),
+  votes: integer("votes").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  categoryIdx: index("challenge_category_idx").on(table.category),
+  urgencyIdx: index("challenge_urgency_idx").on(table.urgency),
+  votesIdx: index("challenge_votes_idx").on(table.votes),
+  deadlineIdx: index("challenge_deadline_idx").on(table.deadline),
+}));
+
+// Challenge votes table
+export const challengeVotes = pgTable("challenge_votes", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  value: integer("value").notNull(), // 1 for upvote
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  challengeUserUnique: uniqueIndex("challenge_user_vote_unique").on(table.challengeId, table.userId),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   comments: many(comments),
   postVotes: many(postVotes),
   commentVotes: many(commentVotes),
+  challengeVotes: many(challengeVotes),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -194,5 +227,20 @@ export const postTagsRelations = relations(postTags, ({ one }) => ({
   tag: one(tags, {
     fields: [postTags.tagId],
     references: [tags.id],
+  }),
+}));
+
+export const challengesRelations = relations(challenges, ({ many }) => ({
+  votes: many(challengeVotes),
+}));
+
+export const challengeVotesRelations = relations(challengeVotes, ({ one }) => ({
+  challenge: one(challenges, {
+    fields: [challengeVotes.challengeId],
+    references: [challenges.id],
+  }),
+  user: one(users, {
+    fields: [challengeVotes.userId],
+    references: [users.id],
   }),
 }));

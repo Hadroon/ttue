@@ -12,7 +12,7 @@ import { Challenge } from '../../models/baseModels';
 export class ChallengeCard {
   @Input() challenge!: Challenge;
   @Input() ideasCount: number = 0;
-  @Output() voteChallenge = new EventEmitter<string>();
+  @Output() voteChallenge = new EventEmitter<number>();
 
   getUrgencyClass(urgency: string): string {
     switch (urgency) {

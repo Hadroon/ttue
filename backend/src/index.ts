@@ -9,6 +9,7 @@ import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
 import { handleCreatePost, handleGetPosts, handleGetPost, handleUpdatePost, handleDeletePost } from "./routes/posts";
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVotePost, handleVoteComment, handleGetPostVote } from "./routes/votes";
+import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge } from "./routes/challenges";
 
 // Log configuration on startup
 logConfig();
@@ -160,6 +161,21 @@ serve({
       if (url.pathname.match(/^\/api\/comments\/\d+\/vote$/) && req.method === "POST") {
         const commentId = parseInt(url.pathname.split("/")[3]);
         return handleVoteComment(req, commentId);
+      }
+      
+      // Challenges routes
+      if (url.pathname === "/api/challenges" && req.method === "GET") {
+        return handleGetChallenges(req);
+      }
+      if (url.pathname === "/api/challenges" && req.method === "POST") {
+        return handleCreateChallenge(req);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+$/) && req.method === "GET") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleGetChallenge(req, challengeId);
+      }
+      if (url.pathname === "/api/challenges/vote" && req.method === "POST") {
+        return handleVoteChallenge(req);
       }
       
       // Add more API routes here
