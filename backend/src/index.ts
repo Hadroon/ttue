@@ -9,7 +9,7 @@ import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
 import { handleCreatePost, handleGetPosts, handleGetPost, handleUpdatePost, handleDeletePost } from "./routes/posts";
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVotePost, handleVoteComment, handleGetPostVote } from "./routes/votes";
-import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge } from "./routes/challenges";
+import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge } from "./routes/challenges";
 
 // Log configuration on startup
 logConfig();
@@ -166,6 +166,9 @@ serve({
       // Challenges routes
       if (url.pathname === "/api/challenges" && req.method === "GET") {
         return handleGetChallenges(req);
+      }
+      if (url.pathname === "/api/challenges/featured" && req.method === "GET") {
+        return handleGetFeaturedChallenge(req);
       }
       if (url.pathname === "/api/challenges" && req.method === "POST") {
         return handleCreateChallenge(req);

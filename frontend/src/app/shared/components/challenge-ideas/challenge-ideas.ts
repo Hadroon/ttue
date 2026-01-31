@@ -37,7 +37,7 @@ export class ChallengeIdeas implements OnInit {
 
   filterAndSortIdeas() {
     // Filter ideas by challengeId
-    this.filteredIdeas = this.allIdeas.filter(idea => idea.challengeId === this.challengeId);
+    this.filteredIdeas = this.allIdeas.filter(idea => idea.challengeId === this.challengeId?.toString());
 
     // Apply status filter
     if (this.filterStatus !== 'all') {

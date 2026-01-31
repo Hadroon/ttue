@@ -19,12 +19,23 @@ export interface Post {
   id: number;
   title: string;
   content: string;
-  user_id: number;
+  authorId?: number; // New snake_case from backend
+  user_id?: number; // Legacy support
+  challengeId?: number; // New field for challenge relation
   score: number;
-  view_count: number;
-  created_at: string;
-  updated_at: string;
-  user?: User;
+  viewCount?: number; // New camelCase from backend
+  view_count?: number; // Legacy support
+  isPinned?: boolean;
+  isClosed?: boolean;
+  createdAt?: string; // New camelCase from backend
+  created_at?: string; // Legacy support
+  updatedAt?: string; // New camelCase from backend
+  updated_at?: string; // Legacy support
+  // Author info from JOIN
+  authorUsername?: string;
+  authorDisplayName?: string;
+  authorAvatarUrl?: string;
+  user?: User; // Legacy nested user
   comments?: Comment[];
   vote_count?: number;
 }
@@ -32,13 +43,23 @@ export interface Post {
 export interface Comment {
   id: number;
   content: string;
-  post_id: number;
-  user_id: number;
-  parent_id?: number;
+  postId?: number; // New camelCase from backend
+  post_id?: number; // Legacy support
+  authorId?: number; // New camelCase from backend
+  user_id?: number; // Legacy support
+  parentId?: number | null; // New camelCase from backend
+  parent_id?: number; // Legacy support
   score: number;
-  created_at: string;
-  updated_at: string;
-  user?: User;
+  isAccepted?: boolean;
+  createdAt?: string; // New camelCase from backend
+  created_at?: string; // Legacy support
+  updatedAt?: string; // New camelCase from backend
+  updated_at?: string; // Legacy support
+  // Author info from JOIN
+  authorUsername?: string;
+  authorDisplayName?: string;
+  authorAvatarUrl?: string;
+  user?: User; // Legacy nested user
   replies?: Comment[];
 }
 
@@ -65,6 +86,12 @@ export interface Challenge {
   voted?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface FeaturedChallenge {
+  challenge: Challenge;
+  topIdea: Post | null;
+  comments: Comment[];
 }
 
 export interface PostRevision {
@@ -450,5 +477,12 @@ export class ApiService {
       `${this.baseUrl}/challenges/vote`,
       { challengeId }
     );
+  }
+
+  /**
+   * Get featured challenges (top 3) with top idea and comments
+   */
+  getFeaturedChallenge(): Observable<FeaturedChallenge[]> {
+    return this.http.get<FeaturedChallenge[]>(`${this.baseUrl}/challenges/featured`);
   }
 }

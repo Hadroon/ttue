@@ -2,7 +2,7 @@ import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angu
 import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Header, ChallengeGrid2x2, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem } from '../shared/components';
-import { ApiService } from '../shared/services/api.service';
+import { ApiService, FeaturedChallenge, Post, Comment as ApiComment } from '../shared/services/api.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,31 +27,87 @@ export class Home implements OnInit {
   welcomePassword = '';
   challenges = signal<Challenge[]>([]);
   isLoadingChallenges = false;
+  featuredChallenges = signal<Challenge[]>([]);
+  featuredIdeasMap = signal<Map<number, Idea[]>>(new Map());
+  featuredCommentsMap = signal<Map<number, Comment[]>>(new Map());
+  isLoadingFeatured = false;
 
   ngOnInit() {
     let needWelcome = window.location.hostname?.toString().includes('localhost')
     this.welcome.set(needWelcome);
-    this.loadChallenges();
+    this.loadFeaturedChallenge();
   }
 
-  loadChallenges() {
-    this.isLoadingChallenges = true;
-    this.apiService.getChallenges().subscribe({
-      next: (challenges) => {
-        console.log('Loaded challenges:', challenges);
-        this.challenges.set(challenges.map(c => ({
-          ...c,
-          deadline: c.deadline ? new Date(c.deadline) : undefined
-        })));
-        this.isLoadingChallenges = false;
-        console.log('Processed challenges:', this.challenges());
+  loadFeaturedChallenge() {
+    this.isLoadingFeatured = true;
+    this.apiService.getFeaturedChallenge().subscribe({
+      next: (featuredList) => {
+        console.log('Loaded featured challenges:', featuredList);
+        
+        const challengesList: Challenge[] = [];
+        const ideasMap = new Map<number, Idea[]>();
+        const commentsMap = new Map<number, Comment[]>();
+        
+        // Process each featured challenge
+        featuredList.forEach(featured => {
+          // Convert API Challenge to component Challenge model
+          const challenge: Challenge = {
+            ...featured.challenge,
+            deadline: featured.challenge.deadline ? new Date(featured.challenge.deadline) : undefined
+          };
+          challengesList.push(challenge);
+          console.log('✅ Processed featured challenge:', challenge);
+          
+          // Convert API Post to component Idea model
+          if (featured.topIdea) {
+            const idea: Idea = {
+              id: featured.topIdea.id.toString(),
+              title: featured.topIdea.title,
+              description: featured.topIdea.content,
+              author: featured.topIdea.authorDisplayName || featured.topIdea.authorUsername || 'Unknown',
+              votes: featured.topIdea.score,
+              category: featured.challenge.category,
+              status: 'Under Review',
+              createdAt: new Date(featured.topIdea.createdAt || Date.now()),
+              challengeId: featured.challenge.id.toString()
+            };
+            ideasMap.set(challenge.id, [idea]);
+            console.log('✅ Set idea for challenge', challenge.id, ':', [idea]);
+          } else {
+            ideasMap.set(challenge.id, []);
+            console.log('⚠️ No top idea found for challenge', challenge.id);
+          }
+          
+          // Convert API Comments to component Comment model
+          const comments: Comment[] = featured.comments.map((c: ApiComment) => ({
+            id: c.id.toString(),
+            author: c.authorDisplayName || c.authorUsername || 'Unknown',
+            content: c.content,
+            createdAt: new Date(c.createdAt || Date.now()),
+            votes: c.score,
+            parentId: c.parentId?.toString(),
+            challengeId: featured.challenge.id.toString()
+          }));
+          commentsMap.set(challenge.id, comments);
+          console.log('✅ Set comments for challenge', challenge.id, ':', comments);
+        });
+        
+        this.featuredChallenges.set(challengesList);
+        this.featuredIdeasMap.set(ideasMap);
+        this.featuredCommentsMap.set(commentsMap);
+        
+        this.isLoadingFeatured = false;
       },
       error: (error) => {
-        console.error('Error loading challenges:', error);
-        this.isLoadingChallenges = false;
+        console.error('Error loading featured challenges:', error);
+        this.isLoadingFeatured = false;
+        // Set to empty on error
+        this.featuredChallenges.set([]);
+        this.featuredIdeasMap.set(new Map());
+        this.featuredCommentsMap.set(new Map());
       }
     });
-}
+  }
 
   // getIdeasCount(challengeId: string): number {
   //   return this.ideas.filter(i => i.challengeId === challengeId).length;
@@ -202,11 +258,11 @@ export class Home implements OnInit {
   }
 
   getIdeasForChallenge(challengeId: number): Idea[] {
-    return this.ideas.filter(idea => idea.challengeId === challengeId.toString());
+    return this.featuredIdeasMap().get(challengeId) || this.ideas.filter(idea => idea.challengeId === challengeId.toString());
   }
 
   getCommentsForChallenge(challengeId: number): Comment[] {
-    return this.comments.filter(comment => comment.challengeId === challengeId.toString());
+    return this.featuredCommentsMap().get(challengeId) || this.comments.filter(comment => comment.challengeId === challengeId.toString());
   }
 
   onChallengeClick(challengeId: number) {
@@ -252,7 +308,7 @@ export class Home implements OnInit {
       if (result && result.success) {
         console.log('Challenge created:', result.challenge);
         // Reload challenges to show the new one
-        this.loadChallenges();
+        this.loadFeaturedChallenge();
       }
     });
   }

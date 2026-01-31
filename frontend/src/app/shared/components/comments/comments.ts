@@ -39,9 +39,9 @@ export class Comments implements OnInit {
   filterAndSortComments() {
     // Filter top-level comments by entity
     if (this.entityType === 'challenge') {
-      this.filteredComments = this.allComments.filter(c => c.challengeId === this.entityId && !c.parentId);
+      this.filteredComments = this.allComments.filter(c => c.challengeId === this.entityId?.toString() && !c.parentId);
     } else {
-      this.filteredComments = this.allComments.filter(c => c.ideaId === this.entityId && !c.parentId);
+      this.filteredComments = this.allComments.filter(c => c.ideaId === this.entityId?.toString() && !c.parentId);
     }
 
     // Attach replies to each comment

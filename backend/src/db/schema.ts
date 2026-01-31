@@ -28,6 +28,7 @@ export const posts = pgTable("posts", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   authorId: integer("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "cascade" }),
   score: integer("score").default(0).notNull(),
   viewCount: integer("view_count").default(0).notNull(),
   isPinned: boolean("is_pinned").default(false).notNull(),
@@ -36,6 +37,7 @@ export const posts = pgTable("posts", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   authorIdx: index("post_author_idx").on(table.authorId),
+  challengeIdx: index("post_challenge_idx").on(table.challengeId),
   scoreIdx: index("post_score_idx").on(table.score),
   createdAtIdx: index("post_created_at_idx").on(table.createdAt),
 }));
@@ -156,6 +158,10 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
     fields: [posts.authorId],
     references: [users.id],
   }),
+  challenge: one(challenges, {
+    fields: [posts.challengeId],
+    references: [challenges.id],
+  }),
   comments: many(comments),
   votes: many(postVotes),
   revisions: many(postRevisions),
@@ -232,6 +238,7 @@ export const postTagsRelations = relations(postTags, ({ one }) => ({
 
 export const challengesRelations = relations(challenges, ({ many }) => ({
   votes: many(challengeVotes),
+  ideas: many(posts),
 }));
 
 export const challengeVotesRelations = relations(challengeVotes, ({ one }) => ({

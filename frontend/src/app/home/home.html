@@ -109,56 +109,19 @@
         </div>
       </div>
 
-      <!-- <div class="ideas-challenges-tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'challenges'" data-tab="challenges"
-          (click)="switchTab('challenges')">
-          Active Challenges
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'ideas'" data-tab="ideas" (click)="switchTab('ideas')">
-          Community Ideas
-        </button>
-      </div> -->
-
       <!-- Challenges Tab -->
         <div class="challenges-grid">
-          @for (challenge of challenges(); track challenge.id) {
-            <!-- TODO: redesign buttons, background color but darker -->
+          @for (challenge of featuredChallenges(); track challenge.id) {
             <app-challenge-item 
               [challenge]="challenge" 
-              [allIdeas]="ideas" 
-              [allComments]="comments"
+              [allIdeas]="getIdeasForChallenge(challenge.id)" 
+              [allComments]="getCommentsForChallenge(challenge.id)"
               (voteChallenge)="onVoteChallenge($event)">
             </app-challenge-item>
           }
         </div>
-      <!-- <div class="section-footer">
-        <a class="link" href="#all-challenges">View all challenges</a>
-        <span class="separator">•</span>
-        <a class="link" href="#all-ideas">Browse all ideas</a>
-        <span class="separator">•</span>
-        <a class="link" href="#leaderboard">Community leaderboard</a>
-      </div> -->
     </div>
   </section>
-
-  <!-- ===== Challenge Detail Grid ===== -->
-  <!-- <section class="section" id="challenge-detail" style="background: var(--panel);"> -->
-      <!-- <div class="section-head">
-        <h2>Challenge Spotlight</h2>
-        <p class="section-subtitle">Explore a featured challenge with related ideas and community discussion</p>
-      </div> -->
-
-      <!-- <app-challenge-grid-2x2
-        [challenge]="challenges[0]"
-        [ideas]="getIdeasForChallenge(challenges[0]?.id || '')"
-        [comments]="getCommentsForChallenge(challenges[0]?.id || '')"
-        (challengeClick)="onChallengeClick($event)"
-        (ideaClick)="onIdeaClick($event)"
-        (voteIdea)="onVoteIdea($event)"
-        (voteComment)="onVoteComment($event)"
-        (viewAllComments)="onViewAllComments($event)">
-      </app-challenge-grid-2x2> -->
-  <!-- </section> -->
 
   <!-- ===== Featured proposals ===== -->
   <section class="section" id="proposals">

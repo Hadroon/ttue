@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { challenges, challengeVotes } from "../db/schema";
+import { challenges, challengeVotes, posts, comments, users } from "../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 
@@ -241,6 +241,117 @@ export async function handleGetChallenge(req: Request, challengeId: number): Pro
     console.error("Error fetching challenge:", error);
     return new Response(
       JSON.stringify({ error: "Failed to fetch challenge" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// Get featured challenges (top 3 highest voted) with top idea and comments for each
+export async function handleGetFeaturedChallenge(req: Request): Promise<Response> {
+  const authResult = await optionalAuth(req);
+  const userId = authResult instanceof Response ? null : (authResult.user?.userId ?? null);
+
+  try {
+    // Get the top 3 highest voted challenges with minimum 1 vote
+    const topChallenges = await db
+      .select()
+      .from(challenges)
+      .where(sql`${challenges.votes} >= 1`)
+      .orderBy(desc(challenges.votes), desc(challenges.createdAt))
+      .limit(3);
+
+    if (topChallenges.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "No featured challenges available" }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get user's votes for all these challenges
+    let userVotedChallengeIds: number[] = [];
+    if (userId) {
+      const votes = await db
+        .select({ challengeId: challengeVotes.challengeId })
+        .from(challengeVotes)
+        .where(eq(challengeVotes.userId, userId));
+      userVotedChallengeIds = votes.map(v => v.challengeId);
+    }
+
+    // Build featured data for each challenge
+    const featuredChallenges = await Promise.all(
+      topChallenges.map(async (challenge) => {
+        const voted = userVotedChallengeIds.includes(challenge.id);
+
+        // Get the most voted idea (post) for this challenge
+        const topIdeas = await db
+          .select({
+            id: posts.id,
+            title: posts.title,
+            content: posts.content,
+            authorId: posts.authorId,
+            challengeId: posts.challengeId,
+            score: posts.score,
+            viewCount: posts.viewCount,
+            isPinned: posts.isPinned,
+            isClosed: posts.isClosed,
+            createdAt: posts.createdAt,
+            updatedAt: posts.updatedAt,
+            authorUsername: users.username,
+            authorDisplayName: users.displayName,
+            authorAvatarUrl: users.avatarUrl,
+          })
+          .from(posts)
+          .innerJoin(users, eq(posts.authorId, users.id))
+          .where(eq(posts.challengeId, challenge.id))
+          .orderBy(desc(posts.score), desc(posts.createdAt))
+          .limit(1);
+
+        const topIdea = topIdeas.length > 0 ? topIdeas[0] : null;
+
+        // Get comments for the top idea
+        let challengeComments = [];
+        if (topIdea) {
+          challengeComments = await db
+            .select({
+              id: comments.id,
+              content: comments.content,
+              postId: comments.postId,
+              authorId: comments.authorId,
+              parentId: comments.parentId,
+              score: comments.score,
+              isAccepted: comments.isAccepted,
+              createdAt: comments.createdAt,
+              updatedAt: comments.updatedAt,
+              authorUsername: users.username,
+              authorDisplayName: users.displayName,
+              authorAvatarUrl: users.avatarUrl,
+            })
+            .from(comments)
+            .innerJoin(users, eq(comments.authorId, users.id))
+            .where(eq(comments.postId, topIdea.id))
+            .orderBy(desc(comments.score), desc(comments.createdAt))
+            .limit(10);
+        }
+
+        return {
+          challenge: {
+            ...challenge,
+            voted,
+          },
+          topIdea,
+          comments: challengeComments,
+        };
+      })
+    );
+
+    return new Response(
+      JSON.stringify(featuredChallenges),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Error fetching featured challenges:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to fetch featured challenges" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
