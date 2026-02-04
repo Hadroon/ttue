@@ -16,7 +16,7 @@ export class Header {
   private elementRef = inject(ElementRef);
   private dialog = inject(MatDialog);
   readonly authService = inject(AuthService);
-
+  // toggleNav
   toggleNav() {
     this.navOpen = !this.navOpen;
     if (this.navOpen) {
