@@ -57,7 +57,7 @@ export async function handleVotePost(req: Request, postId: number): Promise<Resp
           .where(eq(posts.id, postId));
 
         return new Response(
-          JSON.stringify({ message: "Vote removed", score: post.score - value }),
+          JSON.stringify({ message: "Vote removed", score: post.score - value, voted: false }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       } else {
@@ -74,7 +74,7 @@ export async function handleVotePost(req: Request, postId: number): Promise<Resp
           .where(eq(posts.id, postId));
 
         return new Response(
-          JSON.stringify({ message: "Vote updated", score: post.score + (value * 2) }),
+          JSON.stringify({ message: "Vote updated", score: post.score + (value * 2), voted: true }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       }
@@ -94,7 +94,7 @@ export async function handleVotePost(req: Request, postId: number): Promise<Resp
       .where(eq(posts.id, postId));
 
     return new Response(
-      JSON.stringify({ message: "Vote recorded", score: post.score + value }),
+      JSON.stringify({ message: "Vote recorded", score: post.score + value, voted: true }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -160,7 +160,7 @@ export async function handleVoteComment(req: Request, commentId: number): Promis
           .where(eq(comments.id, commentId));
 
         return new Response(
-          JSON.stringify({ message: "Vote removed", score: comment.score - value }),
+          JSON.stringify({ message: "Vote removed", score: comment.score - value, voted: false }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       } else {
@@ -177,7 +177,7 @@ export async function handleVoteComment(req: Request, commentId: number): Promis
           .where(eq(comments.id, commentId));
 
         return new Response(
-          JSON.stringify({ message: "Vote updated", score: comment.score + (value * 2) }),
+          JSON.stringify({ message: "Vote updated", score: comment.score + (value * 2), voted: true }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       }
@@ -197,7 +197,7 @@ export async function handleVoteComment(req: Request, commentId: number): Promis
       .where(eq(comments.id, commentId));
 
     return new Response(
-      JSON.stringify({ message: "Vote recorded", score: comment.score + value }),
+      JSON.stringify({ message: "Vote recorded", score: comment.score + value, voted: true }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {

@@ -1,7 +1,6 @@
 <div class="challenge-ideas-container" [class.expanded]="isExpanded">
   @if (filteredIdeas.length === 0) {
     <div class="empty-state">
-      <!-- <div class="empty-icon">💡</div> -->
       <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon>
       <p class="empty-message">No ideas submitted yet</p>
       <p class="empty-submessage">Be the first to propose a solution for this challenge!</p>
@@ -10,7 +9,6 @@
   } @else {
     <div class="ideas-header">
       <div class="ideas-count">
-        <!-- <span class="count-icon">💡</span> -->
         <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon>
         <span class="count-text">
           Ideas emerging from this challenge · {{ filteredIdeas.length }}
@@ -59,7 +57,7 @@
               </span>
             </div>
             <div class="idea-vote-mini">
-              <button class="vote-btn-mini" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
+              <button class="vote-btn-mini" [class.voted]="idea.voted" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
                 <span class="vote-icon">▲</span>
                 <span class="vote-count">{{ idea.votes }}</span>
               </button>

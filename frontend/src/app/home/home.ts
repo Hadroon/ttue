@@ -69,7 +69,8 @@ export class Home implements OnInit {
               category: featured.challenge.category,
               status: 'Under Review',
               createdAt: new Date(featured.topIdea.createdAt || Date.now()),
-              challengeId: featured.challenge.id.toString()
+              challengeId: featured.challenge.id.toString(),
+              voted: featured.topIdea.voted || false
             };
             ideasMap.set(challenge.id, [idea]);
             console.log('✅ Set idea for challenge', challenge.id, ':', [idea]);
@@ -86,7 +87,8 @@ export class Home implements OnInit {
             createdAt: new Date(c.createdAt || Date.now()),
             votes: c.score,
             parentId: c.parentId?.toString(),
-            challengeId: featured.challenge.id.toString()
+            challengeId: featured.challenge.id.toString(),
+            voted: c.voted || false
           }));
           commentsMap.set(challenge.id, comments);
           console.log('✅ Set comments for challenge', challenge.id, ':', comments);
@@ -116,8 +118,9 @@ export class Home implements OnInit {
   onVoteChallenge(challengeId: number) {
     this.apiService.voteChallenge(challengeId).subscribe({
       next: (response: { message: string; voted: boolean }) => {
+        console.log('Vote response for challenge', challengeId, ':', response);
         const voted = response.voted;
-        this.challenges.update(challenges => 
+        this.featuredChallenges.update(challenges => 
           challenges.map(c => 
             c.id === challengeId 
               ? { ...c, votes: c.votes + (voted ? 1 : -1), voted }
@@ -130,81 +133,6 @@ export class Home implements OnInit {
       }
     });
   }
-
-  ideas: Idea[] = [
-    {
-      id: 'community-energy',
-      title: 'Community Energy Cooperatives',
-      description: 'Enable neighborhoods to form energy cooperatives for shared renewable energy systems with favorable regulatory frameworks.',
-      author: 'Dr. Sarah Chen',
-      votes: 234,
-      category: 'Energy',
-      status: 'Under Review',
-      createdAt: new Date('2025-08-15'),
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'mobile-voting',
-      title: 'Secure Mobile Voting Platform',
-      description: 'Develop blockchain-based mobile voting system for local elections with enhanced security and accessibility features.',
-      author: 'Marcus Rodriguez',
-      votes: 189,
-      category: 'Democracy',
-      status: 'In Development',
-      createdAt: new Date('2025-07-22')
-    },
-    {
-      id: 'green-tax-incentives',
-      title: 'Progressive Green Tax Incentives',
-      description: 'Implement tiered tax incentives for businesses and individuals based on measurable environmental impact reductions.',
-      author: 'Prof. Elena Vasquez',
-      votes: 156,
-      category: 'Environment',
-      status: 'New',
-      createdAt: new Date('2025-09-01'),
-      challengeId: 'climate-adaptation'
-    },
-    // {
-    //   id: 'urban-cooling',
-    //   title: 'Smart Urban Cooling Networks',
-    //   description: 'Deploy interconnected green corridors and reflective surfaces to reduce urban heat islands in densely populated areas.',
-    //   author: 'Dr. James Liu',
-    //   votes: 98,
-    //   category: 'Environment',
-    //   status: 'New',
-    //   createdAt: new Date('2025-09-12'),
-    //   challengeId: 'climate-adaptation'
-    // }
-  ];
-
-  comments: Comment[] = [
-    {
-      id: 'comment-1',
-      author: 'Dr. Michael Green',
-      authorRole: 'Climate Expert',
-      content: 'This challenge addresses critical infrastructure gaps. We need to prioritize flood prevention systems in vulnerable districts.',
-      createdAt: new Date('2025-11-15'),
-      votes: 42,
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'comment-2',
-      author: 'Sarah Thompson',
-      content: 'Great initiative! I suggest including community feedback sessions to identify local priorities.',
-      createdAt: new Date('2025-11-20'),
-      votes: 28,
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'comment-3',
-      author: 'Prof. Anna Martinez',
-      authorRole: 'Urban Planner',
-      content: 'We should integrate this with existing urban development plans to maximize efficiency and avoid redundancy.',
-      createdAt: new Date('2025-11-25'),
-      votes: 35,
-      challengeId: 'climate-adaptation'
-    }
-  ];
 
   switchTab(tabName: 'challenges' | 'ideas') {
     this.activeTab = tabName;
@@ -244,25 +172,62 @@ export class Home implements OnInit {
   }
 
   onVoteIdea(ideaId: string) {
-    const idea = this.ideas.find(i => i.id === ideaId);
-    if (idea) {
-      idea.votes++;
-    }
+    console.log('Voting on idea:', ideaId);
+    const postId = parseInt(ideaId);
+    this.apiService.votePost(postId).subscribe({
+      next: (response: { message: string; score: number; voted: boolean }) => {
+        console.log('Vote response for idea', ideaId, ':', response);
+        const voted = response.voted;
+        this.featuredIdeasMap.update(ideasMap => {
+          const newMap = new Map(ideasMap);
+          newMap.forEach((ideas, challengeId) => {
+            const updatedIdeas = ideas.map(i => 
+              i.id === ideaId
+                ? { ...i, votes: i.votes + (voted ? 1 : -1), voted }
+                : i
+            );
+            newMap.set(challengeId, updatedIdeas);
+          });
+          return newMap;
+        });
+      },
+      error: (error) => {
+        console.error('Error voting on idea:', error);
+      }
+    });
   }
 
   onVoteComment(commentId: string) {
-    const comment = this.comments.find(c => c.id === commentId);
-    if (comment) {
-      comment.votes++;
-    }
+    const commentIdNum = parseInt(commentId);
+    this.apiService.voteComment(commentIdNum).subscribe({
+      next: (response: { message: string; score: number; voted: boolean }) => {
+        console.log('Vote response for comment', commentId, ':', response);
+        const voted = response.voted;
+        this.featuredCommentsMap.update(commentsMap => {
+          const newMap = new Map(commentsMap);
+          newMap.forEach((comments, challengeId) => {
+            const updatedComments = comments.map(c => 
+              c.id === commentId
+                ? { ...c, votes: c.votes + (voted ? 1 : -1), voted }
+                : c
+            );
+            newMap.set(challengeId, updatedComments);
+          });
+          return newMap;
+        });
+      },
+      error: (error) => {
+        console.error('Error voting on comment:', error);
+      }
+    });
   }
 
   getIdeasForChallenge(challengeId: number): Idea[] {
-    return this.featuredIdeasMap().get(challengeId) || this.ideas.filter(idea => idea.challengeId === challengeId.toString());
+    return this.featuredIdeasMap().get(challengeId) || [];
   }
 
   getCommentsForChallenge(challengeId: number): Comment[] {
-    return this.featuredCommentsMap().get(challengeId) || this.comments.filter(comment => comment.challengeId === challengeId.toString());
+    return this.featuredCommentsMap().get(challengeId) || [];
   }
 
   onChallengeClick(challengeId: number) {

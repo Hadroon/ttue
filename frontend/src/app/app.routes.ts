@@ -4,6 +4,7 @@ import { HowItWorks } from './how-it-works/how-it-works';
 import { ArticleWorkbench } from './article-workbench/article-workbench';
 import { Test } from './test/test';
 import { Challenges } from './challenges/challenges';
+import { AddChallenge } from './add-challenge/add-challenge';
 
 export const routes: Routes = [
   {
@@ -21,6 +22,10 @@ export const routes: Routes = [
   {
     path: 'challenges',
     component: Challenges
+  },
+  {
+    path: 'add-challenge',
+    component: AddChallenge
   },
   {
     path: 'test',

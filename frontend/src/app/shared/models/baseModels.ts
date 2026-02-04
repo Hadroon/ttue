@@ -4,6 +4,7 @@ export interface Idea {
   description: string;
   author: string;
   votes: number;
+  voted?: boolean;
   category: string;
   status: 'New' | 'Under Review' | 'In Development' | 'Implemented';
   createdAt: Date;
@@ -18,10 +19,12 @@ export interface Challenge {
   urgency: 'Low' | 'Medium' | 'High' | 'Critical';
   participantCount: number;
   rewardPool?: string;
-  deadline?: Date;
+  deadline?: Date | string;
   tags: string[];
   votes: number;
   voted?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Comment {

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, Signal, input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, Signal, input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Challenge } from '../../models/baseModels';
 
@@ -9,10 +9,18 @@ import { Challenge } from '../../models/baseModels';
   templateUrl: './challenge-card.html',
   styleUrl: './challenge-card.css'
 })
-export class ChallengeCard {
+export class ChallengeCard implements OnInit {
   challenge = input.required<Challenge>();
   @Input() ideasCount: number = 0;
   @Output() voteChallenge = new EventEmitter<number>();
+
+  constructor() {
+    console.log('ChallengeCard created');
+  }
+
+  ngOnInit() {
+    console.log('ChallengeCard challenge:', this.challenge());
+  }
 
   getUrgencyClass(urgency: string): string {
     switch (urgency) {

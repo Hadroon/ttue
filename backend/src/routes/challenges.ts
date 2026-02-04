@@ -1,9 +1,9 @@
 import { db } from "../db";
-import { challenges, challengeVotes, posts, comments, users } from "../db/schema";
+import { challenges, challengeVotes, posts, comments, users, postVotes, commentVotes } from "../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 
-// Get all challenges
+// Get all challenges with top idea and comments
 export async function handleGetChallenges(req: Request): Promise<Response> {
   const authResult = await optionalAuth(req);
   const userId = authResult instanceof Response ? null : (authResult.user?.userId ?? null);
@@ -35,24 +35,113 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
       .limit(limit)
       .offset(offset);
 
-    // If user is authenticated, check which challenges they've voted on
-    let userVotes: number[] = [];
+    // If user is authenticated, check which items they've voted on
+    let userVotedChallengeIds: number[] = [];
+    let userVotedPostIds: number[] = [];
+    let userVotedCommentIds: number[] = [];
+    
     if (userId) {
-      const votes = await db
+      const challengeVotesData = await db
         .select({ challengeId: challengeVotes.challengeId })
         .from(challengeVotes)
         .where(eq(challengeVotes.userId, userId));
-      userVotes = votes.map(v => v.challengeId);
+      userVotedChallengeIds = challengeVotesData.map(v => v.challengeId);
+
+      const postVotesData = await db
+        .select({ postId: postVotes.postId })
+        .from(postVotes)
+        .where(eq(postVotes.userId, userId));
+      userVotedPostIds = postVotesData.map(v => v.postId);
+
+      const commentVotesData = await db
+        .select({ commentId: commentVotes.commentId })
+        .from(commentVotes)
+        .where(eq(commentVotes.userId, userId));
+      userVotedCommentIds = commentVotesData.map(v => v.commentId);
     }
 
-    // Add voted flag to challenges
-    const challengesWithVotes = allChallenges.map(challenge => ({
-      ...challenge,
-      voted: userVotes.includes(challenge.id),
-    }));
+    // Build challenge data with top idea and comments
+    const challengesWithData = await Promise.all(
+      allChallenges.map(async (challenge) => {
+        const voted = userVotedChallengeIds.includes(challenge.id);
+
+        // Get the most voted idea (post) for this challenge
+        const topIdeas = await db
+          .select({
+            id: posts.id,
+            title: posts.title,
+            content: posts.content,
+            authorId: posts.authorId,
+            challengeId: posts.challengeId,
+            score: posts.score,
+            viewCount: posts.viewCount,
+            isPinned: posts.isPinned,
+            isClosed: posts.isClosed,
+            createdAt: posts.createdAt,
+            updatedAt: posts.updatedAt,
+            authorUsername: users.username,
+            authorDisplayName: users.displayName,
+            authorAvatarUrl: users.avatarUrl,
+          })
+          .from(posts)
+          .innerJoin(users, eq(posts.authorId, users.id))
+          .where(eq(posts.challengeId, challenge.id))
+          .orderBy(desc(posts.score), desc(posts.createdAt))
+          .limit(1);
+
+        let topIdea = null;
+        if (topIdeas.length > 0) {
+          const idea = topIdeas[0];
+          topIdea = {
+            ...idea,
+            voted: userVotedPostIds.includes(idea.id),
+          };
+        }
+
+        // Get top 3 comments for the top idea
+        let challengeComments: any[] = [];
+        if (topIdea) {
+          const commentsData = await db
+            .select({
+              id: comments.id,
+              content: comments.content,
+              postId: comments.postId,
+              authorId: comments.authorId,
+              parentId: comments.parentId,
+              score: comments.score,
+              isAccepted: comments.isAccepted,
+              createdAt: comments.createdAt,
+              updatedAt: comments.updatedAt,
+              authorUsername: users.username,
+              authorDisplayName: users.displayName,
+              authorAvatarUrl: users.avatarUrl,
+            })
+            .from(comments)
+            .innerJoin(users, eq(comments.authorId, users.id))
+            .where(eq(comments.postId, topIdea.id))
+            .orderBy(desc(comments.score), desc(comments.createdAt))
+            .limit(3);
+          
+          // Add voted status to comments
+          challengeComments = commentsData.map(comment => ({
+            ...comment,
+            voted: userVotedCommentIds.includes(comment.id),
+          }));
+        }
+
+        return {
+          challenge: {
+            ...challenge,
+            voted,
+          },
+          topIdea,
+          comments: challengeComments,
+        };
+      })
+    );
 
     return new Response(
-      JSON.stringify(challengesWithVotes),
+      JSON.stringify(challengesWithData),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -277,6 +366,23 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
       userVotedChallengeIds = votes.map(v => v.challengeId);
     }
 
+    // Get user's votes for posts and comments if authenticated
+    let userVotedPostIds: number[] = [];
+    let userVotedCommentIds: number[] = [];
+    if (userId) {
+      const postVotesData = await db
+        .select({ postId: postVotes.postId })
+        .from(postVotes)
+        .where(eq(postVotes.userId, userId));
+      userVotedPostIds = postVotesData.map(v => v.postId);
+
+      const commentVotesData = await db
+        .select({ commentId: commentVotes.commentId })
+        .from(commentVotes)
+        .where(eq(commentVotes.userId, userId));
+      userVotedCommentIds = commentVotesData.map(v => v.commentId);
+    }
+
     // Build featured data for each challenge
     const featuredChallenges = await Promise.all(
       topChallenges.map(async (challenge) => {
@@ -306,12 +412,19 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
           .orderBy(desc(posts.score), desc(posts.createdAt))
           .limit(1);
 
-        const topIdea = topIdeas.length > 0 ? topIdeas[0] : null;
+        let topIdea = null;
+        if (topIdeas.length > 0) {
+          const idea = topIdeas[0];
+          topIdea = {
+            ...idea,
+            voted: userVotedPostIds.includes(idea.id),
+          };
+        }
 
         // Get comments for the top idea
-        let challengeComments = [];
+        let challengeComments: any[] = [];
         if (topIdea) {
-          challengeComments = await db
+          const commentsData = await db
             .select({
               id: comments.id,
               content: comments.content,
@@ -331,6 +444,12 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
             .where(eq(comments.postId, topIdea.id))
             .orderBy(desc(comments.score), desc(comments.createdAt))
             .limit(10);
+          
+          // Add voted status to comments
+          challengeComments = commentsData.map(comment => ({
+            ...comment,
+            voted: userVotedCommentIds.includes(comment.id),
+          }));
         }
 
         return {

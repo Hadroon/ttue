@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Idea } from '../../models/baseModels';
@@ -15,6 +15,7 @@ export class ChallengeIdeas implements OnInit {
   @Input() challengeId!: string | number;
   @Input() allIdeas: Idea[] = [];
   @Input() compact: boolean = true;
+  @Output() voteIdea = new EventEmitter<string>();
 
   isExpanded = false;
   filteredIdeas: Idea[] = [];
@@ -85,10 +86,7 @@ export class ChallengeIdeas implements OnInit {
   }
 
   onVoteIdea(ideaId: string) {
-    const idea = this.allIdeas.find(i => i.id === ideaId);
-    if (idea) {
-      idea.votes++;
-    }
+    this.voteIdea.emit(ideaId);
   }
 
   getStatusClass(status: string): string {

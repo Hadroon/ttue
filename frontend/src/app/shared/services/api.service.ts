@@ -38,6 +38,7 @@ export interface Post {
   user?: User; // Legacy nested user
   comments?: Comment[];
   vote_count?: number;
+  voted?: boolean; // Whether the current user has voted on this post
 }
 
 export interface Comment {
@@ -61,6 +62,7 @@ export interface Comment {
   authorAvatarUrl?: string;
   user?: User; // Legacy nested user
   replies?: Comment[];
+  voted?: boolean; // Whether the current user has voted on this comment
 }
 
 export interface Vote {
@@ -436,10 +438,10 @@ export class ApiService {
   // Challenge methods
 
   /**
-   * Get all challenges with pagination
+   * Get all challenges with pagination, including top idea and comments
    */
-  getChallenges(page: number = 1, limit: number = 5): Observable<Challenge[]> {
-    return this.http.get<Challenge[]>(`${this.baseUrl}/challenges`, {
+  getChallenges(page: number = 1, limit: number = 5): Observable<FeaturedChallenge[]> {
+    return this.http.get<FeaturedChallenge[]>(`${this.baseUrl}/challenges`, {
       params: { 
         page: page.toString(), 
         limit: limit.toString() 
@@ -476,6 +478,27 @@ export class ApiService {
     return this.http.post<{ message: string; voted: boolean }>(
       `${this.baseUrl}/challenges/vote`,
       { challengeId }
+    );
+  }
+
+  /**
+   * Vote on a post/idea (toggle upvote)
+   */
+  votePost(postId: number) {
+    console.log("Voting on post:", postId);
+    return this.http.post<{ message: string; score: number; voted: boolean }>(
+      `${this.baseUrl}/posts/${postId}/vote`,
+      { value: 1 }
+    );
+  }
+
+  /**
+   * Vote on a comment (toggle upvote)
+   */
+  voteComment(commentId: number) {
+    return this.http.post<{ message: string; score: number; voted: boolean }>(
+      `${this.baseUrl}/comments/${commentId}/vote`,
+      { value: 1 }
     );
   }
 

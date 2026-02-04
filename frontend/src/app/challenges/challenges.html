@@ -14,85 +14,51 @@
         <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
       </div>
 
-      <!-- NOTE: Tabs are currently disabled; both sections are shown together. -->
-      <!-- <div class="ideas-challenges-tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'challenges'" data-tab="challenges"
-          (click)="switchTab('challenges')">
-          Active Challenges
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'ideas'" data-tab="ideas" (click)="switchTab('ideas')">
-          Community Ideas
-        </button>
-      </div> -->
-
       <!-- Challenges Tab -->
-      <div class="tab-content" [class.active]="activeTab === 'challenges'" id="challenges-tab">
         <div class="challenges-grid">
-          @for (challenge of challenges; track challenge.id) {
+          <!-- Debug info -->
+          <div style="display: none;">
+            Data count: {{ challengesData().length }} | 
+            Computed count: {{ challenges().length }} |
+            Loading: {{ isLoading() }}
+          </div>
+          
+          @for (item of challenges(); track item.challenge.id) {
             <app-challenge-item 
-              [challenge]="challenge" 
-              [allIdeas]="ideas" 
-              [allComments]="comments"
-              (voteChallenge)="onVoteChallenge($event)">
+              [challenge]="item.challenge" 
+              [allIdeas]="item.ideas"
+              [allComments]="item.comments"
+              (voteChallenge)="onVoteChallenge($event)"
+              (voteIdea)="onVoteIdea($event)"
+              (voteComment)="onVoteComment($event)">
             </app-challenge-item>
           }
-        </div>
-      </div>
-      <!-- NOTE: Tabs are currently disabled; both sections are shown together. -->
-      <!-- Ideas Tab -->
-      <!-- <div class="tab-content" [class.active]="activeTab === 'ideas'" id="ideas-tab">
-        <div class="ideas-header">
-          <div class="ideas-actions">
-            <a class="btn primary" href="#submit-idea">Submit your idea</a>
-            <div class="sort-options">
-              <label for="sort-ideas">Sort by:</label>
-              <select id="sort-ideas">
-                <option value="votes">Most voted</option>
-                <option value="recent">Most recent</option>
-                <option value="status">Status</option>
-              </select>
+          
+          @if (challenges().length === 0 && !isLoading()) {
+            <div class="empty-state">
+              <p>No challenges yet. Be the first to create one!</p>
             </div>
-          </div>
-        </div>
-
-        <div class="ideas-grid">
-          @for (idea of ideas; track idea.id) {
-          <article class="idea-card">
-            <div class="idea-header">
-              <div class="idea-meta">
-                <span class="chip">{{ idea.category }}</span>
-                <span class="status-badge" [class]="getStatusClass(idea.status)">
-                  {{ idea.status }}
-                </span>
-              </div>
-              <div class="idea-votes">
-                <button class="vote-btn" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
-                  <span class="vote-icon">⬆</span>
-                  <span class="vote-count">{{ idea.votes }}</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="idea-body">
-              <h3>{{ idea.title }}</h3>
-              <p class="idea-description">{{ idea.description }}</p>
-
-              <div class="idea-author">
-                <span>by {{ idea.author }}</span>
-                <time [dateTime]="idea.createdAt.toISOString()">
-                  {{ idea.createdAt.toLocaleDateString() }}
-                </time>
-              </div>
-            </div>
-
-            <div class="idea-actions">
-              <a class="btn ghost" [href]="'#idea-' + idea.id">View details</a>
-              <a class="btn secondary" [href]="'#discuss-' + idea.id">Discuss</a>
-            </div>
-          </article>
           }
         </div>
-      </div> -->
+        
+        @if (loadError()) {
+          <div class="error-message">
+            <p>{{ loadError() }}</p>
+            <button class="btn secondary" (click)="retry()">Retry</button>
+          </div>
+        }
+        
+        @if (isLoading()) {
+          <div class="loading-indicator">
+            <p>Loading challenges...</p>
+          </div>
+        }
+        
+        @if (hasMore() && !isLoading() && challenges().length > 0) {
+          <div class="load-more-container">
+            <button class="btn secondary" (click)="loadMore()">Load More Challenges</button>
+          </div>
+        }
     </div>
   </section>
 

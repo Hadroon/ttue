@@ -67,7 +67,7 @@
       <div class="steps">
         <article class="step step-highlight">
           <div class="icon" aria-hidden="true">💡</div>
-          <h3>Ideas & Challenge</h3>
+          <h3>Challenges & Ideas</h3>
           <p>Join policy challenges, share innovative ideas, and collaborate on solutions to pressing problems.</p>
           <a href="#ideas-challenges" class="step-link">Browse challenges →</a>
         </article>
@@ -100,12 +100,12 @@
     <div class="container">
       <div class="section-head">
         <div>
-          <h2>Ideas & Challenges</h2>
+          <h2>Challenges & Ideas</h2>
           <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
         </div>
         <div class="section-head-actions">
           <a class="link" routerLink="/challenges">See all</a>
-          <button class="btn primary" (click)="openAddChallengeModal()">Add challenge</button>
+          <a class="btn primary" routerLink="/add-challenge">Add challenge</a>
         </div>
       </div>
 
@@ -116,7 +116,9 @@
               [challenge]="challenge" 
               [allIdeas]="getIdeasForChallenge(challenge.id)" 
               [allComments]="getCommentsForChallenge(challenge.id)"
-              (voteChallenge)="onVoteChallenge($event)">
+              (voteChallenge)="onVoteChallenge($event)"
+              (voteIdea)="onVoteIdea($event)"
+              (voteComment)="onVoteComment($event)">
             </app-challenge-item>
           }
         </div>

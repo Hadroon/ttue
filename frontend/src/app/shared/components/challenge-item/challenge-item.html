@@ -1,18 +1,20 @@
 <div class="challenge-with-ideas">
   <app-challenge-card 
-    [challenge]="challenge" 
+    [challenge]="challenge"
     [ideasCount]="getIdeasCount(challenge.id)"
     (voteChallenge)="onVoteChallenge($event)">
   </app-challenge-card>
   <app-challenge-ideas 
     [challengeId]="challenge.id" 
     [allIdeas]="allIdeas" 
-    [compact]="true">
+    [compact]="true"
+    (voteIdea)="onVoteIdea($event)">
   </app-challenge-ideas>
   <app-comments 
     [entityId]="challenge.id" 
     [entityType]="'challenge'" 
     [allComments]="allComments"
-    [compact]="true">
+    [compact]="true"
+    (voteComment)="onVoteComment($event)">
   </app-comments>
 </div>

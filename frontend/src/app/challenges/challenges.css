@@ -628,3 +628,40 @@
     display: none;
   }
 }
+
+/* ===== Loading, Error, and Empty States ===== */
+
+.loading-indicator,
+.error-message,
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+
+.error-message {
+  color: var(--danger, #dc2626);
+}
+
+.error-message p {
+  margin-bottom: 16px;
+}
+
+.error-message .btn {
+  margin: 0 auto;
+}
+
+.empty-state p {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.load-more-container {
+  text-align: center;
+  padding: 32px 0;
+  margin-top: 24px;
+}
+
+.load-more-container .btn {
+  min-width: 200px;
+}

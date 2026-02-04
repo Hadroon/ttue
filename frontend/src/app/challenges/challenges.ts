@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { Header, ChallengeItem } from '../shared/components';
-import { Challenge, Idea, Comment } from '../shared/models/baseModels';
+import { ApiService, FeaturedChallenge } from '../shared/services/api.service';
+import { Idea, Comment as BaseComment } from '../shared/models/baseModels';
 
 @Component({
   selector: 'app-challenges',
@@ -8,207 +9,334 @@ import { Challenge, Idea, Comment } from '../shared/models/baseModels';
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })
-export class Challenges {
-  activeTab: 'challenges' | 'ideas' = 'challenges';
+export class Challenges implements OnInit {
+  private apiService = inject(ApiService);
+  
+  // State management with signals
+  challengesData = signal<FeaturedChallenge[]>([]); // Made public for debugging
+  currentPage = signal(1);
+  isLoading = signal(false);
+  hasMore = signal(true);
+  loadError = signal<string | null>(null);
+  
+  readonly pageSize = 20;
 
-  challenges: Challenge[] = [
-    {
-      id: 1,
-      category: 'Environment',
-      title: 'Climate Adaptation Strategies',
-      description: 'Develop comprehensive policy frameworks for cities to adapt to climate change impacts including flooding, heat waves, and extreme weather events.',
-      urgency: 'Critical',
-      participantCount: 347,
-      rewardPool: '$50,000',
-      deadline: new Date('2025-12-15'),
-      tags: ['climate', 'adaptation', 'urban-planning', 'emergency-response'],
-      votes: 124
-    },
-    {
-      id: 2,
-      category: 'Technology',
-      title: 'Digital Equity and Access',
-      description: 'Create policies ensuring equitable access to digital infrastructure, devices, and digital literacy programs for underserved communities.',
-      urgency: 'High',
-      participantCount: 892,
-      rewardPool: '$25,000',
-      deadline: new Date('2025-11-30'),
-      tags: ['digital-divide', 'accessibility', 'education', 'infrastructure'],
-      votes: 85
-    },
-    {
-      id: 3,
-      category: 'Housing',
-      title: 'Affordable Housing Innovation',
-      description: 'Design innovative policy solutions to address the affordable housing crisis while promoting sustainable development.',
-      urgency: 'Critical',
-      participantCount: 1456,
-      rewardPool: '$75,000',
-      deadline: new Date('2026-01-31'),
-      tags: ['housing', 'affordability', 'zoning', 'sustainability'],
-      votes: 203
-    }
-  ];
+  // Transform API data to match component expectations
+  challenges = computed(() => {
+    return this.challengesData().map(item => ({
+      challenge: item.challenge,
+      ideas: item.topIdea ? [this.postToIdea(item.topIdea)] : [],
+      comments: item.comments.map(c => this.apiCommentToBaseComment(c, item.challenge.id))
+    }));
+  });
 
-  ideas: Idea[] = [
-    {
-      id: 'community-energy',
-      title: 'Community Energy Cooperatives',
-      description: 'Enable neighborhoods to form energy cooperatives for shared renewable energy systems with favorable regulatory frameworks.',
-      author: 'Dr. Sarah Chen',
-      votes: 234,
-      category: 'Energy',
-      status: 'Under Review',
-      createdAt: new Date('2025-08-15'),
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'mobile-voting',
-      title: 'Secure Mobile Voting Platform',
-      description: 'Develop blockchain-based mobile voting system for local elections with enhanced security and accessibility features.',
-      author: 'Marcus Rodriguez',
-      votes: 189,
-      category: 'Democracy',
-      status: 'In Development',
-      createdAt: new Date('2025-07-22')
-    },
-    {
-      id: 'green-tax-incentives',
-      title: 'Progressive Green Tax Incentives',
-      description: 'Implement tiered tax incentives for businesses and individuals based on measurable environmental impact reductions.',
-      author: 'Prof. Elena Vasquez',
-      votes: 156,
-      category: 'Environment',
-      status: 'New',
-      createdAt: new Date('2025-09-01'),
-      challengeId: 'climate-adaptation'
-    }
-  ];
-
-  comments: Comment[] = [
-    {
-      id: 'comment-1',
-      author: 'Dr. Michael Rodriguez',
-      authorRole: 'Climate Expert',
-      content: 'This is a critical challenge. We need to consider both immediate interventions and long-term infrastructure changes. I recommend breaking this into phased approaches.',
-      createdAt: new Date('2025-11-15'),
-      votes: 42,
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'comment-2',
-      author: 'Sarah Kim',
-      content: 'Has anyone looked at what Amsterdam and Rotterdam are doing? Their water management systems could be excellent case studies.',
-      createdAt: new Date('2025-11-18'),
-      votes: 28,
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'reply-1',
-      author: 'Dr. Michael Rodriguez',
-      authorRole: 'Climate Expert',
-      content: 'Excellent point! The Dutch "Room for the River" program is particularly relevant. I can share some research papers if interested.',
-      createdAt: new Date('2025-11-18'),
-      votes: 15,
-      parentId: 'comment-2',
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'comment-3',
-      author: 'James Chen',
-      content: 'What\'s the expected timeline for implementation? Some of these strategies require decades of infrastructure work.',
-      createdAt: new Date('2025-11-20'),
-      votes: 12,
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'comment-4',
-      author: 'Maria Gonzalez',
-      authorRole: 'Policy Advisor',
-      content: 'We should also consider the equity implications. Climate adaptation measures often benefit wealthier neighborhoods first.',
-      createdAt: new Date('2025-11-21'),
-      votes: 35,
-      challengeId: 'climate-adaptation'
-    },
-    {
-      id: 'comment-5',
-      author: 'Alex Thompson',
-      content: 'The digital divide is getting worse, not better. Rural communities are being left behind completely.',
-      createdAt: new Date('2025-11-10'),
-      votes: 18,
-      challengeId: 'digital-equity'
-    },
-    {
-      id: 'comment-6',
-      author: 'Jennifer Park',
-      authorRole: 'Tech Policy Expert',
-      content: 'We need to think beyond just infrastructure. Digital literacy programs are equally important.',
-      createdAt: new Date('2025-11-12'),
-      votes: 24,
-      challengeId: 'digital-equity'
-    },
-    {
-      id: 'comment-7',
-      author: 'David Brown',
-      content: 'Zoning reform is the elephant in the room. Without addressing restrictive zoning, no amount of funding will solve this.',
-      createdAt: new Date('2025-11-08'),
-      votes: 56,
-      challengeId: 'affordable-housing'
-    },
-    {
-      id: 'reply-2',
-      author: 'Lisa Martinez',
-      content: 'Agreed. Minneapolis upzoned the entire city and saw significant improvements. We should study their model.',
-      createdAt: new Date('2025-11-09'),
-      votes: 31,
-      parentId: 'comment-7',
-      challengeId: 'affordable-housing'
-    },
-    {
-      id: 'comment-8',
-      author: 'Robert Johnson',
-      authorRole: 'Housing Advocate',
-      content: 'Community land trusts have been successful in several cities. They remove speculation from the equation.',
-      createdAt: new Date('2025-11-14'),
-      votes: 22,
-      challengeId: 'affordable-housing'
-    }
-  ];
-
-  switchTab(tabName: 'challenges' | 'ideas') {
-    this.activeTab = tabName;
+  private postToIdea(post: any): Idea {
+    return {
+      id: post.id.toString(),
+      title: post.title,
+      description: post.content,
+      author: post.authorDisplayName || post.authorUsername || 'Unknown',
+      votes: post.score,
+      voted: post.voted,
+      category: '', // Not available in Post
+      status: 'New', // Default status
+      createdAt: new Date(post.createdAt),
+      challengeId: post.challengeId?.toString()
+    };
   }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'Implemented': return 'status-implemented';
-      case 'In Development': return 'status-development';
-      case 'Under Review': return 'status-review';
-      default: return 'status-new';
-    }
+  private apiCommentToBaseComment(comment: any, challengeId: number): BaseComment {
+    return {
+      id: comment.id.toString(),
+      author: comment.authorDisplayName || comment.authorUsername || 'Unknown',
+      authorRole: undefined, // Not available
+      content: comment.content,
+      createdAt: new Date(comment.createdAt),
+      votes: comment.score,
+      voted: comment.voted,
+      parentId: comment.parentId?.toString(),
+      replies: [],
+      ideaId: comment.postId?.toString(),
+      challengeId: challengeId.toString()
+    };
   }
 
-  onVoteIdea(ideaId: string) {
-    const idea = this.ideas.find(i => i.id === ideaId);
-    if (idea) {
-      idea.votes++;
+  ngOnInit() {
+    this.loadChallenges();
+  }
+
+  loadChallenges(append: boolean = false) {
+    if (this.isLoading()) {
+      return;
+    }
+    
+    // Don't reload if we already have data on initial load
+    if (!append && this.challengesData().length > 0) {
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.loadError.set(null);
+    const page = append ? this.currentPage() + 1 : 1;
+
+    console.log('Loading challenges, page:', page, 'append:', append);
+
+    this.apiService.getChallenges(page, this.pageSize).subscribe({
+      next: (data) => {
+        console.log('Challenges loaded:', data);
+        if (append) {
+          // Append for infinite scroll
+          this.challengesData.set([...this.challengesData(), ...data]);
+        } else {
+          // Replace on initial load
+          this.challengesData.set(data);
+        }
+        
+        this.currentPage.set(page);
+        this.hasMore.set(data.length === this.pageSize);
+        this.isLoading.set(false);
+        console.log('Challenges state updated:', this.challengesData().length, 'challenges');
+      },
+      error: (error) => {
+        console.error('Error loading challenges:', error);
+        this.loadError.set('Failed to load challenges. Please try again.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+  
+  retry() {
+    this.challengesData.set([]);
+    this.loadError.set(null);
+    this.loadChallenges();
+  }
+
+  loadMore() {
+    if (!this.isLoading() && this.hasMore()) {
+      this.loadChallenges(true);
     }
   }
 
   onVoteChallenge(challengeId: number) {
-    const challenge = this.challenges.find(c => c.id === challengeId);
-    if (challenge) {
-      if (challenge.voted) {
-        challenge.votes--;
-        challenge.voted = false;
-      } else {
-        challenge.votes++;
-        challenge.voted = true;
+    // Optimistically update UI
+    const currentChallenges = this.challengesData();
+    const challengeIndex = currentChallenges.findIndex(c => c.challenge.id === challengeId);
+    
+    if (challengeIndex === -1) return;
+    
+    const challengeData = currentChallenges[challengeIndex];
+    const challenge = challengeData.challenge;
+    const wasVoted = challenge.voted || false;
+    
+    // Update local state optimistically
+    const updatedChallenges = [...currentChallenges];
+    updatedChallenges[challengeIndex] = {
+      ...challengeData,
+      challenge: {
+        ...challenge,
+        voted: !wasVoted,
+        votes: wasVoted ? challenge.votes - 1 : challenge.votes + 1
       }
-    }
+    };
+    this.challengesData.set(updatedChallenges);
+
+    // Call API
+    this.apiService.voteChallenge(challengeId).subscribe({
+      next: (response) => {
+        // API confirmed, sync with response if needed
+        const challenges = this.challengesData();
+        const idx = challenges.findIndex(c => c.challenge.id === challengeId);
+        if (idx !== -1) {
+          const updated = [...challenges];
+          updated[idx] = {
+            ...updated[idx],
+            challenge: { ...updated[idx].challenge, voted: response.voted }
+          };
+          this.challengesData.set(updated);
+        }
+      },
+      error: (error) => {
+        console.error('Error voting on challenge:', error);
+        // Revert optimistic update on error
+        const challenges = this.challengesData();
+        const idx = challenges.findIndex(c => c.challenge.id === challengeId);
+        if (idx !== -1) {
+          const reverted = [...challenges];
+          reverted[idx] = {
+            ...reverted[idx],
+            challenge: {
+              ...reverted[idx].challenge,
+              voted: wasVoted,
+              votes: wasVoted ? reverted[idx].challenge.votes + 1 : reverted[idx].challenge.votes - 1
+            }
+          };
+          this.challengesData.set(reverted);
+        }
+      }
+    });
   }
 
-  getIdeasCount(challengeId: number): number {
-    return this.ideas.filter(i => i.challengeId === challengeId.toString()).length;
+  onVoteIdea(ideaId: string) {
+    const postId = parseInt(ideaId);
+    // Find and update the idea optimistically
+    const currentChallenges = this.challengesData();
+    const challengeIndex = currentChallenges.findIndex(c => c.topIdea?.id === postId);
+    
+    if (challengeIndex === -1 || !currentChallenges[challengeIndex].topIdea) return;
+    
+    const challengeData = currentChallenges[challengeIndex];
+    const idea = challengeData.topIdea!;
+    const wasVoted = idea.voted || false;
+    
+    // Update local state optimistically
+    const updatedChallenges = [...currentChallenges];
+    updatedChallenges[challengeIndex] = {
+      ...challengeData,
+      topIdea: {
+        ...idea,
+        voted: !wasVoted,
+        score: wasVoted ? idea.score - 1 : idea.score + 1
+      }
+    };
+    this.challengesData.set(updatedChallenges);
+
+    // Call API
+    this.apiService.votePost(postId).subscribe({
+      next: (response) => {
+        const challenges = this.challengesData();
+        const idx = challenges.findIndex(c => c.topIdea?.id === postId);
+        if (idx !== -1 && challenges[idx].topIdea) {
+          const updated = [...challenges];
+          updated[idx] = {
+            ...updated[idx],
+            topIdea: {
+              ...updated[idx].topIdea!,
+              voted: response.voted,
+              score: response.score
+            }
+          };
+          this.challengesData.set(updated);
+        }
+      },
+      error: (error) => {
+        console.error('Error voting on idea:', error);
+        // Revert on error
+        const challenges = this.challengesData();
+        const idx = challenges.findIndex(c => c.topIdea?.id === postId);
+        if (idx !== -1 && challenges[idx].topIdea) {
+          const reverted = [...challenges];
+          reverted[idx] = {
+            ...reverted[idx],
+            topIdea: {
+              ...reverted[idx].topIdea!,
+              voted: wasVoted,
+              score: wasVoted ? reverted[idx].topIdea!.score + 1 : reverted[idx].topIdea!.score - 1
+            }
+          };
+          this.challengesData.set(reverted);
+        }
+      }
+    });
+  }
+
+  onVoteComment(commentIdStr: string) {
+    const commentId = parseInt(commentIdStr);
+    // Find and update the comment optimistically
+    const currentChallenges = this.challengesData();
+    let challengeIndex = -1;
+    let commentIndex = -1;
+    
+    for (let i = 0; i < currentChallenges.length; i++) {
+      const idx = currentChallenges[i].comments.findIndex(c => c.id === commentId);
+      if (idx !== -1) {
+        challengeIndex = i;
+        commentIndex = idx;
+        break;
+      }
+    }
+    
+    if (challengeIndex === -1 || commentIndex === -1) return;
+    
+    const challengeData = currentChallenges[challengeIndex];
+    const comment = challengeData.comments[commentIndex];
+    const wasVoted = comment.voted || false;
+    
+    // Update local state optimistically
+    const updatedChallenges = [...currentChallenges];
+    const updatedComments = [...challengeData.comments];
+    updatedComments[commentIndex] = {
+      ...comment,
+      voted: !wasVoted,
+      score: wasVoted ? comment.score - 1 : comment.score + 1
+    };
+    updatedChallenges[challengeIndex] = {
+      ...challengeData,
+      comments: updatedComments
+    };
+    this.challengesData.set(updatedChallenges);
+
+    // Call API
+    this.apiService.voteComment(commentId).subscribe({
+      next: (response) => {
+        const challenges = this.challengesData();
+        let chIdx = -1;
+        let cmIdx = -1;
+        
+        for (let i = 0; i < challenges.length; i++) {
+          const idx = challenges[i].comments.findIndex(c => c.id === commentId);
+          if (idx !== -1) {
+            chIdx = i;
+            cmIdx = idx;
+            break;
+          }
+        }
+        
+        if (chIdx !== -1 && cmIdx !== -1) {
+          const updated = [...challenges];
+          const updatedComments = [...updated[chIdx].comments];
+          updatedComments[cmIdx] = {
+            ...updatedComments[cmIdx],
+            voted: response.voted,
+            score: response.score
+          };
+          updated[chIdx] = {
+            ...updated[chIdx],
+            comments: updatedComments
+          };
+          this.challengesData.set(updated);
+        }
+      },
+      error: (error) => {
+        console.error('Error voting on comment:', error);
+        // Revert on error
+        const challenges = this.challengesData();
+        let chIdx = -1;
+        let cmIdx = -1;
+        
+        for (let i = 0; i < challenges.length; i++) {
+          const idx = challenges[i].comments.findIndex(c => c.id === commentId);
+          if (idx !== -1) {
+            chIdx = i;
+            cmIdx = idx;
+            break;
+          }
+        }
+        
+        if (chIdx !== -1 && cmIdx !== -1) {
+          const reverted = [...challenges];
+          const revertedComments = [...reverted[chIdx].comments];
+          revertedComments[cmIdx] = {
+            ...revertedComments[cmIdx],
+            voted: wasVoted,
+            score: wasVoted ? revertedComments[cmIdx].score + 1 : revertedComments[cmIdx].score - 1
+          };
+          reverted[chIdx] = {
+            ...reverted[chIdx],
+            comments: revertedComments
+          };
+          this.challengesData.set(reverted);
+        }
+      }
+    });
   }
 }

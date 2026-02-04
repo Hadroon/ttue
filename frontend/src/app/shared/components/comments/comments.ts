@@ -1,9 +1,10 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Comment } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { AuthGuardService } from '../../services/auth-guard.service';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-comments',
@@ -17,8 +18,10 @@ export class Comments implements OnInit {
   @Input() entityType: 'challenge' | 'idea' = 'challenge';
   @Input() allComments: Comment[] = [];
   @Input() compact: boolean = false;
+  @Output() voteComment = new EventEmitter<string>();
 
   private authGuard = inject(AuthGuardService);
+  private apiService = inject(ApiService);
 
   filteredComments: Comment[] = [];
   displayedComments: Comment[] = [];
@@ -29,20 +32,33 @@ export class Comments implements OnInit {
   showCommentBox: boolean = false;
 
   ngOnInit() {
+    console.log('Comments initialized:', {
+      entityId: this.entityId,
+      entityType: this.entityType,
+      allComments: this.allComments,
+      allCommentsCount: this.allComments.length
+    });
     this.filterAndSortComments();
   }
 
   ngOnChanges() {
+    console.log('Comments changed:', {
+      entityId: this.entityId,
+      entityType: this.entityType,
+      allComments: this.allComments
+    });
     this.filterAndSortComments();
   }
 
   filterAndSortComments() {
+    console.log('Filtering comments for:', this.entityType, this.entityId);
     // Filter top-level comments by entity
     if (this.entityType === 'challenge') {
       this.filteredComments = this.allComments.filter(c => c.challengeId === this.entityId?.toString() && !c.parentId);
     } else {
       this.filteredComments = this.allComments.filter(c => c.ideaId === this.entityId?.toString() && !c.parentId);
     }
+    console.log('Filtered comments:', this.filteredComments.length, this.filteredComments);
 
     // Attach replies to each comment
     this.filteredComments.forEach(comment => {
@@ -163,16 +179,8 @@ export class Comments implements OnInit {
       return;
     }
 
-    const comment = this.allComments.find(c => c.id === commentId);
-    if (comment) {
-      if (comment.voted) {
-        comment.votes--;
-        comment.voted = false;
-      } else {
-        comment.votes++;
-        comment.voted = true;
-      }
-    }
+    // Emit event to parent component to handle the vote
+    this.voteComment.emit(commentId);
   }
 
   formatTimeAgo(date: Date): string {
