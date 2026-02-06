@@ -21,8 +21,20 @@
   <section class="section hero compose-hero">
     <div class="container compose-hero-inner">
       <div class="compose-hero-copy">
-        <h1>Compose long-form proposals with precision.</h1>
-        <p class="lead">Use the workbench to craft evidence-rich drafts, compare revisions, and prepare your article for expert review before it reaches the community feed.</p>
+        @if (challenge()) {
+          <div class="challenge-context" style="margin-bottom: 1rem;">
+            <span class="chip">Challenge: {{ challenge()!.category }}</span>
+            <h1>{{ challenge()!.title }}</h1>
+            <p class="lead">{{ challenge()!.description }}</p>
+          </div>
+        } @else if (loadingChallenge()) {
+          <p class="lead">Loading challenge...</p>
+        } @else if (challengeError()) {
+          <p class="lead" style="color: var(--color-error, red);">{{ challengeError() }}</p>
+        } @else {
+          <h1>Compose long-form proposals with precision.</h1>
+          <p class="lead">Use the workbench to craft evidence-rich drafts, compare revisions, and prepare your article for expert review before it reaches the community feed.</p>
+        }
         <div class="hero-actions">
           <button type="button" class="btn primary lg" (click)="publishDraft()">Publish current draft</button>
           <button type="button" class="btn secondary lg" (click)="saveSnapshot()">Save snapshot</button>

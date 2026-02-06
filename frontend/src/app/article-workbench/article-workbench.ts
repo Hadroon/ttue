@@ -3,6 +3,7 @@ import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, W
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Header } from '../shared/components';
+import { ApiService, Challenge } from '../shared/services/api.service';
 
 type DiffKind = 'added' | 'removed' | 'unchanged';
 
@@ -115,19 +116,43 @@ export class ArticleWorkbench implements AfterViewInit {
   ];
 
   readonly challengeId: WritableSignal<number | null> = signal(null);
+  readonly challenge: WritableSignal<Challenge | null> = signal(null);
+  readonly loadingChallenge: WritableSignal<boolean> = signal(false);
+  readonly challengeError: WritableSignal<string | null> = signal(null);
 
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private apiService: ApiService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     
-    // Read challengeId from query parameters
+    // Read challengeId from query parameters and fetch challenge
     this.route.queryParams.subscribe(params => {
       const id = params['challengeId'];
       if (id) {
-        this.challengeId.set(Number(id));
+        const numericId = Number(id);
+        this.challengeId.set(numericId);
         console.log('Article Workbench loaded with challengeId:', id);
+        this.fetchChallenge(numericId);
+      }
+    });
+  }
+
+  private fetchChallenge(id: number): void {
+    this.loadingChallenge.set(true);
+    this.challengeError.set(null);
+    
+    this.apiService.getChallenge(id).subscribe({
+      next: (challenge) => {
+        this.challenge.set(challenge);
+        this.loadingChallenge.set(false);
+        console.log('Challenge loaded:', challenge);
+      },
+      error: (error) => {
+        console.error('Error loading challenge:', error);
+        this.challengeError.set('Failed to load challenge');
+        this.loadingChallenge.set(false);
       }
     });
   }
