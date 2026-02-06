@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, Signal, input, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, Signal, input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Challenge } from '../../models/baseModels';
 
 @Component({
@@ -13,6 +14,8 @@ export class ChallengeCard implements OnInit {
   challenge = input.required<Challenge>();
   @Input() ideasCount: number = 0;
   @Output() voteChallenge = new EventEmitter<number>();
+  
+  private router = inject(Router);
 
   constructor() {
     console.log('ChallengeCard created');
@@ -48,5 +51,11 @@ export class ChallengeCard implements OnInit {
 
   onVote() {
     this.voteChallenge.emit(this.challenge().id);
+  }
+
+  navigateToWorkbench() {
+    this.router.navigate(['/article-workbench'], { 
+      queryParams: { challengeId: this.challenge().id } 
+    });
   }
 }

@@ -1,6 +1,7 @@
 <article class="challenge-card">
   <div class="challenge-vote">
-    <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()" [attr.aria-label]="'Vote for ' + challenge().title">
+    <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
+      [attr.aria-label]="'Vote for ' + challenge().title">
       <span class="vote-icon">▲</span>
       <span class="vote-count">{{ challenge().votes }}</span>
     </button>
@@ -40,21 +41,14 @@
         </div>
         }
       </div> -->
-                    <div class="challenge-tags">
+      <div class="challenge-tags">
         @for (tag of challenge().tags; track tag) {
         <span class="tag">#{{ tag }}</span>
         }
       </div>
     </div>
-
-                    <!-- <app-comments
-                  [entityId]="challenge().id"
-                  [entityType]="'challenge'"
-                  [allComments]="comments"
-                  [compact]="true">
-                </app-comments> -->
     <div class="challenge-actions">
-      <a class="btn secondary sm" [href]="'#challenge-' + challenge().id">Learn more</a>
+      <button class="btn secondary sm" (click)="navigateToWorkbench()">Explore Challenge</button>
       <a class="btn primary sm" [href]="'#join-' + challenge().id">Join challenge</a>
     </div>
   </div>

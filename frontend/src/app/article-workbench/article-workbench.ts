@@ -1,6 +1,6 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, WritableSignal, signal, computed } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Header } from '../shared/components';
 
@@ -114,8 +114,22 @@ export class ArticleWorkbench implements AfterViewInit {
     { icon: '1.', label: 'Numbered', command: 'insertOrderedList' }
   ];
 
-  constructor(@Inject(PLATFORM_ID) private readonly platformId: object) {
+  readonly challengeId: WritableSignal<number | null> = signal(null);
+
+  constructor(
+    @Inject(PLATFORM_ID) private readonly platformId: object,
+    private route: ActivatedRoute
+  ) {
     this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Read challengeId from query parameters
+    this.route.queryParams.subscribe(params => {
+      const id = params['challengeId'];
+      if (id) {
+        this.challengeId.set(Number(id));
+        console.log('Article Workbench loaded with challengeId:', id);
+      }
+    });
   }
 
   ngAfterViewInit(): void {
