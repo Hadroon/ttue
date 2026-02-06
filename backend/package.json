@@ -7,7 +7,14 @@
     "dev": "bun --env-file=../.env.local run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "start:staging": "bun --env-file=../.env.staging run src/index.ts",
-    "start:prod": "bun --env-file=../.env.production run src/index.ts"
+    "start:prod": "bun --env-file=../.env.production run src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "bun --env-file=../.env.local run src/db/seed-challenges.ts",
+    "db:reset": "powershell -ExecutionPolicy Bypass -File ./scripts/reset-db.ps1",
+    "db:reset:bash": "bash ./scripts/reset-db.sh"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

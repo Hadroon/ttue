@@ -54,10 +54,11 @@ export class ChallengeGrid2x2 {
     return status ? classes[status] || '' : '';
   }
 
-  formatDeadline(deadline?: Date): string {
+  formatDeadline(deadline?: Date | string): string {
     if (!deadline) return '';
+    const deadlineDate = typeof deadline === 'string' ? new Date(deadline) : deadline;
     const now = new Date();
-    const diff = deadline.getTime() - now.getTime();
+    const diff = deadlineDate.getTime() - now.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (days < 0) return 'Ended';
