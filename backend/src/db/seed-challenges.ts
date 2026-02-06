@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { challenges, users, posts, comments } from "./schema";
+import { challenges, users, ideas, comments } from "./schema";
 
 const seedChallenges = [
   {
@@ -84,31 +84,31 @@ async function seed() {
       ];
       
       for (const idea of ideaData) {
-        const [insertedPost] = await db
-          .insert(posts)
+        const [insertedIdea] = await db
+          .insert(ideas)
           .values(idea)
           .returning();
         
-        console.log(`  💡 Created idea: ${insertedPost.title} (ID: ${insertedPost.id}, Score: ${insertedPost.score})`);
+        console.log(`  💡 Created idea: ${insertedIdea.title} (ID: ${insertedIdea.id}, Score: ${insertedIdea.score})`);
         
         // Add sample comments to the top idea
-        if (insertedPost.score >= 40) {
+        if (insertedIdea.score >= 40) {
           const commentData = [
             {
               content: 'This is an excellent proposal! I especially appreciate the focus on implementation details.',
-              postId: insertedPost.id,
+              ideaId: insertedIdea.id,
               authorId: userId,
               score: 12
             },
             {
               content: 'Have you considered the budget implications? We should add a cost-benefit analysis.',
-              postId: insertedPost.id,
+              ideaId: insertedIdea.id,
               authorId: userId,
               score: 8
             },
             {
               content: 'Great work! This aligns well with our community priorities.',
-              postId: insertedPost.id,
+              ideaId: insertedIdea.id,
               authorId: userId,
               score: 5
             }

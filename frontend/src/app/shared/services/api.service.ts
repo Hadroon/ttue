@@ -15,7 +15,7 @@ export interface User {
   updated_at: string;
 }
 
-export interface Post {
+export interface Idea {
   id: number;
   title: string;
   content: string;
@@ -38,14 +38,14 @@ export interface Post {
   user?: User; // Legacy nested user
   comments?: Comment[];
   vote_count?: number;
-  voted?: boolean; // Whether the current user has voted on this post
+  voted?: boolean; // Whether the current user has voted on this idea
 }
 
 export interface Comment {
   id: number;
   content: string;
-  postId?: number; // New camelCase from backend
-  post_id?: number; // Legacy support
+  ideaId?: number; // New camelCase from backend
+  idea_id?: number; // Legacy support
   authorId?: number; // New camelCase from backend
   user_id?: number; // Legacy support
   parentId?: number | null; // New camelCase from backend
@@ -68,7 +68,7 @@ export interface Comment {
 export interface Vote {
   id: number;
   user_id: number;
-  post_id?: number;
+  idea_id?: number;
   comment_id?: number;
   vote_type: 'up' | 'down';
   created_at: string;
@@ -92,13 +92,13 @@ export interface Challenge {
 
 export interface FeaturedChallenge {
   challenge: Challenge;
-  topIdea: Post | null;
+  topIdea: Idea | null;
   comments: Comment[];
 }
 
-export interface PostRevision {
+export interface IdeaRevision {
   id: number;
-  post_id: number;
+  idea_id: number;
   title: string;
   content: string;
   revision_number: number;
@@ -107,25 +107,25 @@ export interface PostRevision {
 }
 
 // API request/response interfaces
-export interface CreatePostRequest {
+export interface CreateIdeaRequest {
   title: string;
   content: string;
 }
 
-export interface UpdatePostRequest {
+export interface UpdateIdeaRequest {
   title?: string;
   content?: string;
 }
 
 export interface CreateCommentRequest {
   content: string;
-  post_id: number;
+  idea_id: number;
   parent_id?: number;
 }
 
 export interface CreateVoteRequest {
   vote_type: 'up' | 'down';
-  post_id?: number;
+  idea_id?: number;
   comment_id?: number;
 }
 
@@ -153,23 +153,23 @@ export class ApiService {
   private readonly baseUrl = environment.apiUrl;
 
   // Signal-based reactive state management
-  private readonly _posts = signal<PaginatedResponse<Post> | null>(null);
+  private readonly _ideas = signal<PaginatedResponse<Idea> | null>(null);
   private readonly _currentUser = signal<User | null>(null);
   private readonly _loading = signal<boolean>(false);
   private readonly _error = signal<string | null>(null);
 
   // Computed properties for reactive access
-  readonly posts = this._posts.asReadonly();
+  readonly ideas = this._ideas.asReadonly();
   readonly currentUser = this._currentUser.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
   // BehaviorSubjects for complex data streams
-  private readonly postsSubject = new BehaviorSubject<PaginatedResponse<Post> | null>(null);
+  private readonly ideasSubject = new BehaviorSubject<PaginatedResponse<Idea> | null>(null);
   private readonly userSubject = new BehaviorSubject<User | null>(null);
 
   // Observable streams
-  readonly posts$ = this.postsSubject.asObservable();
+  readonly ideas$ = this.ideasSubject.asObservable();
   readonly currentUser$ = this.userSubject.asObservable();
 
 
@@ -178,24 +178,24 @@ export class ApiService {
     return this.http.post<ApiResponse<boolean>>(`${this.baseUrl}/welcome`, { password });
   }
   /**
-   * Load posts with pagination
+   * Load ideas with pagination
    */
-  loadPosts(page: number = 1, limit: number = 20): Observable<PaginatedResponse<Post>> {
+  loadIdeas(page: number = 1, limit: number = 20): Observable<PaginatedResponse<Idea>> {
     this._loading.set(true);
     this._error.set(null);
 
-    const request = this.http.get<PaginatedResponse<Post>>(`${this.baseUrl}/posts`, {
+    const request = this.http.get<PaginatedResponse<Idea>>(`${this.baseUrl}/ideas`, {
       params: { page: page.toString(), limit: limit.toString() }
     });
 
     request.subscribe({
       next: (data) => {
-        this._posts.set(data);
-        this.postsSubject.next(data);
+        this._ideas.set(data);
+        this.ideasSubject.next(data);
         this._loading.set(false);
       },
       error: (error) => {
-        this._error.set(error.message || 'Failed to load posts');
+        this._error.set(error.message || 'Failed to load ideas');
         this._loading.set(false);
       }
     });
@@ -204,17 +204,17 @@ export class ApiService {
   }
 
   /**
-   * Get a single post by ID
+   * Get a single idea by ID
    */
-  getPost(postId: number): Observable<Post> {
-    return this.http.get<Post>(`${this.baseUrl}/posts/${postId}`);
+  getIdea(ideaId: number): Observable<Idea> {
+    return this.http.get<Idea>(`${this.baseUrl}/ideas/${ideaId}`);
   }
 
   /**
-   * Get comments for a specific post
+   * Get comments for a specific idea
    */
-  getComments(postId: number): Observable<Comment[]> {
-    return this.http.get<Comment[]>(`${this.baseUrl}/posts/${postId}/comments`);
+  getComments(ideaId: number): Observable<Comment[]> {
+    return this.http.get<Comment[]>(`${this.baseUrl}/ideas/${ideaId}/comments`);
   }
 
   /**
@@ -245,10 +245,10 @@ export class ApiService {
   }
 
   /**
-   * Search posts
+   * Search ideas
    */
-  searchPosts(query: string, page: number = 1, limit: number = 20): Observable<PaginatedResponse<Post>> {
-    return this.http.get<PaginatedResponse<Post>>(`${this.baseUrl}/posts/search`, {
+  searchIdeas(query: string, page: number = 1, limit: number = 20): Observable<PaginatedResponse<Idea>> {
+    return this.http.get<PaginatedResponse<Idea>>(`${this.baseUrl}/ideas/search`, {
       params: {
         q: query,
         page: page.toString(),
@@ -258,33 +258,33 @@ export class ApiService {
   }
 
   /**
-   * Get post revisions
+   * Get idea revisions
    */
-  getPostRevisions(postId: number): Observable<PostRevision[]> {
-    return this.http.get<PostRevision[]>(`${this.baseUrl}/posts/${postId}/revisions`);
+  getIdeaRevisions(ideaId: number): Observable<IdeaRevision[]> {
+    return this.http.get<IdeaRevision[]>(`${this.baseUrl}/ideas/${ideaId}/revisions`);
   }
 
   // CRUD Operations using HTTP methods
 
   /**
-   * Create a new post
+   * Create a new idea
    */
-  createPost(data: CreatePostRequest) {
-    return this.http.post<ApiResponse<Post>>(`${this.baseUrl}/posts`, data);
+  createIdea(data: CreateIdeaRequest) {
+    return this.http.post<ApiResponse<Idea>>(`${this.baseUrl}/ideas`, data);
   }
 
   /**
-   * Update an existing post
+   * Update an existing idea
    */
-  updatePost(postId: number, data: UpdatePostRequest) {
-    return this.http.put<ApiResponse<Post>>(`${this.baseUrl}/posts/${postId}`, data);
+  updateIdea(ideaId: number, data: UpdateIdeaRequest) {
+    return this.http.put<ApiResponse<Idea>>(`${this.baseUrl}/ideas/${ideaId}`, data);
   }
 
   /**
-   * Delete a post
+   * Delete an idea
    */
-  deletePost(postId: number) {
-    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/posts/${postId}`);
+  deleteIdea(ideaId: number) {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/ideas/${ideaId}`);
   }
 
   /**
@@ -309,7 +309,7 @@ export class ApiService {
   }
 
   /**
-   * Vote on a post or comment
+   * Vote on an idea or comment
    */
   vote(data: CreateVoteRequest) {
     return this.http.post<ApiResponse<Vote>>(`${this.baseUrl}/votes`, data);
@@ -323,10 +323,10 @@ export class ApiService {
   }
 
   /**
-   * Get user's votes for a post
+   * Get user's votes for an idea
    */
-  getUserVotes(postId: number) {
-    return this.http.get<Vote[]>(`${this.baseUrl}/posts/${postId}/user-votes`);
+  getUserVotes(ideaId: number) {
+    return this.http.get<Vote[]>(`${this.baseUrl}/ideas/${ideaId}/user-votes`);
   }
 
   // Authentication methods
@@ -385,19 +385,19 @@ export class ApiService {
   // Additional utility methods
 
   /**
-   * Load trending posts
+   * Load trending ideas
    */
-  loadTrendingPosts(timeframe: 'day' | 'week' | 'month' = 'week'): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.baseUrl}/posts/trending`, {
+  loadTrendingIdeas(timeframe: 'day' | 'week' | 'month' = 'week'): Observable<Idea[]> {
+    return this.http.get<Idea[]>(`${this.baseUrl}/ideas/trending`, {
       params: { timeframe }
     });
   }
 
   /**
-   * Load user's posts
+   * Load user's ideas
    */
-  loadUserPosts(userId: number, page: number = 1, limit: number = 20): Observable<PaginatedResponse<Post>> {
-    return this.http.get<PaginatedResponse<Post>>(`${this.baseUrl}/users/${userId}/posts`, {
+  loadUserIdeas(userId: number, page: number = 1, limit: number = 20): Observable<PaginatedResponse<Idea>> {
+    return this.http.get<PaginatedResponse<Idea>>(`${this.baseUrl}/users/${userId}/ideas`, {
       params: { page: page.toString(), limit: limit.toString() }
     });
   }
@@ -415,13 +415,13 @@ export class ApiService {
    * Get forum statistics
    */
   getForumStats(): Observable<{
-    total_posts: number;
+    total_ideas: number;
     total_comments: number;
     total_users: number;
     active_users_today: number;
   }> {
     return this.http.get<{
-      total_posts: number;
+      total_ideas: number;
       total_comments: number;
       total_users: number;
       active_users_today: number;
@@ -429,10 +429,10 @@ export class ApiService {
   }
 
   /**
-   * Increment post view count
+   * Increment idea view count
    */
-  incrementPostViews(postId: number): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/posts/${postId}/view`, {});
+  incrementIdeaViews(ideaId: number): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/ideas/${ideaId}/view`, {});
   }
 
   // Challenge methods
@@ -482,12 +482,12 @@ export class ApiService {
   }
 
   /**
-   * Vote on a post/idea (toggle upvote)
+   * Vote on an idea (toggle upvote)
    */
-  votePost(postId: number) {
-    console.log("Voting on post:", postId);
+  voteIdea(ideaId: number) {
+    console.log("Voting on idea:", ideaId);
     return this.http.post<{ message: string; score: number; voted: boolean }>(
-      `${this.baseUrl}/posts/${postId}/vote`,
+      `${this.baseUrl}/ideas/${ideaId}/vote`,
       { value: 1 }
     );
   }

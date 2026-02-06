@@ -22,8 +22,8 @@ export const users = pgTable("users", {
   googleIdIdx: index("google_id_idx").on(table.googleId),
 }));
 
-// Posts table
-export const posts = pgTable("posts", {
+// Ideas table
+export const ideas = pgTable("ideas", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   content: text("content").notNull(),
@@ -36,17 +36,17 @@ export const posts = pgTable("posts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
-  authorIdx: index("post_author_idx").on(table.authorId),
-  challengeIdx: index("post_challenge_idx").on(table.challengeId),
-  scoreIdx: index("post_score_idx").on(table.score),
-  createdAtIdx: index("post_created_at_idx").on(table.createdAt),
+  authorIdx: index("idea_author_idx").on(table.authorId),
+  challengeIdx: index("idea_challenge_idx").on(table.challengeId),
+  scoreIdx: index("idea_score_idx").on(table.score),
+  createdAtIdx: index("idea_created_at_idx").on(table.createdAt),
 }));
 
 // Comments table
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
-  postId: integer("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  ideaId: integer("idea_id").notNull().references(() => ideas.id, { onDelete: "cascade" }),
   authorId: integer("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   parentId: integer("parent_id").references(() => comments.id, { onDelete: "cascade" }),
   score: integer("score").default(0).notNull(),
@@ -54,20 +54,20 @@ export const comments = pgTable("comments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
-  postIdx: index("comment_post_idx").on(table.postId),
+  ideaIdx: index("comment_idea_idx").on(table.ideaId),
   authorIdx: index("comment_author_idx").on(table.authorId),
   parentIdx: index("comment_parent_idx").on(table.parentId),
 }));
 
-// Post votes table
-export const postVotes = pgTable("post_votes", {
+// Idea votes table
+export const ideaVotes = pgTable("idea_votes", {
   id: serial("id").primaryKey(),
-  postId: integer("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  ideaId: integer("idea_id").notNull().references(() => ideas.id, { onDelete: "cascade" }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   value: integer("value").notNull(), // 1 for upvote, -1 for downvote
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
-  postUserUnique: uniqueIndex("post_user_vote_unique").on(table.postId, table.userId),
+  ideaUserUnique: uniqueIndex("idea_user_vote_unique").on(table.ideaId, table.userId),
 }));
 
 // Comment votes table
@@ -81,17 +81,17 @@ export const commentVotes = pgTable("comment_votes", {
   commentUserUnique: uniqueIndex("comment_user_vote_unique").on(table.commentId, table.userId),
 }));
 
-// Post revisions table
-export const postRevisions = pgTable("post_revisions", {
+// Idea revisions table
+export const ideaRevisions = pgTable("idea_revisions", {
   id: serial("id").primaryKey(),
-  postId: integer("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  ideaId: integer("idea_id").notNull().references(() => ideas.id, { onDelete: "cascade" }),
   editorId: integer("editor_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   content: text("content").notNull(),
   editSummary: text("edit_summary"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
-  postIdx: index("revision_post_idx").on(table.postId),
+  ideaIdx: index("revision_idea_idx").on(table.ideaId),
 }));
 
 // Tags table
@@ -103,13 +103,13 @@ export const tags = pgTable("tags", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Post tags junction table
-export const postTags = pgTable("post_tags", {
-  postId: integer("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+// Idea tags junction table
+export const ideaTags = pgTable("idea_tags", {
+  ideaId: integer("idea_id").notNull().references(() => ideas.id, { onDelete: "cascade" }),
   tagId: integer("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
-  postTagUnique: uniqueIndex("post_tag_unique").on(table.postId, table.tagId),
+  ideaTagUnique: uniqueIndex("idea_tag_unique").on(table.ideaId, table.tagId),
 }));
 
 // Challenges table
@@ -146,32 +146,32 @@ export const challengeVotes = pgTable("challenge_votes", {
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
+  ideas: many(ideas),
   comments: many(comments),
-  postVotes: many(postVotes),
+  ideaVotes: many(ideaVotes),
   commentVotes: many(commentVotes),
   challengeVotes: many(challengeVotes),
 }));
 
-export const postsRelations = relations(posts, ({ one, many }) => ({
+export const ideasRelations = relations(ideas, ({ one, many }) => ({
   author: one(users, {
-    fields: [posts.authorId],
+    fields: [ideas.authorId],
     references: [users.id],
   }),
   challenge: one(challenges, {
-    fields: [posts.challengeId],
+    fields: [ideas.challengeId],
     references: [challenges.id],
   }),
   comments: many(comments),
-  votes: many(postVotes),
-  revisions: many(postRevisions),
-  tags: many(postTags),
+  votes: many(ideaVotes),
+  revisions: many(ideaRevisions),
+  tags: many(ideaTags),
 }));
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
-  post: one(posts, {
-    fields: [comments.postId],
-    references: [posts.id],
+  idea: one(ideas, {
+    fields: [comments.ideaId],
+    references: [ideas.id],
   }),
   author: one(users, {
     fields: [comments.authorId],
@@ -188,13 +188,13 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
   votes: many(commentVotes),
 }));
 
-export const postVotesRelations = relations(postVotes, ({ one }) => ({
-  post: one(posts, {
-    fields: [postVotes.postId],
-    references: [posts.id],
+export const ideaVotesRelations = relations(ideaVotes, ({ one }) => ({
+  idea: one(ideas, {
+    fields: [ideaVotes.ideaId],
+    references: [ideas.id],
   }),
   user: one(users, {
-    fields: [postVotes.userId],
+    fields: [ideaVotes.userId],
     references: [users.id],
   }),
 }));
@@ -210,35 +210,35 @@ export const commentVotesRelations = relations(commentVotes, ({ one }) => ({
   }),
 }));
 
-export const postRevisionsRelations = relations(postRevisions, ({ one }) => ({
-  post: one(posts, {
-    fields: [postRevisions.postId],
-    references: [posts.id],
+export const ideaRevisionsRelations = relations(ideaRevisions, ({ one }) => ({
+  idea: one(ideas, {
+    fields: [ideaRevisions.ideaId],
+    references: [ideas.id],
   }),
   editor: one(users, {
-    fields: [postRevisions.editorId],
+    fields: [ideaRevisions.editorId],
     references: [users.id],
   }),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
-  posts: many(postTags),
+  ideas: many(ideaTags),
 }));
 
-export const postTagsRelations = relations(postTags, ({ one }) => ({
-  post: one(posts, {
-    fields: [postTags.postId],
-    references: [posts.id],
+export const ideaTagsRelations = relations(ideaTags, ({ one }) => ({
+  idea: one(ideas, {
+    fields: [ideaTags.ideaId],
+    references: [ideas.id],
   }),
   tag: one(tags, {
-    fields: [postTags.tagId],
+    fields: [ideaTags.tagId],
     references: [tags.id],
   }),
 }));
 
 export const challengesRelations = relations(challenges, ({ many }) => ({
   votes: many(challengeVotes),
-  ideas: many(posts),
+  ideas: many(ideas),
 }));
 
 export const challengeVotesRelations = relations(challengeVotes, ({ one }) => ({

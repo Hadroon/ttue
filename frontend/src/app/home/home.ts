@@ -2,7 +2,7 @@ import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angu
 import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Header, ChallengeGrid2x2, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem } from '../shared/components';
-import { ApiService, FeaturedChallenge, Post, Comment as ApiComment } from '../shared/services/api.service';
+import { ApiService, FeaturedChallenge, Idea as ApiIdea, Comment as ApiComment } from '../shared/services/api.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -58,7 +58,7 @@ export class Home implements OnInit {
           challengesList.push(challenge);
           console.log('✅ Processed featured challenge:', challenge);
           
-          // Convert API Post to component Idea model
+          // Convert API Idea to component Idea model
           if (featured.topIdea) {
             const idea: Idea = {
               id: featured.topIdea.id.toString(),
@@ -174,7 +174,7 @@ export class Home implements OnInit {
   onVoteIdea(ideaId: string) {
     console.log('Voting on idea:', ideaId);
     const postId = parseInt(ideaId);
-    this.apiService.votePost(postId).subscribe({
+    this.apiService.voteIdea(postId).subscribe({
       next: (response: { message: string; score: number; voted: boolean }) => {
         console.log('Vote response for idea', ideaId, ':', response);
         const voted = response.voted;
@@ -191,7 +191,7 @@ export class Home implements OnInit {
           return newMap;
         });
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error voting on idea:', error);
       }
     });

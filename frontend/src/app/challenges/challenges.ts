@@ -25,23 +25,23 @@ export class Challenges implements OnInit {
   challenges = computed(() => {
     return this.challengesData().map(item => ({
       challenge: item.challenge,
-      ideas: item.topIdea ? [this.postToIdea(item.topIdea)] : [],
+      ideas: item.topIdea ? [this.apiIdeaToIdea(item.topIdea)] : [],
       comments: item.comments.map(c => this.apiCommentToBaseComment(c, item.challenge.id))
     }));
   });
 
-  private postToIdea(post: any): Idea {
+  private apiIdeaToIdea(idea: any): Idea {
     return {
-      id: post.id.toString(),
-      title: post.title,
-      description: post.content,
-      author: post.authorDisplayName || post.authorUsername || 'Unknown',
-      votes: post.score,
-      voted: post.voted,
-      category: '', // Not available in Post
+      id: idea.id.toString(),
+      title: idea.title,
+      description: idea.content,
+      author: idea.authorDisplayName || idea.authorUsername || 'Unknown',
+      votes: idea.score,
+      voted: idea.voted,
+      category: '', // Not available in Idea
       status: 'New', // Default status
-      createdAt: new Date(post.createdAt),
-      challengeId: post.challengeId?.toString()
+      createdAt: new Date(idea.createdAt),
+      challengeId: idea.challengeId?.toString()
     };
   }
 
@@ -56,7 +56,7 @@ export class Challenges implements OnInit {
       voted: comment.voted,
       parentId: comment.parentId?.toString(),
       replies: [],
-      ideaId: comment.postId?.toString(),
+      ideaId: comment.ideaId?.toString(),
       challengeId: challengeId.toString()
     };
   }
@@ -201,8 +201,8 @@ export class Challenges implements OnInit {
     this.challengesData.set(updatedChallenges);
 
     // Call API
-    this.apiService.votePost(postId).subscribe({
-      next: (response) => {
+    this.apiService.voteIdea(postId).subscribe({
+      next: (response: { message: string; score: number; voted: boolean }) => {
         const challenges = this.challengesData();
         const idx = challenges.findIndex(c => c.topIdea?.id === postId);
         if (idx !== -1 && challenges[idx].topIdea) {
@@ -218,7 +218,7 @@ export class Challenges implements OnInit {
           this.challengesData.set(updated);
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error voting on idea:', error);
         // Revert on error
         const challenges = this.challengesData();

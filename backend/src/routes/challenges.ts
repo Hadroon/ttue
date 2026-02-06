@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { challenges, challengeVotes, posts, comments, users, postVotes, commentVotes } from "../db/schema";
+import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentVotes } from "../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 
@@ -37,7 +37,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
 
     // If user is authenticated, check which items they've voted on
     let userVotedChallengeIds: number[] = [];
-    let userVotedPostIds: number[] = [];
+    let userVotedIdeaIds: number[] = [];
     let userVotedCommentIds: number[] = [];
     
     if (userId) {
@@ -47,11 +47,11 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
         .where(eq(challengeVotes.userId, userId));
       userVotedChallengeIds = challengeVotesData.map(v => v.challengeId);
 
-      const postVotesData = await db
-        .select({ postId: postVotes.postId })
-        .from(postVotes)
-        .where(eq(postVotes.userId, userId));
-      userVotedPostIds = postVotesData.map(v => v.postId);
+      const ideaVotesData = await db
+        .select({ ideaId: ideaVotes.ideaId })
+        .from(ideaVotes)
+        .where(eq(ideaVotes.userId, userId));
+      userVotedIdeaIds = ideaVotesData.map(v => v.ideaId);
 
       const commentVotesData = await db
         .select({ commentId: commentVotes.commentId })
@@ -68,25 +68,25 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
         // Get the most voted idea (post) for this challenge
         const topIdeas = await db
           .select({
-            id: posts.id,
-            title: posts.title,
-            content: posts.content,
-            authorId: posts.authorId,
-            challengeId: posts.challengeId,
-            score: posts.score,
-            viewCount: posts.viewCount,
-            isPinned: posts.isPinned,
-            isClosed: posts.isClosed,
-            createdAt: posts.createdAt,
-            updatedAt: posts.updatedAt,
+            id: ideas.id,
+            title: ideas.title,
+            content: ideas.content,
+            authorId: ideas.authorId,
+            challengeId: ideas.challengeId,
+            score: ideas.score,
+            viewCount: ideas.viewCount,
+            isPinned: ideas.isPinned,
+            isClosed: ideas.isClosed,
+            createdAt: ideas.createdAt,
+            updatedAt: ideas.updatedAt,
             authorUsername: users.username,
             authorDisplayName: users.displayName,
             authorAvatarUrl: users.avatarUrl,
           })
-          .from(posts)
-          .innerJoin(users, eq(posts.authorId, users.id))
-          .where(eq(posts.challengeId, challenge.id))
-          .orderBy(desc(posts.score), desc(posts.createdAt))
+          .from(ideas)
+          .innerJoin(users, eq(ideas.authorId, users.id))
+          .where(eq(ideas.challengeId, challenge.id))
+          .orderBy(desc(ideas.score), desc(ideas.createdAt))
           .limit(1);
 
         let topIdea = null;
@@ -94,7 +94,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
           const idea = topIdeas[0];
           topIdea = {
             ...idea,
-            voted: userVotedPostIds.includes(idea.id),
+            voted: userVotedIdeaIds.includes(idea.id),
           };
         }
 
@@ -105,7 +105,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
             .select({
               id: comments.id,
               content: comments.content,
-              postId: comments.postId,
+              ideaId: comments.ideaId,
               authorId: comments.authorId,
               parentId: comments.parentId,
               score: comments.score,
@@ -118,7 +118,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
             })
             .from(comments)
             .innerJoin(users, eq(comments.authorId, users.id))
-            .where(eq(comments.postId, topIdea.id))
+            .where(eq(comments.ideaId, topIdea.id))
             .orderBy(desc(comments.score), desc(comments.createdAt))
             .limit(3);
           
@@ -366,15 +366,15 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
       userVotedChallengeIds = votes.map(v => v.challengeId);
     }
 
-    // Get user's votes for posts and comments if authenticated
-    let userVotedPostIds: number[] = [];
+    // Get user's votes for ideas and comments if authenticated
+    let userVotedIdeaIds: number[] = [];
     let userVotedCommentIds: number[] = [];
     if (userId) {
-      const postVotesData = await db
-        .select({ postId: postVotes.postId })
-        .from(postVotes)
-        .where(eq(postVotes.userId, userId));
-      userVotedPostIds = postVotesData.map(v => v.postId);
+      const ideaVotesData = await db
+        .select({ ideaId: ideaVotes.ideaId })
+        .from(ideaVotes)
+        .where(eq(ideaVotes.userId, userId));
+      userVotedIdeaIds = ideaVotesData.map(v => v.ideaId);
 
       const commentVotesData = await db
         .select({ commentId: commentVotes.commentId })
@@ -391,25 +391,25 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
         // Get the most voted idea (post) for this challenge
         const topIdeas = await db
           .select({
-            id: posts.id,
-            title: posts.title,
-            content: posts.content,
-            authorId: posts.authorId,
-            challengeId: posts.challengeId,
-            score: posts.score,
-            viewCount: posts.viewCount,
-            isPinned: posts.isPinned,
-            isClosed: posts.isClosed,
-            createdAt: posts.createdAt,
-            updatedAt: posts.updatedAt,
+            id: ideas.id,
+            title: ideas.title,
+            content: ideas.content,
+            authorId: ideas.authorId,
+            challengeId: ideas.challengeId,
+            score: ideas.score,
+            viewCount: ideas.viewCount,
+            isPinned: ideas.isPinned,
+            isClosed: ideas.isClosed,
+            createdAt: ideas.createdAt,
+            updatedAt: ideas.updatedAt,
             authorUsername: users.username,
             authorDisplayName: users.displayName,
             authorAvatarUrl: users.avatarUrl,
           })
-          .from(posts)
-          .innerJoin(users, eq(posts.authorId, users.id))
-          .where(eq(posts.challengeId, challenge.id))
-          .orderBy(desc(posts.score), desc(posts.createdAt))
+          .from(ideas)
+          .innerJoin(users, eq(ideas.authorId, users.id))
+          .where(eq(ideas.challengeId, challenge.id))
+          .orderBy(desc(ideas.score), desc(ideas.createdAt))
           .limit(1);
 
         let topIdea = null;
@@ -417,7 +417,7 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
           const idea = topIdeas[0];
           topIdea = {
             ...idea,
-            voted: userVotedPostIds.includes(idea.id),
+            voted: userVotedIdeaIds.includes(idea.id),
           };
         }
 
@@ -428,7 +428,7 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
             .select({
               id: comments.id,
               content: comments.content,
-              postId: comments.postId,
+              ideaId: comments.ideaId,
               authorId: comments.authorId,
               parentId: comments.parentId,
               score: comments.score,
@@ -441,7 +441,7 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
             })
             .from(comments)
             .innerJoin(users, eq(comments.authorId, users.id))
-            .where(eq(comments.postId, topIdea.id))
+            .where(eq(comments.ideaId, topIdea.id))
             .orderBy(desc(comments.score), desc(comments.createdAt))
             .limit(10);
           

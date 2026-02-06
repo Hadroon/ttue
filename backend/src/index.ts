@@ -6,9 +6,9 @@ import { db, testConnection } from "./db";
 import { sql } from "drizzle-orm";
 import { handleRegister, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
 import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
-import { handleCreatePost, handleGetPosts, handleGetPost, handleUpdatePost, handleDeletePost } from "./routes/posts";
+import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, handleDeleteIdea } from "./routes/ideas";
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
-import { handleVotePost, handleVoteComment, handleGetPostVote } from "./routes/votes";
+import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
 import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge } from "./routes/challenges";
 
 // Log configuration on startup
@@ -108,33 +108,33 @@ serve({
         return handleGetGoogleConfig(req);
       }
       
-      // Posts routes
-      if (url.pathname === "/api/posts" && req.method === "GET") {
-        return handleGetPosts(req);
+      // Ideas routes
+      if (url.pathname === "/api/ideas" && req.method === "GET") {
+        return handleGetIdeas(req);
       }
-      if (url.pathname === "/api/posts" && req.method === "POST") {
-        return handleCreatePost(req);
+      if (url.pathname === "/api/ideas" && req.method === "POST") {
+        return handleCreateIdea(req);
       }
-      if (url.pathname.match(/^\/api\/posts\/\d+$/) && req.method === "GET") {
-        const postId = parseInt(url.pathname.split("/")[3]);
-        return handleGetPost(req, postId);
+      if (url.pathname.match(/^\/api\/ideas\/\d+$/) && req.method === "GET") {
+        const ideaId = parseInt(url.pathname.split("/")[3]);
+        return handleGetIdea(req, ideaId);
       }
-      if (url.pathname.match(/^\/api\/posts\/\d+$/) && req.method === "PUT") {
-        const postId = parseInt(url.pathname.split("/")[3]);
-        return handleUpdatePost(req, postId);
+      if (url.pathname.match(/^\/api\/ideas\/\d+$/) && req.method === "PUT") {
+        const ideaId = parseInt(url.pathname.split("/")[3]);
+        return handleUpdateIdea(req, ideaId);
       }
-      if (url.pathname.match(/^\/api\/posts\/\d+$/) && req.method === "DELETE") {
-        const postId = parseInt(url.pathname.split("/")[3]);
-        return handleDeletePost(req, postId);
+      if (url.pathname.match(/^\/api\/ideas\/\d+$/) && req.method === "DELETE") {
+        const ideaId = parseInt(url.pathname.split("/")[3]);
+        return handleDeleteIdea(req, ideaId);
       }
       
       // Comments routes
       if (url.pathname === "/api/comments" && req.method === "POST") {
         return handleCreateComment(req);
       }
-      if (url.pathname.match(/^\/api\/posts\/\d+\/comments$/) && req.method === "GET") {
-        const postId = parseInt(url.pathname.split("/")[3]);
-        return handleGetComments(req, postId);
+      if (url.pathname.match(/^\/api\/ideas\/\d+\/comments$/) && req.method === "GET") {
+        const ideaId = parseInt(url.pathname.split("/")[3]);
+        return handleGetComments(req, ideaId);
       }
       if (url.pathname.match(/^\/api\/comments\/\d+$/) && req.method === "PUT") {
         const commentId = parseInt(url.pathname.split("/")[3]);
@@ -150,13 +150,13 @@ serve({
       }
       
       // Voting routes
-      if (url.pathname.match(/^\/api\/posts\/\d+\/vote$/) && req.method === "POST") {
-        const postId = parseInt(url.pathname.split("/")[3]);
-        return handleVotePost(req, postId);
+      if (url.pathname.match(/^\/api\/ideas\/\d+\/vote$/) && req.method === "POST") {
+        const ideaId = parseInt(url.pathname.split("/")[3]);
+        return handleVoteIdea(req, ideaId);
       }
-      if (url.pathname.match(/^\/api\/posts\/\d+\/vote$/) && req.method === "GET") {
-        const postId = parseInt(url.pathname.split("/")[3]);
-        return handleGetPostVote(req, postId);
+      if (url.pathname.match(/^\/api\/ideas\/\d+\/vote$/) && req.method === "GET") {
+        const ideaId = parseInt(url.pathname.split("/")[3]);
+        return handleGetIdeaVote(req, ideaId);
       }
       if (url.pathname.match(/^\/api\/comments\/\d+\/vote$/) && req.method === "POST") {
         const commentId = parseInt(url.pathname.split("/")[3]);

@@ -1,10 +1,10 @@
 import { db } from "../db";
-import { postVotes, commentVotes, posts, comments, users } from "../db/schema";
+import { ideaVotes, commentVotes, ideas, comments, users } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 
-// Vote on a post
-export async function handleVotePost(req: Request, postId: number): Promise<Response> {
+// Vote on an idea
+export async function handleVoteIdea(req: Request, ideaId: number): Promise<Response> {
   const authResult = await authenticate(req);
   if (authResult instanceof Response) return authResult;
 
@@ -19,16 +19,16 @@ export async function handleVotePost(req: Request, postId: number): Promise<Resp
       );
     }
 
-    // Check if post exists
-    const [post] = await db
+    // Check if idea exists
+    const [idea] = await db
       .select()
-      .from(posts)
-      .where(eq(posts.id, postId))
+      .from(ideas)
+      .where(eq(ideas.id, ideaId))
       .limit(1);
 
-    if (!post) {
+    if (!idea) {
       return new Response(
-        JSON.stringify({ error: "Post not found" }),
+        JSON.stringify({ error: "Idea not found" }),
         { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -36,10 +36,10 @@ export async function handleVotePost(req: Request, postId: number): Promise<Resp
     // Check for existing vote
     const [existingVote] = await db
       .select()
-      .from(postVotes)
+      .from(ideaVotes)
       .where(and(
-        eq(postVotes.postId, postId),
-        eq(postVotes.userId, authResult.user.userId)
+        eq(ideaVotes.ideaId, ideaId),
+        eq(ideaVotes.userId, authResult.user.userId)
       ))
       .limit(1);
 
@@ -47,60 +47,60 @@ export async function handleVotePost(req: Request, postId: number): Promise<Resp
       if (existingVote.value === value) {
         // Remove vote if same value (toggle off)
         await db
-          .delete(postVotes)
-          .where(eq(postVotes.id, existingVote.id));
+          .delete(ideaVotes)
+          .where(eq(ideaVotes.id, existingVote.id));
 
-        // Update post score
+        // Update idea score
         await db
-          .update(posts)
-          .set({ score: sql`${posts.score} - ${value}` })
-          .where(eq(posts.id, postId));
+          .update(ideas)
+          .set({ score: sql`${ideas.score} - ${value}` })
+          .where(eq(ideas.id, ideaId));
 
         return new Response(
-          JSON.stringify({ message: "Vote removed", score: post.score - value, voted: false }),
+          JSON.stringify({ message: "Vote removed", score: idea.score - value, voted: false }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       } else {
         // Update vote to opposite value
         await db
-          .update(postVotes)
+          .update(ideaVotes)
           .set({ value })
-          .where(eq(postVotes.id, existingVote.id));
+          .where(eq(ideaVotes.id, existingVote.id));
 
-        // Update post score (swing of 2 points)
+        // Update idea score (swing of 2 points)
         await db
-          .update(posts)
-          .set({ score: sql`${posts.score} + ${value * 2}` })
-          .where(eq(posts.id, postId));
+          .update(ideas)
+          .set({ score: sql`${ideas.score} + ${value * 2}` })
+          .where(eq(ideas.id, ideaId));
 
         return new Response(
-          JSON.stringify({ message: "Vote updated", score: post.score + (value * 2), voted: true }),
+          JSON.stringify({ message: "Vote updated", score: idea.score + (value * 2), voted: true }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       }
     }
 
     // Create new vote
-    await db.insert(postVotes).values({
-      postId,
+    await db.insert(ideaVotes).values({
+      ideaId,
       userId: authResult.user.userId,
       value,
     });
 
-    // Update post score
+    // Update idea score
     await db
-      .update(posts)
-      .set({ score: sql`${posts.score} + ${value}` })
-      .where(eq(posts.id, postId));
+      .update(ideas)
+      .set({ score: sql`${ideas.score} + ${value}` })
+      .where(eq(ideas.id, ideaId));
 
     return new Response(
-      JSON.stringify({ message: "Vote recorded", score: post.score + value, voted: true }),
+      JSON.stringify({ message: "Vote recorded", score: idea.score + value, voted: true }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Vote post error:", error);
+    console.error("Vote idea error:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to vote on post" }),
+      JSON.stringify({ error: "Failed to vote on idea" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -209,18 +209,18 @@ export async function handleVoteComment(req: Request, commentId: number): Promis
   }
 }
 
-// Get user's vote on a post
-export async function handleGetPostVote(req: Request, postId: number): Promise<Response> {
+// Get user's vote on an idea
+export async function handleGetIdeaVote(req: Request, ideaId: number): Promise<Response> {
   const authResult = await authenticate(req);
   if (authResult instanceof Response) return authResult;
 
   try {
     const [vote] = await db
       .select()
-      .from(postVotes)
+      .from(ideaVotes)
       .where(and(
-        eq(postVotes.postId, postId),
-        eq(postVotes.userId, authResult.user.userId)
+        eq(ideaVotes.ideaId, ideaId),
+        eq(ideaVotes.userId, authResult.user.userId)
       ))
       .limit(1);
 
@@ -229,7 +229,7 @@ export async function handleGetPostVote(req: Request, postId: number): Promise<R
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Get post vote error:", error);
+    console.error("Get idea vote error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to get vote" }),
       { status: 500, headers: { "Content-Type": "application/json" } }

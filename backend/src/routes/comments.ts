@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { comments, users, posts } from "../db/schema";
+import { comments, users, ideas } from "../db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 
@@ -9,26 +9,26 @@ export async function handleCreateComment(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const { content, postId, parentId } = await req.json();
+    const { content, ideaId, parentId } = await req.json();
 
     // Validate input
-    if (!content || !postId) {
+    if (!content || !ideaId) {
       return new Response(
-        JSON.stringify({ error: "Content and postId are required" }),
+        JSON.stringify({ error: "Content and ideaId are required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Check if post exists
-    const [post] = await db
+    // Check if idea exists
+    const [idea] = await db
       .select()
-      .from(posts)
-      .where(eq(posts.id, postId))
+      .from(ideas)
+      .where(eq(ideas.id, ideaId))
       .limit(1);
 
-    if (!post) {
+    if (!idea) {
       return new Response(
-        JSON.stringify({ error: "Post not found" }),
+        JSON.stringify({ error: "Idea not found" }),
         { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -38,7 +38,7 @@ export async function handleCreateComment(req: Request): Promise<Response> {
       .insert(comments)
       .values({
         content,
-        postId,
+        ideaId,
         authorId: authResult.user.userId,
         parentId: parentId || null,
       })
@@ -57,14 +57,14 @@ export async function handleCreateComment(req: Request): Promise<Response> {
   }
 }
 
-// Get comments for a post
-export async function handleGetComments(req: Request, postId: number): Promise<Response> {
+// Get comments for an idea
+export async function handleGetComments(req: Request, ideaId: number): Promise<Response> {
   try {
     const allComments = await db
       .select({
         id: comments.id,
         content: comments.content,
-        postId: comments.postId,
+        ideaId: comments.ideaId,
         parentId: comments.parentId,
         score: comments.score,
         isAccepted: comments.isAccepted,
@@ -79,7 +79,7 @@ export async function handleGetComments(req: Request, postId: number): Promise<R
       })
       .from(comments)
       .leftJoin(users, eq(comments.authorId, users.id))
-      .where(eq(comments.postId, postId))
+      .where(eq(comments.ideaId, ideaId))
       .orderBy(desc(comments.isAccepted), desc(comments.score), comments.createdAt);
 
     return new Response(
