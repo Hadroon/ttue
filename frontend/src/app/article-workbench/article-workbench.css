@@ -480,3 +480,121 @@
     flex-direction: column;
   }
 }
+
+/* Proposal styles */
+.proposal-badge {
+  background: #f59e0b;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.proposal-diff-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.proposal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.proposal-info h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.proposal-date {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.proposal-diff-stats {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.proposal-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+.proposal-list .proposal-item {
+  border-left: 3px solid transparent;
+  padding-left: 0.75rem;
+}
+
+.proposal-item.pending {
+  border-left-color: #f59e0b;
+}
+
+.proposal-item.accepted {
+  border-left-color: #10b981;
+}
+
+.proposal-item.rejected {
+  border-left-color: #ef4444;
+}
+
+.proposal-status-badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.proposal-status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.proposal-status-badge.accepted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.proposal-status-badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn.sm {
+  padding: 4px 12px;
+  font-size: 0.8125rem;
+}
+
+.proposal-edit-area {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--panel, #fff);
+  color: var(--text, #1a1a1a);
+  resize: vertical;
+}
+
+.proposal-edit-area:focus {
+  outline: none;
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}

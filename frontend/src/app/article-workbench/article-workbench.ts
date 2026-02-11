@@ -3,7 +3,8 @@ import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, W
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Header } from '../shared/components';
-import { ApiService, Challenge } from '../shared/services/api.service';
+import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal } from '../shared/services/api.service';
+import { AuthService } from '../shared/services/auth.service';
 
 type DiffKind = 'added' | 'removed' | 'unchanged';
 
@@ -38,16 +39,13 @@ interface RevisionSnapshot {
 export class ArticleWorkbench implements AfterViewInit {
   @ViewChild('editorArea') private editorArea?: ElementRef<HTMLDivElement>;
 
-  private readonly publishedHtml = `<p>Section I. Establish a Climate Resilience Fund focused on coastal defense pilots in three priority districts with annual reporting limited to flood mitigation metrics.</p><p>Section II. Direct the Infrastructure Directorate to catalog vulnerable assets and publish a summary of remediation costs without binding implementation targets.</p><p>Section III. Create an advisory panel composed of agency staff and invited experts to provide optional guidance on community relocation.</p>`;
-
-  private readonly draftSeedHtml = `<h2>Citywide Climate Resilience and Justice Act</h2><p>Section I. Establish a Climate Resilience Fund to accelerate coastal, heat, and wildfire defenses in every district, beginning with communities facing the highest risk over the last five years.</p><p>The fund shall dedicate no less than 45% to frontline neighborhoods and must publish quarterly dashboards that track project progress, contractor diversity, and measurable risk reductions.</p><p>Section II. Direct the Infrastructure Directorate to map vulnerable assets, publish open procurement schedules, and co-design mitigation timelines with resident councils.</p><ul><li>Phase critical hospital and utility hardening within 18 months.</li><li>Deliver safe evacuation routes and cooling access by the second summer after passage.</li><li>Provide translation and accessibility for every public meeting.</li></ul><p>Section III. Establish a standing Community Adaptation Assembly with voting seats for residents, planners, public health professionals, and small business owners.</p><p>The Assembly shall publish binding recommendations, diff reports comparing revisions, and score departmental compliance each quarter.</p>`;
-
   readonly isBrowser: boolean;
   readonly isEditing: WritableSignal<boolean> = signal(false);
   readonly activeSection: WritableSignal<string> = signal('draft');
 
-  readonly previousDraft: WritableSignal<string> = signal(this.publishedHtml);
-  readonly draftHtml: WritableSignal<string> = signal(this.draftSeedHtml);
+  readonly previousDraft: WritableSignal<string> = signal('');
+  readonly draftHtml: WritableSignal<string> = signal('');
+  readonly noDraft: WritableSignal<boolean> = signal(false);
 
   readonly diffSegments = computed(() => this.createDiffSegments(
     this.stripHtml(this.previousDraft()),
@@ -120,10 +118,55 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly loadingChallenge: WritableSignal<boolean> = signal(false);
   readonly challengeError: WritableSignal<string | null> = signal(null);
 
+  // Backend draft state
+  readonly backendDraft: WritableSignal<ChallengeDraft | null> = signal(null);
+  readonly loadingDraft: WritableSignal<boolean> = signal(false);
+  readonly savingDraft: WritableSignal<boolean> = signal(false);
+  readonly draftError: WritableSignal<string | null> = signal(null);
+  readonly backendRevisions: WritableSignal<ChallengeDraftRevision[]> = signal([]);
+
+  // Proposal state
+  readonly proposals: WritableSignal<ChallengeDraftProposal[]> = signal([]);
+  readonly selectedProposal: WritableSignal<ChallengeDraftProposal | null> = signal(null);
+  readonly editingProposal: WritableSignal<boolean> = signal(false);
+  readonly editedProposalContent: WritableSignal<string> = signal('');
+  readonly loadingProposals: WritableSignal<boolean> = signal(false);
+
+  readonly isDraftCreator = computed(() => {
+    const draft = this.backendDraft();
+    const user = this.authService.currentUser();
+    return draft !== null && user !== null && draft.creatorId === user.id;
+  });
+
+  readonly pendingProposals = computed(() =>
+    this.proposals().filter(p => p.status === 'pending')
+  );
+
+  readonly proposalDiffSegments = computed(() => {
+    const proposal = this.selectedProposal();
+    const draft = this.backendDraft();
+    if (!proposal || !draft) return [];
+    const proposalText = this.editingProposal()
+      ? this.editedProposalContent()
+      : proposal.content;
+    return this.createDiffSegments(
+      this.stripHtml(draft.content),
+      this.stripHtml(proposalText)
+    );
+  });
+
+  readonly proposalDiffStats = computed(() => {
+    const segments = this.proposalDiffSegments();
+    const added = this.countWordsForKind(segments, 'added');
+    const removed = this.countWordsForKind(segments, 'removed');
+    return { added, removed };
+  });
+
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
     private route: ActivatedRoute,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private authService: AuthService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     
@@ -148,11 +191,74 @@ export class ArticleWorkbench implements AfterViewInit {
         this.challenge.set(challenge);
         this.loadingChallenge.set(false);
         console.log('Challenge loaded:', challenge);
+        // Load draft after challenge is loaded
+        this.loadDraft(id);
       },
       error: (error) => {
         console.error('Error loading challenge:', error);
         this.challengeError.set('Failed to load challenge');
         this.loadingChallenge.set(false);
+      }
+    });
+  }
+
+  private loadDraft(challengeId: number): void {
+    this.loadingDraft.set(true);
+    this.draftError.set(null);
+    this.noDraft.set(false);
+    
+    this.apiService.getChallengeDraft(challengeId).subscribe({
+      next: (draft: ChallengeDraft) => {
+        this.backendDraft.set(draft);
+        this.draftHtml.set(draft.content);
+        this.previousDraft.set(draft.content);
+        this.loadingDraft.set(false);
+        console.log('Draft loaded:', draft);
+        
+        // Update editor if it exists
+        if (this.editorArea) {
+          this.editorArea.nativeElement.innerHTML = draft.content;
+        }
+        
+        // Load revision history
+        this.loadRevisions(challengeId);
+        // Load proposals
+        this.loadProposals(challengeId);
+      },
+      error: (error: any) => {
+        this.loadingDraft.set(false);
+        if (error.status === 404) {
+          // No draft exists yet for this challenge
+          this.noDraft.set(true);
+          console.log('No draft exists for this challenge yet');
+        } else {
+          console.error('Error loading draft:', error);
+          this.draftError.set('Failed to load draft');
+        }
+      }
+    });
+  }
+
+  private loadRevisions(challengeId: number): void {
+    this.apiService.getChallengeDraftRevisions(challengeId).subscribe({
+      next: (revisions: ChallengeDraftRevision[]) => {
+        this.backendRevisions.set(revisions);
+        // Convert to local format for display
+        this.revisions.set(revisions.map((rev, index) => ({
+          id: rev.id,
+          label: `Revision ${revisions.length - index} by ${rev.editorUsername}`,
+          summary: this.makeSummary(this.stripHtml(rev.content)),
+          createdAtLabel: new Date(rev.createdAt).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        })));
+      },
+      error: (error: any) => {
+        console.error('Error loading revisions:', error);
       }
     });
   }
@@ -252,7 +358,124 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   saveSnapshot(): void {
-    this.previousDraft.set(this.draftHtml());
+    const challengeId = this.challengeId();
+    if (!challengeId) {
+      console.error('No challenge ID available');
+      return;
+    }
+
+    const content = this.draftHtml();
+    const draft = this.backendDraft();
+    
+    this.savingDraft.set(true);
+    this.draftError.set(null);
+
+    if (draft) {
+      // Update existing draft (or create proposal if non-creator)
+      this.apiService.updateChallengeDraft(challengeId, content).subscribe({
+        next: (response: any) => {
+          if (response.type === 'proposal') {
+            // Non-creator: a proposal was created instead
+            this.savingDraft.set(false);
+            console.log('Proposal submitted successfully');
+            // Reload proposals to show the new one
+            this.loadProposals(challengeId);
+            // Revert editor to current draft content (proposal doesn't change active draft)
+            this.draftHtml.set(this.previousDraft());
+            this.updateEditorContent();
+          } else {
+            // Creator: draft updated directly
+            const updatedDraft = response as ChallengeDraft;
+            this.backendDraft.set(updatedDraft);
+            this.previousDraft.set(content);
+            this.savingDraft.set(false);
+            console.log('Draft saved successfully');
+            // Reload revisions to show the new one
+            this.loadRevisions(challengeId);
+          }
+        },
+        error: (error: any) => {
+          console.error('Error saving draft:', error);
+          this.draftError.set('Failed to save draft');
+          this.savingDraft.set(false);
+        }
+      });
+    } else {
+      // Create new draft
+      this.apiService.createChallengeDraft(challengeId, content).subscribe({
+        next: (response: any) => {
+          const newDraft = 'data' in response ? response.data : response;
+          this.backendDraft.set(newDraft as ChallengeDraft);
+          this.previousDraft.set(content);
+          this.noDraft.set(false);
+          this.savingDraft.set(false);
+          console.log('Draft created successfully');
+        },
+        error: (error: any) => {
+          console.error('Error creating draft:', error);
+          this.draftError.set('Failed to create draft');
+          this.savingDraft.set(false);
+        }
+      });
+    }
+  }
+
+  private loadProposals(challengeId: number): void {
+    this.loadingProposals.set(true);
+    this.apiService.getDraftProposals(challengeId).subscribe({
+      next: (proposals: ChallengeDraftProposal[]) => {
+        this.proposals.set(proposals);
+        this.loadingProposals.set(false);
+      },
+      error: (error: any) => {
+        console.error('Error loading proposals:', error);
+        this.loadingProposals.set(false);
+      }
+    });
+  }
+
+  selectProposal(proposal: ChallengeDraftProposal): void {
+    this.selectedProposal.set(proposal);
+    this.editingProposal.set(false);
+    this.editedProposalContent.set(this.stripHtml(proposal.content));
+  }
+
+  clearProposalView(): void {
+    this.selectedProposal.set(null);
+    this.editingProposal.set(false);
+  }
+
+  toggleProposalEdit(): void {
+    this.editingProposal.set(!this.editingProposal());
+  }
+
+  onProposalEditInput(event: Event): void {
+    const target = event.target as HTMLTextAreaElement;
+    this.editedProposalContent.set(target.value);
+  }
+
+  resolveProposal(action: 'accept' | 'reject'): void {
+    const proposal = this.selectedProposal();
+    const challengeId = this.challengeId();
+    if (!proposal || !challengeId) return;
+
+    const editedContent = this.editingProposal() ? this.editedProposalContent() : undefined;
+    this.apiService.resolveDraftProposal(challengeId, proposal.id, action, editedContent).subscribe({
+      next: (resolved: ChallengeDraftProposal) => {
+        console.log(`Proposal ${action}ed successfully`);
+        this.selectedProposal.set(null);
+        // Reload draft if accepted (content changed)
+        if (action === 'accept') {
+          this.loadDraft(challengeId);
+        }
+        // Reload proposals to update statuses
+        this.loadProposals(challengeId);
+      },
+      error: (error: any) => {
+        console.error(`Error ${action}ing proposal:`, error);
+        this.draftError.set(`Failed to ${action} proposal`);
+      }
+    });
   }
 
   revertToSnapshot(): void {
@@ -261,25 +484,14 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   resetDraft(): void {
-    this.draftHtml.set(this.draftSeedHtml);
+    this.draftHtml.set('');
     this.updateEditorContent();
   }
 
   publishDraft(): void {
-    const html = this.draftHtml();
-    const summary = this.makeSummary(this.stripHtml(html));
-
-    this.revisions.update((current) => [
-      {
-        id: Date.now(),
-    label: 'Revision ' + (current.length + 1) + ' - Submitted',
-        summary,
-        createdAtLabel: this.buildTimestampLabel(new Date())
-      },
-      ...current
-    ]);
-
-    this.previousDraft.set(html);
+    // For now, save as snapshot (same as saveSnapshot)
+    // In future, this could publish to ideas/posts
+    this.saveSnapshot();
   }
 
   castVote(choice: 'support' | 'oppose'): void {
@@ -346,7 +558,7 @@ export class ArticleWorkbench implements AfterViewInit {
     this.editorArea.nativeElement.innerHTML = this.draftHtml();
   }
 
-  private stripHtml(html: string): string {
+  stripHtml(html: string): string {
     return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
@@ -431,7 +643,7 @@ export class ArticleWorkbench implements AfterViewInit {
     return segments;
   }
 
-  private makeSummary(text: string): string {
+  makeSummary(text: string): string {
     if (!text) {
       return 'Draft submitted with structural changes.';
     }

@@ -36,6 +36,20 @@
       "when": 1738886400000,
       "tag": "0004_rename_posts_to_ideas",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1739059200000,
+      "tag": "0005_add_challenge_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1739145600000,
+      "tag": "0006_add_draft_proposals",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,101 @@
     [ideasCount]="getIdeasCount(challenge.id)"
     (voteChallenge)="onVoteChallenge($event)">
   </app-challenge-card>
+  
+  <!-- Challenge Draft Section -->
+  <div class="challenge-draft-section">
+    @if (draft()) {
+      <!-- Display existing draft -->
+      <div class="draft-container">
+        <div class="draft-header">
+          <h4>📝 Challenge Draft</h4>
+          <span class="draft-meta">
+            Created by {{ draft()!.creatorUsername }} on {{ draft()!.createdAt | date:'short' }}
+            @if (draft()!.updatedAt !== draft()!.createdAt) {
+              <span class="draft-updated"> (updated {{ draft()!.updatedAt | date:'short' }})</span>
+            }
+          </span>
+        </div>
+        
+        @if (!isEditingDraft()) {
+          <!-- View mode -->
+          <div class="draft-content">
+            <p>{{ draft()!.content }}</p>
+          </div>
+          <div class="draft-actions">
+            @if (isDraftCreator) {
+              <button class="btn-secondary" (click)="editDraft()">Edit Draft</button>
+            }
+            <button class="btn-link" (click)="toggleRevisions()">
+              {{ showRevisions() ? 'Hide' : 'View' }} History
+            </button>
+          </div>
+          
+          <!-- Revision history -->
+          @if (showRevisions()) {
+            <div class="draft-revisions">
+              <h5>Revision History</h5>
+              @if (revisions().length === 0) {
+                <p class="no-revisions">No revision history yet</p>
+              } @else {
+                <div class="revision-list">
+                  @for (revision of revisions(); track revision.id) {
+                    <div class="revision-item">
+                      <div class="revision-meta">
+                        <strong>{{ revision.editorUsername }}</strong>
+                        <span class="revision-date">{{ revision.createdAt | date:'medium' }}</span>
+                      </div>
+                      <div class="revision-content">{{ revision.content }}</div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        } @else {
+          <!-- Edit mode -->
+          <div class="draft-editor">
+            <textarea 
+              [(ngModel)]="draftContent"
+              class="draft-textarea"
+              placeholder="Enter your draft content here..."
+              rows="8"
+              maxlength="5000"
+              [disabled]="isSavingDraft()">
+            </textarea>
+            <div class="draft-char-count">
+              {{ draftContent().length }} / 5000 characters
+            </div>
+            @if (draftError()) {
+              <div class="draft-error">{{ draftError() }}</div>
+            }
+            <div class="draft-edit-actions">
+              <button 
+                class="btn-primary" 
+                (click)="saveDraft()"
+                [disabled]="isSavingDraft()">
+                {{ isSavingDraft() ? 'Saving...' : 'Save Draft' }}
+              </button>
+              <button 
+                class="btn-secondary" 
+                (click)="cancelEdit()"
+                [disabled]="isSavingDraft()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (isAuthenticated) {
+      <!-- No draft exists, show create button -->
+      <div class="no-draft">
+        <button class="btn-create-draft" (click)="createDraft()">
+          + Create Draft for this Challenge
+        </button>
+      </div>
+    }
+  </div>
+  
   <app-challenge-ideas 
     [challengeId]="challenge.id" 
     [allIdeas]="allIdeas" 

@@ -144,6 +144,46 @@ export const challengeVotes = pgTable("challenge_votes", {
   challengeUserUnique: uniqueIndex("challenge_user_vote_unique").on(table.challengeId, table.userId),
 }));
 
+// Challenge drafts table
+export const challengeDrafts = pgTable("challenge_drafts", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }).unique(),
+  creatorId: integer("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  challengeIdx: index("draft_challenge_idx").on(table.challengeId),
+  creatorIdx: index("draft_creator_idx").on(table.creatorId),
+}));
+
+// Challenge draft revisions table
+export const challengeDraftRevisions = pgTable("challenge_draft_revisions", {
+  id: serial("id").primaryKey(),
+  draftId: integer("draft_id").notNull().references(() => challengeDrafts.id, { onDelete: "cascade" }),
+  editorId: integer("editor_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  draftIdx: index("draft_revision_draft_idx").on(table.draftId),
+  createdAtIdx: index("draft_revision_created_at_idx").on(table.createdAt),
+}));
+
+// Challenge draft proposals table
+export const challengeDraftProposals = pgTable("challenge_draft_proposals", {
+  id: serial("id").primaryKey(),
+  draftId: integer("draft_id").notNull().references(() => challengeDrafts.id, { onDelete: "cascade" }),
+  proposerId: integer("proposer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  status: text("status").default("pending").notNull(), // 'pending', 'accepted', 'rejected'
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  draftIdx: index("proposal_draft_idx").on(table.draftId),
+  proposerIdx: index("proposal_proposer_idx").on(table.proposerId),
+  statusIdx: index("proposal_status_idx").on(table.status),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   ideas: many(ideas),
@@ -151,6 +191,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   ideaVotes: many(ideaVotes),
   commentVotes: many(commentVotes),
   challengeVotes: many(challengeVotes),
+  challengeDrafts: many(challengeDrafts),
+  challengeDraftRevisions: many(challengeDraftRevisions),
+  challengeDraftProposals: many(challengeDraftProposals),
 }));
 
 export const ideasRelations = relations(ideas, ({ one, many }) => ({
@@ -236,9 +279,13 @@ export const ideaTagsRelations = relations(ideaTags, ({ one }) => ({
   }),
 }));
 
-export const challengesRelations = relations(challenges, ({ many }) => ({
+export const challengesRelations = relations(challenges, ({ one, many }) => ({
   votes: many(challengeVotes),
   ideas: many(ideas),
+  draft: one(challengeDrafts, {
+    fields: [challenges.id],
+    references: [challengeDrafts.challengeId],
+  }),
 }));
 
 export const challengeVotesRelations = relations(challengeVotes, ({ one }) => ({
@@ -248,6 +295,41 @@ export const challengeVotesRelations = relations(challengeVotes, ({ one }) => ({
   }),
   user: one(users, {
     fields: [challengeVotes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const challengeDraftsRelations = relations(challengeDrafts, ({ one, many }) => ({
+  challenge: one(challenges, {
+    fields: [challengeDrafts.challengeId],
+    references: [challenges.id],
+  }),
+  creator: one(users, {
+    fields: [challengeDrafts.creatorId],
+    references: [users.id],
+  }),
+  revisions: many(challengeDraftRevisions),
+  proposals: many(challengeDraftProposals),
+}));
+
+export const challengeDraftRevisionsRelations = relations(challengeDraftRevisions, ({ one }) => ({
+  draft: one(challengeDrafts, {
+    fields: [challengeDraftRevisions.draftId],
+    references: [challengeDrafts.id],
+  }),
+  editor: one(users, {
+    fields: [challengeDraftRevisions.editorId],
+    references: [users.id],
+  }),
+}));
+
+export const challengeDraftProposalsRelations = relations(challengeDraftProposals, ({ one }) => ({
+  draft: one(challengeDrafts, {
+    fields: [challengeDraftProposals.draftId],
+    references: [challengeDrafts.id],
+  }),
+  proposer: one(users, {
+    fields: [challengeDraftProposals.proposerId],
     references: [users.id],
   }),
 }));

@@ -36,9 +36,16 @@
           <p class="lead">Use the workbench to craft evidence-rich drafts, compare revisions, and prepare your article for expert review before it reaches the community feed.</p>
         }
         <div class="hero-actions">
-          <button type="button" class="btn primary lg" (click)="publishDraft()">Publish current draft</button>
-          <button type="button" class="btn secondary lg" (click)="saveSnapshot()">Save snapshot</button>
+          <button type="button" class="btn primary lg" (click)="publishDraft()" [disabled]="savingDraft()">
+            {{ savingDraft() ? 'Publishing...' : 'Publish current draft' }}
+          </button>
+          <button type="button" class="btn secondary lg" (click)="saveSnapshot()" [disabled]="savingDraft()">
+            {{ savingDraft() ? 'Saving...' : 'Save snapshot' }}
+          </button>
         </div>
+        @if (draftError()) {
+          <p style="color: var(--color-error, red); margin-top: 0.5rem;">{{ draftError() }}</p>
+        }
         <ul class="stat-list" aria-label="Draft metrics">
           <li>
             <span class="stat">{{ diffStats().added }}</span>
@@ -89,9 +96,14 @@
           <div>
             <h2>Draft workspace</h2>
             <p>Format content, cite evidence, and refine your narrative for publication.</p>
+            @if (backendDraft()) {
+              <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                Created by {{ backendDraft()!.creatorUsername }} • Last updated {{ backendDraft()!.updatedAt | date:'short' }}
+              </p>
+            }
           </div>
           <div class="panel-actions">
-            <button type="button" class="btn" [class.primary]="!isEditing()" (click)="toggleEditMode()">
+            <button type="button" class="btn" [class.primary]="!isEditing()" (click)="toggleEditMode()" [disabled]="loadingDraft()">
               {{ isEditing() ? 'Done Editing' : 'Edit' }}
             </button>
             @if (isEditing()) {
@@ -102,7 +114,16 @@
           </div>
         </header>
 
-        @if (isEditing()) {
+        @if (loadingDraft()) {
+        <div style="padding: 3rem; text-align: center; color: #6b7280;">
+          <p>Loading draft...</p>
+        </div>
+        } @else if (noDraft() && !isEditing()) {
+        <div style="padding: 3rem; text-align: center; color: #6b7280;">
+          <p style="font-size: 1.125rem; margin-bottom: 0.75rem;">No draft has been created for this challenge yet.</p>
+          <p>Click <strong>Edit</strong> to start writing the first draft, or <strong>Save snapshot</strong> to persist your work.</p>
+        </div>
+        } @else if (isEditing()) {
         <div class="editor-toolbar" role="toolbar" aria-label="Formatting controls">
           @for (action of formattingActions; track action.command) {
           <button type="button"
@@ -138,7 +159,62 @@
             <h2>Live diff</h2>
             <p>Inspect how the draft diverges from the last saved snapshot.</p>
           </div>
+          @if (pendingProposals().length > 0) {
+            <div class="proposal-badge">
+              {{ pendingProposals().length }} pending proposal{{ pendingProposals().length > 1 ? 's' : '' }}
+            </div>
+          }
         </header>
+
+        <!-- Proposal diff view (when a proposal is selected) -->
+        @if (selectedProposal()) {
+        <section class="diff-body proposal-diff-view">
+          <div class="proposal-header">
+            <div class="proposal-info">
+              <h3>Proposal by {{ selectedProposal()!.proposerUsername }}</h3>
+              <span class="proposal-date">{{ selectedProposal()!.createdAt | date:'medium' }}</span>
+            </div>
+            <button type="button" class="btn secondary sm" (click)="clearProposalView()">Back to diff</button>
+          </div>
+          <div class="diff-legend">
+            <span class="legend-item added">Additions</span>
+            <span class="legend-item removed">Removals</span>
+            <span class="legend-item unchanged">Unchanged</span>
+            <span class="proposal-diff-stats">
+              +{{ proposalDiffStats().added }} / -{{ proposalDiffStats().removed }} words
+            </span>
+          </div>
+          <div class="diff-content" aria-live="polite">
+            @if (editingProposal()) {
+              <textarea class="proposal-edit-area"
+                        [value]="editedProposalContent()"
+                        (input)="onProposalEditInput($event)"
+                        rows="12"
+                        placeholder="Edit the proposed content before accepting..."></textarea>
+            } @else if (proposalDiffSegments().length === 0) {
+              <p class="muted-note">No differences between proposal and current draft.</p>
+            } @else {
+              @for (segment of proposalDiffSegments(); track $index) {
+                <span class="diff-piece"
+                      [class.diff-added]="segment.kind === 'added'"
+                      [class.diff-removed]="segment.kind === 'removed'"
+                      >{{ segment.text }}</span>
+              }
+            }
+          </div>
+          @if (isDraftCreator()) {
+          <div class="proposal-actions">
+            <button type="button" class="btn secondary" (click)="toggleProposalEdit()">
+              {{ editingProposal() ? 'Preview diff' : 'Edit before accept' }}
+            </button>
+            <button type="button" class="btn primary" (click)="resolveProposal('accept')">Accept & merge</button>
+            <button type="button" class="btn ghost" (click)="resolveProposal('reject')">Reject</button>
+          </div>
+          }
+        </section>
+        } @else {
+
+        <!-- Normal diff view -->
         <section class="diff-body">
           <div class="diff-legend">
             <span class="legend-item added">Additions</span>
@@ -159,7 +235,29 @@
             }
           </div>
         </section>
+        }
+
         <footer class="panel-footer">
+          <!-- Proposals section -->
+          @if (proposals().length > 0) {
+          <h3 class="snapshot-title">Proposals</h3>
+          <ul class="snapshot-list proposal-list">
+            @for (proposal of proposals(); track proposal.id) {
+            <li class="proposal-item" [class.pending]="proposal.status === 'pending'" [class.accepted]="proposal.status === 'accepted'" [class.rejected]="proposal.status === 'rejected'">
+              <div class="snapshot-label">
+                {{ proposal.proposerUsername }}
+                <span class="proposal-status-badge" [class]="proposal.status">{{ proposal.status }}</span>
+              </div>
+              <div class="snapshot-summary">{{ makeSummary(stripHtml(proposal.content)) }}</div>
+              <div class="snapshot-date">{{ proposal.createdAt | date:'medium' }}</div>
+              @if (proposal.status === 'pending') {
+                <button type="button" class="link-btn" (click)="selectProposal(proposal)">View diff</button>
+              }
+            </li>
+            }
+          </ul>
+          }
+
           <h3 class="snapshot-title">Snapshots</h3>
           <ul class="snapshot-list">
             @for (revision of revisions(); track revision.id) {

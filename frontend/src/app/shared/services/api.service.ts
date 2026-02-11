@@ -90,6 +90,36 @@ export interface Challenge {
   updatedAt: string;
 }
 
+export interface ChallengeDraft {
+  id: number;
+  challengeId: number;
+  creatorId: number;
+  creatorUsername: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChallengeDraftRevision {
+  id: number;
+  draftId: number;
+  editorId: number;
+  editorUsername: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ChallengeDraftProposal {
+  id: number;
+  draftId: number;
+  proposerId: number;
+  proposerUsername: string;
+  content: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
 export interface FeaturedChallenge {
   challenge: Challenge;
   topIdea: Idea | null;
@@ -507,5 +537,66 @@ export class ApiService {
    */
   getFeaturedChallenge(): Observable<FeaturedChallenge[]> {
     return this.http.get<FeaturedChallenge[]>(`${this.baseUrl}/challenges/featured`);
+  }
+
+  // Challenge draft methods
+
+  /**
+   * Create a draft for a challenge
+   */
+  createChallengeDraft(challengeId: number, content: string): Observable<ApiResponse<ChallengeDraft>> {
+    return this.http.post<ApiResponse<ChallengeDraft>>(
+      `${this.baseUrl}/challenges/${challengeId}/draft`,
+      { content }
+    );
+  }
+
+  /**
+   * Get the draft for a challenge
+   */
+  getChallengeDraft(challengeId: number): Observable<ChallengeDraft> {
+    return this.http.get<ChallengeDraft>(`${this.baseUrl}/challenges/${challengeId}/draft`);
+  }
+
+  /**
+   * Update the draft for a challenge
+   */
+  updateChallengeDraft(challengeId: number, content: string): Observable<ChallengeDraft> {
+    return this.http.put<ChallengeDraft>(
+      `${this.baseUrl}/challenges/${challengeId}/draft`,
+      { content }
+    );
+  }
+
+  /**
+   * Get revision history for a challenge draft
+   */
+  getChallengeDraftRevisions(challengeId: number): Observable<ChallengeDraftRevision[]> {
+    return this.http.get<ChallengeDraftRevision[]>(
+      `${this.baseUrl}/challenges/${challengeId}/draft/revisions`
+    );
+  }
+
+  /**
+   * Get proposals for a challenge draft
+   */
+  getDraftProposals(challengeId: number): Observable<ChallengeDraftProposal[]> {
+    return this.http.get<ChallengeDraftProposal[]>(
+      `${this.baseUrl}/challenges/${challengeId}/draft/proposals`
+    );
+  }
+
+  /**
+   * Resolve a draft proposal (accept or reject)
+   */
+  resolveDraftProposal(challengeId: number, proposalId: number, action: 'accept' | 'reject', editedContent?: string): Observable<ChallengeDraftProposal> {
+    const body: any = { action };
+    if (editedContent !== undefined) {
+      body.editedContent = editedContent;
+    }
+    return this.http.post<ChallengeDraftProposal>(
+      `${this.baseUrl}/challenges/${challengeId}/draft/proposals/${proposalId}/resolve`,
+      body
+    );
   }
 }

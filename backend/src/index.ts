@@ -9,7 +9,7 @@ import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
 import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, handleDeleteIdea } from "./routes/ideas";
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
-import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge } from "./routes/challenges";
+import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
 
 // Log configuration on startup
 logConfig();
@@ -179,6 +179,33 @@ serve({
       }
       if (url.pathname === "/api/challenges/vote" && req.method === "POST") {
         return handleVoteChallenge(req);
+      }
+      
+      // Challenge draft routes
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft$/) && req.method === "POST") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleCreateChallengeDraft(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft$/) && req.method === "GET") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleGetChallengeDraft(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft$/) && req.method === "PUT") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleUpdateChallengeDraft(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft\/revisions$/) && req.method === "GET") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleGetChallengeDraftRevisions(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft\/proposals$/) && req.method === "GET") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleGetDraftProposals(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft\/proposals\/\d+\/resolve$/) && req.method === "POST") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        const proposalId = parseInt(url.pathname.split("/")[6]);
+        return handleResolveDraftProposal(req, challengeId, proposalId);
       }
       
       // Add more API routes here
