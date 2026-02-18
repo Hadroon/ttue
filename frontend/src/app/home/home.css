@@ -136,14 +136,6 @@
 }
 
 /* Demo Card */
-.demo-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
-
 .demo-head {
   display: flex;
   justify-content: space-between;
@@ -159,10 +151,6 @@
   border: 1px solid var(--border);
   background: rgba(110, 168, 255, 0.3);
   font-size: 12px;
-}
-
-.demo-body {
-  padding: 16px;
 }
 
 .demo-checks {

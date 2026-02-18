@@ -1,0 +1,24 @@
+<aside class="demo-card" [class.demo-card-featured]="featured" aria-label="Proposal demo">
+  @if(featured) {
+    <div class="demo-badge">
+      <span class="badge-icon">✨</span> Featured Proposal
+    </div>
+  }
+  <div class="demo-body">
+    <div class="demo-header-info">
+      <span class="chip">{{ category }}</span>
+      <span class="demo-status">{{ status }}</span>
+    </div>
+    <h3>{{ title }}</h3>
+    <p class="demo-lead">{{ leadText }}</p>
+    <div class="demo-message">
+      <p>{{ messageText }} <strong>{{ strongText }}</strong></p>
+      <p class="demo-cta-text">{{ ctaText }}</p>
+    </div>
+    <div class="demo-stats-mini">
+      <span class="stat-mini">⬆️ {{ votes }} votes</span>
+      <span class="stat-mini">💬 {{ comments }} comments</span>
+      <span class="stat-mini">⭐ {{ experts }} experts</span>
+    </div>
+  </div>
+</aside>

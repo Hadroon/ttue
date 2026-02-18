@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Header, ChallengeGrid2x2, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem } from '../shared/components';
+import { Header, ChallengeGrid2x2, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem, DemoCard } from '../shared/components';
 import { ApiService, FeaturedChallenge, Idea as ApiIdea, Comment as ApiComment } from '../shared/services/api.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
@@ -14,7 +14,7 @@ import { AddChallengeModalComponent } from '../shared/components/add-challenge-m
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule, ChallengeItem, MatIconModule],
+  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule, ChallengeItem, MatIconModule, DemoCard],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
