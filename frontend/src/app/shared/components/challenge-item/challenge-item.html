@@ -6,9 +6,8 @@
   </app-challenge-card>
   
   <!-- Challenge Draft Section -->
-  <div class="challenge-draft-section">
+  <!-- <div class="challenge-draft-section">
     @if (draft()) {
-      <!-- Display existing draft -->
       <div class="draft-container">
         <div class="draft-header">
           <h4>📝 Challenge Draft</h4>
@@ -21,7 +20,6 @@
         </div>
         
         @if (!isEditingDraft()) {
-          <!-- View mode -->
           <div class="draft-content">
             <p>{{ draft()!.content }}</p>
           </div>
@@ -34,7 +32,6 @@
             </button>
           </div>
           
-          <!-- Revision history -->
           @if (showRevisions()) {
             <div class="draft-revisions">
               <h5>Revision History</h5>
@@ -56,7 +53,6 @@
             </div>
           }
         } @else {
-          <!-- Edit mode -->
           <div class="draft-editor">
             <textarea 
               [(ngModel)]="draftContent"
@@ -90,14 +86,13 @@
         }
       </div>
     } @else if (isAuthenticated) {
-      <!-- No draft exists, show create button -->
       <div class="no-draft">
         <button class="btn-create-draft" (click)="createDraft()">
           + Create Draft for this Challenge
         </button>
       </div>
     }
-  </div>
+  </div> -->
   
   <app-challenge-ideas 
     [challengeId]="challenge.id" 
