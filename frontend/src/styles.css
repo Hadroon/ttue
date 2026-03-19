@@ -92,6 +92,20 @@ a {
   padding: 0 20px;
 }
 
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1360px;
+    padding: 0 40px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1760px;
+    padding: 0 60px;
+  }
+}
+
 .section {
   padding: 72px 0;
   position: relative;
