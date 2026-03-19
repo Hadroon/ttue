@@ -11,6 +11,7 @@ export interface User {
   displayName?: string;
   avatarUrl?: string;
   reputation: number;
+  isAdmin?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -117,6 +118,48 @@ export interface ChallengeDraftProposal {
   content: string;
   status: 'pending' | 'accepted' | 'rejected';
   resolvedAt: string | null;
+  createdAt: string;
+}
+
+// Admin interfaces
+export interface AdminStats {
+  userCount: number;
+  ideaCount: number;
+  commentCount: number;
+  challengeCount: number;
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  displayName?: string;
+  isAdmin: boolean;
+  reputation: number;
+  createdAt: string;
+}
+
+export interface AdminIdea {
+  id: number;
+  title: string;
+  authorUsername: string;
+  score: number;
+  createdAt: string;
+}
+
+export interface AdminComment {
+  id: number;
+  content: string;
+  authorUsername: string;
+  createdAt: string;
+}
+
+export interface AdminChallenge {
+  id: number;
+  title: string;
+  category: string;
+  urgency: string;
+  votes: number;
   createdAt: string;
 }
 
@@ -598,5 +641,43 @@ export class ApiService {
       `${this.baseUrl}/challenges/${challengeId}/draft/proposals/${proposalId}/resolve`,
       body
     );
+  }
+
+  // Admin methods
+
+  getAdminStats(): Observable<AdminStats> {
+    return this.http.get<AdminStats>(`${this.baseUrl}/admin/stats`);
+  }
+
+  getAdminUsers(): Observable<AdminUser[]> {
+    return this.http.get<AdminUser[]>(`${this.baseUrl}/admin/users`);
+  }
+
+  toggleAdminUser(userId: number, isAdmin: boolean): Observable<AdminUser> {
+    return this.http.patch<AdminUser>(`${this.baseUrl}/admin/users/${userId}`, { isAdmin });
+  }
+
+  getAdminIdeas(): Observable<AdminIdea[]> {
+    return this.http.get<AdminIdea[]>(`${this.baseUrl}/admin/ideas`);
+  }
+
+  deleteAdminIdea(ideaId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/admin/ideas/${ideaId}`);
+  }
+
+  getAdminComments(): Observable<AdminComment[]> {
+    return this.http.get<AdminComment[]>(`${this.baseUrl}/admin/comments`);
+  }
+
+  deleteAdminComment(commentId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/admin/comments/${commentId}`);
+  }
+
+  getAdminChallenges(): Observable<AdminChallenge[]> {
+    return this.http.get<AdminChallenge[]>(`${this.baseUrl}/admin/challenges`);
+  }
+
+  deleteAdminChallenge(challengeId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/admin/challenges/${challengeId}`);
   }
 }

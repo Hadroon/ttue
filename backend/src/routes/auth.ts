@@ -3,6 +3,7 @@ import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth";
 import { authenticate } from "../middleware/auth";
+import { config } from "../config/app.config";
 
 // Register new user
 export async function handleRegister(req: Request): Promise<Response> {
@@ -48,6 +49,9 @@ export async function handleRegister(req: Request): Promise<Response> {
     // Hash password
     const passwordHash = await hashPassword(password);
 
+    // Auto-grant admin if email is in the configured admin list
+    const isAdminEmail = config.adminEmails.includes(email.toLowerCase());
+
     // Create user
     const [newUser] = await db
       .insert(users)
@@ -56,6 +60,7 @@ export async function handleRegister(req: Request): Promise<Response> {
         email,
         passwordHash,
         displayName: displayName || username,
+        isAdmin: isAdminEmail,
       })
       .returning({
         id: users.id,
@@ -63,6 +68,7 @@ export async function handleRegister(req: Request): Promise<Response> {
         email: users.email,
         displayName: users.displayName,
         reputation: users.reputation,
+        isAdmin: users.isAdmin,
         createdAt: users.createdAt,
       });
 
@@ -119,6 +125,15 @@ export async function handleLogin(req: Request): Promise<Response> {
         JSON.stringify({ error: "Invalid credentials" }),
         { status: 401, headers: { "Content-Type": "application/json" } }
       );
+    }
+
+    // Auto-promote to admin if email matches the configured admin list
+    if (config.adminEmails.includes(user.email.toLowerCase()) && !user.isAdmin) {
+      await db
+        .update(users)
+        .set({ isAdmin: true, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+      user.isAdmin = true;
     }
 
     // Generate token

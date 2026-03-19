@@ -5,6 +5,8 @@ import { ArticleWorkbench } from './article-workbench/article-workbench';
 import { Test } from './test/test';
 import { Challenges } from './challenges/challenges';
 import { AddChallenge } from './add-challenge/add-challenge';
+import { Admin } from './admin/admin';
+import { adminGuard } from './shared/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -26,6 +28,11 @@ export const routes: Routes = [
   {
     path: 'add-challenge',
     component: AddChallenge
+  },
+  {
+    path: 'admin',
+    component: Admin,
+    canActivate: [adminGuard]
   },
   {
     path: 'test',

@@ -29,6 +29,7 @@ export interface AppConfig {
     passwordReset: boolean;
     emailVerification: boolean;
   };
+  adminEmails: string[];
 }
 
 function getConfig(): AppConfig {
@@ -65,6 +66,7 @@ function getConfig(): AppConfig {
       passwordReset: process.env.FEATURE_PASSWORD_RESET !== 'false',
       emailVerification: process.env.FEATURE_EMAIL_VERIFICATION !== 'false',
     },
+    adminEmails: process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(Boolean) ?? [],
   };
 
   // Environment-specific overrides

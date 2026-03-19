@@ -10,6 +10,7 @@ import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, hand
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
 import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
+import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge } from "./routes/admin";
 
 // Log configuration on startup
 logConfig();
@@ -209,6 +210,39 @@ serve({
       }
       
       // Add more API routes here
+      // Admin routes
+      if (url.pathname === "/api/admin/stats" && req.method === "GET") {
+        return handleAdminStats(req);
+      }
+      if (url.pathname === "/api/admin/users" && req.method === "GET") {
+        return handleAdminGetUsers(req);
+      }
+      if (url.pathname.match(/^\/api\/admin\/users\/\d+$/) && req.method === "PATCH") {
+        const userId = parseInt(url.pathname.split("/")[4]);
+        return handleAdminUpdateUser(req, userId);
+      }
+      if (url.pathname === "/api/admin/ideas" && req.method === "GET") {
+        return handleAdminGetIdeas(req);
+      }
+      if (url.pathname.match(/^\/api\/admin\/ideas\/\d+$/) && req.method === "DELETE") {
+        const ideaId = parseInt(url.pathname.split("/")[4]);
+        return handleAdminDeleteIdea(req, ideaId);
+      }
+      if (url.pathname === "/api/admin/comments" && req.method === "GET") {
+        return handleAdminGetComments(req);
+      }
+      if (url.pathname.match(/^\/api\/admin\/comments\/\d+$/) && req.method === "DELETE") {
+        const commentId = parseInt(url.pathname.split("/")[4]);
+        return handleAdminDeleteComment(req, commentId);
+      }
+      if (url.pathname === "/api/admin/challenges" && req.method === "GET") {
+        return handleAdminGetChallenges(req);
+      }
+      if (url.pathname.match(/^\/api\/admin\/challenges\/\d+$/) && req.method === "DELETE") {
+        const challengeId = parseInt(url.pathname.split("/")[4]);
+        return handleAdminDeleteChallenge(req, challengeId);
+      }
+
       return new Response(JSON.stringify({ error: "API endpoint not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },

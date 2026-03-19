@@ -14,6 +14,7 @@ export class AuthService {
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
   readonly isLoggedIn = computed(() => this._currentUser() !== null);
+  readonly isAdmin = computed(() => this._currentUser()?.isAdmin === true);
 
   constructor(private apiService: ApiService) {
     this.initializeAuth();

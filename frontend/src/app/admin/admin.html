@@ -1,0 +1,234 @@
+<div class="admin-page">
+  <div class="admin-header">
+    <h1>Admin Panel</h1>
+    <a routerLink="/" class="back-link">← Back to site</a>
+  </div>
+
+  @if (error()) {
+    <div class="admin-error">{{ error() }}</div>
+  }
+
+  <nav class="admin-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'dashboard'"
+      (click)="setTab('dashboard')">
+      Dashboard
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'users'"
+      (click)="setTab('users')">
+      Users
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'content'"
+      (click)="setTab('content')">
+      Content
+    </button>
+  </nav>
+
+  <div class="admin-body">
+
+    <!-- Dashboard Tab -->
+    @if (activeTab() === 'dashboard') {
+      @if (loading()) {
+        <div class="loading">Loading stats…</div>
+      } @else if (stats()) {
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.userCount }}</span>
+            <span class="stat-label">Total Users</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.ideaCount }}</span>
+            <span class="stat-label">Total Ideas</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.commentCount }}</span>
+            <span class="stat-label">Total Comments</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.challengeCount }}</span>
+            <span class="stat-label">Total Challenges</span>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Users Tab -->
+    @if (activeTab() === 'users') {
+      @if (loading()) {
+        <div class="loading">Loading users…</div>
+      } @else {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Reputation</th>
+              <th>Admin</th>
+              <th>Joined</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.id) {
+              <tr [class.is-admin]="user.isAdmin">
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.reputation }}</td>
+                <td>
+                  <span class="badge" [class.badge-admin]="user.isAdmin" [class.badge-user]="!user.isAdmin">
+                    {{ user.isAdmin ? 'Admin' : 'User' }}
+                  </span>
+                </td>
+                <td>{{ user.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button
+                    class="action-btn"
+                    [class.revoke]="user.isAdmin"
+                    (click)="toggleAdmin(user)">
+                    {{ user.isAdmin ? 'Revoke admin' : 'Make admin' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-row">No users found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Content Tab -->
+    @if (activeTab() === 'content') {
+      <nav class="content-tabs">
+        <button
+          class="content-tab-btn"
+          [class.active]="activeContentTab() === 'ideas'"
+          (click)="setContentTab('ideas')">
+          Ideas
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="activeContentTab() === 'comments'"
+          (click)="setContentTab('comments')">
+          Comments
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="activeContentTab() === 'challenges'"
+          (click)="setContentTab('challenges')">
+          Challenges
+        </button>
+      </nav>
+
+      @if (loading()) {
+        <div class="loading">Loading…</div>
+      }
+
+      <!-- Ideas -->
+      @if (activeContentTab() === 'ideas' && !loading()) {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Score</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (idea of ideas(); track idea.id) {
+              <tr>
+                <td>{{ idea.id }}</td>
+                <td>{{ truncate(idea.title) }}</td>
+                <td>{{ idea.authorUsername }}</td>
+                <td>{{ idea.score }}</td>
+                <td>{{ idea.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button class="action-btn delete" (click)="deleteIdea(idea.id)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty-row">No ideas found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <!-- Comments -->
+      @if (activeContentTab() === 'comments' && !loading()) {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Content</th>
+              <th>Author</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (comment of comments(); track comment.id) {
+              <tr>
+                <td>{{ comment.id }}</td>
+                <td>{{ truncate(comment.content) }}</td>
+                <td>{{ comment.authorUsername }}</td>
+                <td>{{ comment.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button class="action-btn delete" (click)="deleteComment(comment.id)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="empty-row">No comments found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <!-- Challenges -->
+      @if (activeContentTab() === 'challenges' && !loading()) {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Urgency</th>
+              <th>Votes</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (challenge of challenges(); track challenge.id) {
+              <tr>
+                <td>{{ challenge.id }}</td>
+                <td>{{ truncate(challenge.title) }}</td>
+                <td>{{ challenge.category }}</td>
+                <td>
+                  <span class="badge urgency-{{ challenge.urgency.toLowerCase() }}">{{ challenge.urgency }}</span>
+                </td>
+                <td>{{ challenge.votes }}</td>
+                <td>{{ challenge.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button class="action-btn delete" (click)="deleteChallenge(challenge.id)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-row">No challenges found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+  </div>
+</div>

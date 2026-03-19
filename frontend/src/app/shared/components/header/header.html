@@ -20,6 +20,9 @@
         <a class="btn ghost" href="#signin" (click)="openSignInModal(); $event.preventDefault()">Sign in</a>
       } @else {
         <span class="user-greeting">Hi, {{ authService.currentUser()?.displayName || authService.currentUser()?.username }}</span>
+        @if (authService.isAdmin()) {
+          <a class="btn ghost" routerLink="/admin">Admin</a>
+        }
         <a class="btn ghost" (click)="logout()">Sign out</a>
       }
       <a class="btn primary" routerLink="/article-workbench">Create proposal</a>

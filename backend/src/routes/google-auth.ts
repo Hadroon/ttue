@@ -204,6 +204,15 @@ export async function handleGoogleAuth(req: Request): Promise<Response> {
     // Generate JWT token
     const token = generateToken(user.id, user.username);
 
+    // Auto-promote to admin if email matches the configured admin list
+    if (config.adminEmails.includes(user.email.toLowerCase()) && !user.isAdmin) {
+      await db
+        .update(users)
+        .set({ isAdmin: true, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+      user.isAdmin = true;
+    }
+
     // Return user without sensitive data
     const { passwordHash, ...userWithoutPassword } = user;
 
