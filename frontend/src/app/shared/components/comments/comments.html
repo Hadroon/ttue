@@ -17,7 +17,7 @@
         </select>
       </div>
     }
-      <a class="btn primary" (click)="toggleCommentBox()">
+      <a class="btn primary" (click)="toggleCommentBox()" [class.disabled]="parentIsMarked" [attr.disabled]="parentIsMarked ? true : null">
         {{ showCommentBox ? 'Cancel' : 'Add comment' }}
       </a>
     </div>
@@ -53,7 +53,8 @@
             <div class="marked-banner">⚠ Reviewed by moderator</div>
           }
           <div class="comment-vote">
-            <button class="vote-btn-comment" [class.voted]="comment.voted" (click)="onVoteComment(comment.id)">
+            <button class="vote-btn-comment" [class.voted]="comment.voted" (click)="onVoteComment(comment.id)"
+              [disabled]="comment.isMarked">
               <span class="vote-icon">▲</span>
               <span class="vote-count">{{ comment.votes }}</span>
             </button>
@@ -109,7 +110,8 @@
                 @for (reply of comment.replies; track reply.id) {
                   <article class="reply-card">
                     <div class="comment-vote">
-                      <button class="vote-btn-comment sm" [class.voted]="reply.voted" (click)="onVoteComment(reply.id)">
+                      <button class="vote-btn-comment sm" [class.voted]="reply.voted" (click)="onVoteComment(reply.id)"
+                        [disabled]="reply.isMarked">
                         <span class="vote-icon">▲</span>
                         <span class="vote-count">{{ reply.votes }}</span>
                       </button>

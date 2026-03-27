@@ -225,6 +225,20 @@ export async function handleVoteChallenge(req: Request): Promise<Response> {
       );
     }
 
+    // Check if challenge is marked
+    const [challenge] = await db
+      .select({ isMarked: challenges.isMarked })
+      .from(challenges)
+      .where(eq(challenges.id, challengeId))
+      .limit(1);
+
+    if (challenge?.isMarked) {
+      return new Response(
+        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be voted on" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Check if user already voted
     const existingVote = await db
       .select()

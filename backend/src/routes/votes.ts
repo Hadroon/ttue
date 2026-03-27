@@ -33,6 +33,13 @@ export async function handleVoteIdea(req: Request, ideaId: number): Promise<Resp
       );
     }
 
+    if (idea.isMarked) {
+      return new Response(
+        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be voted on" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Check for existing vote
     const [existingVote] = await db
       .select()
@@ -133,6 +140,13 @@ export async function handleVoteComment(req: Request, commentId: number): Promis
       return new Response(
         JSON.stringify({ error: "Comment not found" }),
         { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (comment.isMarked) {
+      return new Response(
+        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be voted on" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }
 

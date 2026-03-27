@@ -105,6 +105,7 @@
     [entityType]="'challenge'" 
     [allComments]="allComments"
     [compact]="true"
+    [parentIsMarked]="!!challenge.isMarked"
     (voteComment)="onVoteComment($event)">
   </app-comments>
 </div>

@@ -33,6 +33,13 @@ export async function handleCreateComment(req: Request): Promise<Response> {
       );
     }
 
+    if (idea.isMarked) {
+      return new Response(
+        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be commented on" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Create comment
     const [newComment] = await db
       .insert(comments)
@@ -128,6 +135,13 @@ export async function handleUpdateComment(req: Request, commentId: number): Prom
     if (comment.authorId !== authResult.user.userId) {
       return new Response(
         JSON.stringify({ error: "You don't have permission to edit this comment" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (comment.isMarked) {
+      return new Response(
+        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be edited" }),
         { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }

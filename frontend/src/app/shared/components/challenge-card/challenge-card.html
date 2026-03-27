@@ -4,6 +4,7 @@
   }
   <div class="challenge-vote">
     <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
+      [disabled]="challenge().isMarked"
       [attr.aria-label]="'Vote for ' + challenge().title">
       <span class="vote-icon">▲</span>
       <span class="vote-count">{{ challenge().votes }}</span>
@@ -51,7 +52,7 @@
       </div>
     </div>
     <div class="challenge-actions">
-      <button class="btn secondary sm" (click)="navigateToWorkbench()">Explore Challenge</button>
+      <button class="btn secondary sm" (click)="navigateToWorkbench()" [disabled]="challenge().isMarked">Explore Challenge</button>
       <a class="btn primary sm" [href]="'#join-' + challenge().id">Join challenge</a>
       <app-content-actions-menu
         contentType="challenge"

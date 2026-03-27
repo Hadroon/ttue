@@ -19,6 +19,7 @@ export class Comments implements OnInit {
   @Input() entityType: 'challenge' | 'idea' = 'challenge';
   @Input() allComments: Comment[] = [];
   @Input() compact: boolean = false;
+  @Input() parentIsMarked: boolean = false;
   @Output() voteComment = new EventEmitter<string>();
 
   private authGuard = inject(AuthGuardService);

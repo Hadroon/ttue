@@ -199,6 +199,13 @@ export async function handleUpdateIdea(req: Request, ideaId: number): Promise<Re
       );
     }
 
+    if (idea.isMarked) {
+      return new Response(
+        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be edited" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Update idea
     const [updatedIdea] = await db
       .update(ideas)

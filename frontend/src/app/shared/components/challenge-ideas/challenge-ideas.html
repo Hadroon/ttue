@@ -60,7 +60,9 @@
               </span>
             </div>
             <div class="idea-vote-mini">
-              <button class="vote-btn-mini" [class.voted]="idea.voted" (click)="onVoteIdea(idea.id)" [attr.aria-label]="'Vote for ' + idea.title">
+              <button class="vote-btn-mini" [class.voted]="idea.voted" (click)="onVoteIdea(idea.id)"
+                [disabled]="idea.isMarked"
+                [attr.aria-label]="'Vote for ' + idea.title">
                 <span class="vote-icon">▲</span>
                 <span class="vote-count">{{ idea.votes }}</span>
               </button>
