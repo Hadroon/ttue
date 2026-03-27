@@ -93,5 +93,26 @@
         </article>
       }
     </div>
+
+    @if (!compact || isExpanded) {
+      <div class="ideas-pagination" role="navigation" aria-label="Ideas pagination">
+        <button class="page-btn nav-btn" (click)="prevPage()" [disabled]="currentPage === 1" aria-label="Previous page">
+          &#8592;
+        </button>
+        @for (page of visiblePageNumbers; track page) {
+          @if (page < 0) {
+            <span class="page-ellipsis">&hellip;</span>
+          } @else {
+            <button class="page-btn" [class.active]="page === currentPage" (click)="goToPage(page)" [attr.aria-label]="'Page ' + page" [attr.aria-current]="page === currentPage ? 'page' : null">
+              {{ page }}
+            </button>
+          }
+        }
+        <button class="page-btn nav-btn" (click)="nextPage()" [disabled]="currentPage === totalPages" aria-label="Next page">
+          &#8594;
+        </button>
+        <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+      </div>
+    }
   }
 </div>
