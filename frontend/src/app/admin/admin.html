@@ -27,6 +27,12 @@
       (click)="setTab('content')">
       Content
     </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'flags'"
+      (click)="setTab('flags')">
+      Flags
+    </button>
   </nav>
 
   <div class="admin-body">
@@ -224,6 +230,79 @@
               </tr>
             } @empty {
               <tr><td colspan="7" class="empty-row">No challenges found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Flags Tab -->
+    @if (activeTab() === 'flags') {
+      <nav class="content-tabs">
+        <button
+          class="content-tab-btn"
+          [class.active]="flagStatusFilter() === 'pending'"
+          (click)="setFlagFilter('pending')">
+          Pending
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="flagStatusFilter() === 'marked'"
+          (click)="setFlagFilter('marked')">
+          Marked
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="flagStatusFilter() === 'all'"
+          (click)="setFlagFilter('all')">
+          All
+        </button>
+      </nav>
+
+      @if (loading()) {
+        <div class="loading">Loading flags…</div>
+      } @else {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Reporter</th>
+              <th>Type</th>
+              <th>Content ID</th>
+              <th>Reason</th>
+              <th>Reported</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (flag of flags(); track flag.id) {
+              <tr>
+                <td>{{ flag.id }}</td>
+                <td>{{ flag.reporterUsername }}</td>
+                <td>
+                  <span class="badge badge-user">{{ flag.contentType }}</span>
+                </td>
+                <td>{{ flag.contentId }}</td>
+                <td>{{ truncate(flag.reason, 100) }}</td>
+                <td>{{ flag.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'badge-user': flag.status === 'pending',
+                    'badge-mark': flag.status === 'marked',
+                    'badge-admin': flag.status === 'reviewed' || flag.status === 'dismissed'
+                  }">{{ flag.status }}</span>
+                </td>
+                <td class="flag-actions">
+                  @if (flag.status === 'pending') {
+                    <button class="action-btn mark" (click)="markContent(flag)">Mark</button>
+                    <button class="action-btn" (click)="resolveFlag(flag.id, 'reviewed')">Reviewed</button>
+                    <button class="action-btn revoke" (click)="resolveFlag(flag.id, 'dismissed')">Dismiss</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="empty-row">No flags found.</td></tr>
             }
           </tbody>
         </table>

@@ -28,6 +28,7 @@ export interface Idea {
   view_count?: number; // Legacy support
   isPinned?: boolean;
   isClosed?: boolean;
+  isMarked?: boolean;
   createdAt?: string; // New camelCase from backend
   created_at?: string; // Legacy support
   updatedAt?: string; // New camelCase from backend
@@ -53,6 +54,7 @@ export interface Comment {
   parent_id?: number; // Legacy support
   score: number;
   isAccepted?: boolean;
+  isMarked?: boolean;
   createdAt?: string; // New camelCase from backend
   created_at?: string; // Legacy support
   updatedAt?: string; // New camelCase from backend
@@ -87,6 +89,7 @@ export interface Challenge {
   tags: string[];
   votes: number;
   voted?: boolean;
+  isMarked?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -161,6 +164,17 @@ export interface AdminChallenge {
   urgency: string;
   votes: number;
   createdAt: string;
+}
+
+export interface Flag {
+  id: number;
+  contentType: 'idea' | 'comment' | 'challenge';
+  contentId: number;
+  reason: string;
+  status: 'pending' | 'reviewed' | 'dismissed' | 'marked';
+  createdAt: string;
+  reviewedAt?: string | null;
+  reporterUsername?: string;
 }
 
 export interface FeaturedChallenge {
@@ -679,5 +693,33 @@ export class ApiService {
 
   deleteAdminChallenge(challengeId: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.baseUrl}/admin/challenges/${challengeId}`);
+  }
+
+  // Flag methods
+
+  flagContent(contentType: string, contentId: string | number, reason: string): Observable<Flag> {
+    return this.http.post<Flag>(`${this.baseUrl}/flags`, { contentType, contentId, reason });
+  }
+
+  unflagContent(contentType: string, contentId: string | number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/flags/${contentType}/${contentId}`);
+  }
+
+  checkFlagged(contentType: string, contentId: string | number): Observable<{ flagged: boolean }> {
+    return this.http.get<{ flagged: boolean }>(`${this.baseUrl}/flags/me`, {
+      params: { contentType, contentId: contentId.toString() }
+    });
+  }
+
+  getAdminFlags(status: 'pending' | 'marked' | 'all' = 'pending'): Observable<Flag[]> {
+    return this.http.get<Flag[]>(`${this.baseUrl}/admin/flags`, { params: { status } });
+  }
+
+  resolveAdminFlag(flagId: number, status: 'reviewed' | 'dismissed'): Observable<{ id: number; status: string }> {
+    return this.http.patch<{ id: number; status: string }>(`${this.baseUrl}/admin/flags/${flagId}`, { status });
+  }
+
+  markAdminContent(flagId: number): Observable<{ id: number; status: string }> {
+    return this.http.patch<{ id: number; status: string }>(`${this.baseUrl}/admin/flags/${flagId}/mark`, {});
   }
 }

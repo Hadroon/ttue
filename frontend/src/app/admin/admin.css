@@ -226,9 +226,29 @@
   background: #fef2f2;
 }
 
+.action-btn.mark {
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+.action-btn.mark:hover {
+  background: #fffbeb;
+}
+
+.badge-mark {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .loading {
   text-align: center;
   padding: 3rem;
   color: #9ca3af;
   font-size: 0.9375rem;
+}
+
+.flag-actions {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
 }

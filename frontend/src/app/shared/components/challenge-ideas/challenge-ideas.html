@@ -48,7 +48,10 @@
 
     <div class="ideas-grid" [class.compact]="!isExpanded">
       @for (idea of displayedIdeas; track idea.id) {
-        <article class="idea-card-mini">
+        <article class="idea-card-mini" [class.is-marked]="idea.isMarked">
+          @if (idea.isMarked) {
+            <div class="marked-banner">⚠ Reviewed by moderator</div>
+          }
           <div class="idea-card-header">
             <div class="idea-meta">
               <span class="status-badge-mini" [class]="getStatusClass(idea.status)">
@@ -61,6 +64,11 @@
                 <span class="vote-icon">▲</span>
                 <span class="vote-count">{{ idea.votes }}</span>
               </button>
+              <app-content-actions-menu
+                contentType="idea"
+                [contentId]="idea.id"
+                [contentLabel]="idea.title">
+              </app-content-actions-menu>
             </div>
           </div>
 

@@ -167,6 +167,22 @@
   transform: translateY(-1px);
 }
 
+.idea-card-mini.is-marked {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.marked-banner {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
 .idea-card-header {
   display: flex;
   justify-content: space-between;

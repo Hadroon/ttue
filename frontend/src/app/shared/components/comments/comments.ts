@@ -5,11 +5,12 @@ import { Comment } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { AuthGuardService } from '../../services/auth-guard.service';
 import { ApiService } from '../../services/api.service';
+import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
 
 @Component({
   selector: 'app-comments',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule, ContentActionsMenu],
   templateUrl: './comments.html',
   styleUrl: './comments.css'
 })

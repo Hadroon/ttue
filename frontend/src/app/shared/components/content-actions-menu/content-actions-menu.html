@@ -1,0 +1,22 @@
+<div class="cam-wrapper">
+  <button
+    class="cam-trigger"
+    (click)="toggle($event)"
+    [attr.aria-expanded]="isOpen"
+    aria-label="More actions"
+    title="More actions">
+    ···
+  </button>
+
+  @if (isOpen) {
+    <div class="cam-dropdown" role="menu">
+      @if (isLoggedIn) {
+        <button class="cam-item report" role="menuitem" (click)="openFlagModal($event)">
+          ⚑ Report
+        </button>
+      } @else {
+        <span class="cam-item disabled">Sign in to report</span>
+      }
+    </div>
+  }
+</div>

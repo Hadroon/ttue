@@ -68,6 +68,7 @@ export async function handleGetComments(req: Request, ideaId: number): Promise<R
         parentId: comments.parentId,
         score: comments.score,
         isAccepted: comments.isAccepted,
+        isMarked: comments.isMarked,
         createdAt: comments.createdAt,
         updatedAt: comments.updatedAt,
         author: {

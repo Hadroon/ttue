@@ -7,6 +7,7 @@ export interface Idea {
   voted?: boolean;
   category: string;
   status: 'New' | 'Under Review' | 'In Development' | 'Implemented';
+  isMarked?: boolean;
   createdAt: Date;
   challengeId?: string;
 }
@@ -23,6 +24,7 @@ export interface Challenge {
   tags: string[];
   votes: number;
   voted?: boolean;
+  isMarked?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +69,7 @@ export interface Comment {
   voted?: boolean;
   parentId?: string;
   replies?: Comment[];
+  isMarked?: boolean;
   challengeId?: string;
   ideaId?: string;
 }

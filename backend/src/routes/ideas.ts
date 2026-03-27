@@ -129,6 +129,7 @@ export async function handleGetIdea(req: Request, ideaId: number): Promise<Respo
         viewCount: ideas.viewCount,
         isPinned: ideas.isPinned,
         isClosed: ideas.isClosed,
+        isMarked: ideas.isMarked,
         createdAt: ideas.createdAt,
         updatedAt: ideas.updatedAt,
         author: {

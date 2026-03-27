@@ -7,10 +7,11 @@ import {
   AdminUser,
   AdminIdea,
   AdminComment,
-  AdminChallenge
+  AdminChallenge,
+  Flag
 } from '../shared/services/api.service';
 
-type AdminTab = 'dashboard' | 'users' | 'content';
+type AdminTab = 'dashboard' | 'users' | 'content' | 'flags';
 type ContentTab = 'ideas' | 'comments' | 'challenges';
 
 @Component({
@@ -30,6 +31,8 @@ export class Admin implements OnInit {
   ideas = signal<AdminIdea[]>([]);
   comments = signal<AdminComment[]>([]);
   challenges = signal<AdminChallenge[]>([]);
+  flags = signal<Flag[]>([]);
+  flagStatusFilter = signal<'pending' | 'marked' | 'all'>('pending');
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -44,6 +47,7 @@ export class Admin implements OnInit {
     if (tab === 'dashboard') this.loadStats();
     else if (tab === 'users') this.loadUsers();
     else if (tab === 'content') this.loadIdeas();
+    else if (tab === 'flags') this.loadFlags();
   }
 
   setContentTab(tab: ContentTab) {
@@ -124,6 +128,33 @@ export class Admin implements OnInit {
     this.apiService.deleteAdminChallenge(id).subscribe({
       next: () => this.challenges.update(list => list.filter(c => c.id !== id)),
       error: () => this.error.set('Failed to delete challenge')
+    });
+  }
+
+  loadFlags() {
+    this.loading.set(true);
+    this.apiService.getAdminFlags(this.flagStatusFilter()).subscribe({
+      next: (data) => { this.flags.set(data); this.loading.set(false); },
+      error: () => { this.error.set('Failed to load flags'); this.loading.set(false); }
+    });
+  }
+
+  setFlagFilter(status: 'pending' | 'marked' | 'all') {
+    this.flagStatusFilter.set(status);
+    this.loadFlags();
+  }
+
+  resolveFlag(id: number, status: 'reviewed' | 'dismissed') {
+    this.apiService.resolveAdminFlag(id, status).subscribe({
+      next: () => this.flags.update(list => list.filter(f => f.id !== id)),
+      error: () => this.error.set('Failed to resolve flag')
+    });
+  }
+
+  markContent(flag: Flag) {
+    this.apiService.markAdminContent(flag.id).subscribe({
+      next: () => this.loadFlags(),
+      error: () => this.error.set('Failed to mark content')
     });
   }
 

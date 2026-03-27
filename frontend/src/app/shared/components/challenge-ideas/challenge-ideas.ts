@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Idea } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
+import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
 
 @Component({
   selector: 'app-challenge-ideas',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule, ContentActionsMenu],
   templateUrl: './challenge-ideas.html',
   styleUrl: './challenge-ideas.css'
 })

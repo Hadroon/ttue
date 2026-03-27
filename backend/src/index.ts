@@ -10,7 +10,8 @@ import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, hand
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
 import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
-import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge } from "./routes/admin";
+import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
+import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 
 // Log configuration on startup
 logConfig();
@@ -241,6 +242,31 @@ serve({
       if (url.pathname.match(/^\/api\/admin\/challenges\/\d+$/) && req.method === "DELETE") {
         const challengeId = parseInt(url.pathname.split("/")[4]);
         return handleAdminDeleteChallenge(req, challengeId);
+      }
+      if (url.pathname === "/api/admin/flags" && req.method === "GET") {
+        return handleAdminGetFlags(req);
+      }
+      if (url.pathname.match(/^\/api\/admin\/flags\/\d+\/mark$/) && req.method === "PATCH") {
+        const flagId = parseInt(url.pathname.split("/")[4]);
+        return handleAdminMarkContent(req, flagId);
+      }
+      if (url.pathname.match(/^\/api\/admin\/flags\/\d+$/) && req.method === "PATCH") {
+        const flagId = parseInt(url.pathname.split("/")[4]);
+        return handleAdminResolveFlag(req, flagId);
+      }
+
+      // Flag routes
+      if (url.pathname === "/api/flags" && req.method === "POST") {
+        return handleCreateFlag(req);
+      }
+      if (url.pathname === "/api/flags/me" && req.method === "GET") {
+        return handleCheckFlag(req);
+      }
+      if (url.pathname.match(/^\/api\/flags\/[a-z]+\/\d+$/) && req.method === "DELETE") {
+        const parts = url.pathname.split("/");
+        const contentType = parts[3];
+        const contentId = parseInt(parts[4]);
+        return handleDeleteFlag(req, contentType, contentId);
       }
 
       return new Response(JSON.stringify({ error: "API endpoint not found" }), {

@@ -1,4 +1,7 @@
-<article class="challenge-card">
+<article class="challenge-card" [class.is-marked]="challenge().isMarked">
+  @if (challenge().isMarked) {
+    <div class="marked-banner">⚠ Reviewed by moderator</div>
+  }
   <div class="challenge-vote">
     <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
       [attr.aria-label]="'Vote for ' + challenge().title">
@@ -50,6 +53,11 @@
     <div class="challenge-actions">
       <button class="btn secondary sm" (click)="navigateToWorkbench()">Explore Challenge</button>
       <a class="btn primary sm" [href]="'#join-' + challenge().id">Join challenge</a>
+      <app-content-actions-menu
+        contentType="challenge"
+        [contentId]="challenge().id"
+        [contentLabel]="challenge().title">
+      </app-content-actions-menu>
     </div>
   </div>
 </article>

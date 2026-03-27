@@ -33,6 +33,7 @@ export const ideas = pgTable("ideas", {
   viewCount: integer("view_count").default(0).notNull(),
   isPinned: boolean("is_pinned").default(false).notNull(),
   isClosed: boolean("is_closed").default(false).notNull(),
+  isMarked: boolean("is_marked").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -51,6 +52,7 @@ export const comments = pgTable("comments", {
   parentId: integer("parent_id").references(() => comments.id, { onDelete: "cascade" }),
   score: integer("score").default(0).notNull(),
   isAccepted: boolean("is_accepted").default(false).notNull(),
+  isMarked: boolean("is_marked").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -124,6 +126,7 @@ export const challenges = pgTable("challenges", {
   deadline: timestamp("deadline"),
   tags: json("tags").$type<string[]>().default([]).notNull(),
   votes: integer("votes").default(0).notNull(),
+  isMarked: boolean("is_marked").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -330,6 +333,34 @@ export const challengeDraftProposalsRelations = relations(challengeDraftProposal
   }),
   proposer: one(users, {
     fields: [challengeDraftProposals.proposerId],
+    references: [users.id],
+  }),
+}));
+
+// Content flags table (unified for ideas, comments, challenges)
+export const flags = pgTable("flags", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  contentType: text("content_type").notNull(), // 'idea' | 'comment' | 'challenge'
+  contentId: integer("content_id").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").default("pending").notNull(), // 'pending' | 'reviewed' | 'dismissed' | 'marked'
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedById: integer("reviewed_by_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userContentUnique: uniqueIndex("flag_user_content_unique").on(table.userId, table.contentType, table.contentId),
+  contentTypeIdx: index("flag_content_type_idx").on(table.contentType, table.contentId),
+  statusIdx: index("flag_status_idx").on(table.status),
+}));
+
+export const flagsRelations = relations(flags, ({ one }) => ({
+  reporter: one(users, {
+    fields: [flags.userId],
+    references: [users.id],
+  }),
+  reviewer: one(users, {
+    fields: [flags.reviewedById],
     references: [users.id],
   }),
 }));

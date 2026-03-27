@@ -181,6 +181,24 @@
   gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.comment-card.is-marked {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.comment-card .marked-banner {
+  width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 4px;
+  padding: 2px 8px;
+  display: inline-block;
+  margin-bottom: 4px;
 }
 
 .comment-card:last-child {

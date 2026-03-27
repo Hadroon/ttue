@@ -48,7 +48,10 @@
   } @else {
     <div class="comments-list">
       @for (comment of displayedComments; track comment.id) {
-        <article class="comment-card">
+        <article class="comment-card" [class.is-marked]="comment.isMarked">
+          @if (comment.isMarked) {
+            <div class="marked-banner">⚠ Reviewed by moderator</div>
+          }
           <div class="comment-vote">
             <button class="vote-btn-comment" [class.voted]="comment.voted" (click)="onVoteComment(comment.id)">
               <span class="vote-icon">▲</span>
@@ -65,6 +68,11 @@
                 }
                 <span class="comment-time">{{ formatTimeAgo(comment.createdAt) }}</span>
               </div>
+              <app-content-actions-menu
+                contentType="comment"
+                [contentId]="comment.id"
+                [contentLabel]="'comment by ' + comment.author">
+              </app-content-actions-menu>
             </div>
 
             <div class="comment-body">

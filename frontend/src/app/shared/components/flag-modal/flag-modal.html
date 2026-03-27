@@ -1,0 +1,35 @@
+<div class="flag-modal">
+  <h2 mat-dialog-title>Report content</h2>
+
+  <mat-dialog-content>
+    <p class="flag-description">
+      Report "<strong>{{ data.contentLabel }}</strong>" to the moderation team.
+      Content stays visible until a moderator reviews this report.
+    </p>
+
+    @if (error()) {
+      <div class="flag-error">{{ error() }}</div>
+    }
+
+    <label class="flag-label" for="flag-reason">Why are you reporting this?</label>
+    <textarea
+      id="flag-reason"
+      class="flag-textarea"
+      [(ngModel)]="reason"
+      placeholder="Describe the issue (e.g. spam, offensive language, off-topic…)"
+      rows="4"
+      [disabled]="submitting()"
+    ></textarea>
+    <span class="flag-char-hint">{{ reason.length }} characters</span>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button class="btn ghost" (click)="cancel()" [disabled]="submitting()">Cancel</button>
+    <button
+      class="btn danger"
+      (click)="submit()"
+      [disabled]="submitting() || reason.trim().length < 5">
+      {{ submitting() ? 'Submitting…' : 'Submit report' }}
+    </button>
+  </mat-dialog-actions>
+</div>

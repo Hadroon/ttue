@@ -8,6 +8,24 @@
   display: flex;
   gap: 20px;
   height: 100%;
+  flex-wrap: wrap;
+}
+
+.challenge-card.is-marked {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.challenge-card .marked-banner {
+  width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 4px;
+  padding: 2px 8px;
+  display: inline-block;
+  margin-bottom: 4px;
 }
 
 /* .challenge-card:hover {

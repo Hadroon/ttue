@@ -1,6 +1,6 @@
 import { db } from "../db";
-import { users, ideas, comments, challenges } from "../db/schema";
-import { eq, sql } from "drizzle-orm";
+import { users, ideas, comments, challenges, flags } from "../db/schema";
+import { eq, sql, or } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 
 /**
@@ -307,6 +307,146 @@ export async function handleAdminDeleteChallenge(req: Request, challengeId: numb
     console.error("Admin delete challenge error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to delete challenge" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// GET /api/admin/flags?status=pending|marked|all
+export async function handleAdminGetFlags(req: Request): Promise<Response> {
+  const auth = await adminAuth(req);
+  if (auth instanceof Response) return auth;
+
+  const url = new URL(req.url);
+  const statusFilter = url.searchParams.get("status") || "pending";
+
+  try {
+    let whereClause;
+    if (statusFilter === "all") {
+      whereClause = undefined;
+    } else if (statusFilter === "marked") {
+      whereClause = eq(flags.status, "marked");
+    } else {
+      whereClause = eq(flags.status, "pending");
+    }
+
+    const query = db
+      .select({
+        id: flags.id,
+        contentType: flags.contentType,
+        contentId: flags.contentId,
+        reason: flags.reason,
+        status: flags.status,
+        createdAt: flags.createdAt,
+        reviewedAt: flags.reviewedAt,
+        reporterUsername: users.username,
+      })
+      .from(flags)
+      .leftJoin(users, eq(flags.userId, users.id))
+      .orderBy(flags.createdAt);
+
+    const result = whereClause
+      ? await query.where(whereClause)
+      : await query;
+
+    return new Response(
+      JSON.stringify(result),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Admin get flags error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to load flags" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// PATCH /api/admin/flags/:id/mark — mark content as reviewed by moderator
+export async function handleAdminMarkContent(req: Request, flagId: number): Promise<Response> {
+  const auth = await adminAuth(req);
+  if (auth instanceof Response) return auth;
+
+  try {
+    // Look up the flag to find content type + content id
+    const [flag] = await db
+      .select({ contentType: flags.contentType, contentId: flags.contentId })
+      .from(flags)
+      .where(eq(flags.id, flagId))
+      .limit(1);
+
+    if (!flag) {
+      return new Response(
+        JSON.stringify({ error: "Flag not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Set isMarked=true on the appropriate content table
+    if (flag.contentType === "idea") {
+      await db.update(ideas).set({ isMarked: true }).where(eq(ideas.id, flag.contentId));
+    } else if (flag.contentType === "comment") {
+      await db.update(comments).set({ isMarked: true }).where(eq(comments.id, flag.contentId));
+    } else if (flag.contentType === "challenge") {
+      await db.update(challenges).set({ isMarked: true }).where(eq(challenges.id, flag.contentId));
+    }
+
+    // Resolve the flag with status 'marked'
+    const [updated] = await db
+      .update(flags)
+      .set({ status: "marked", reviewedAt: new Date(), reviewedById: auth.user.userId })
+      .where(eq(flags.id, flagId))
+      .returning({ id: flags.id, status: flags.status });
+
+    return new Response(
+      JSON.stringify(updated),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Admin mark content error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to mark content" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// PATCH /api/admin/flags/:id
+export async function handleAdminResolveFlag(req: Request, flagId: number): Promise<Response> {
+  const auth = await adminAuth(req);
+  if (auth instanceof Response) return auth;
+
+  try {
+    const { status } = await req.json();
+
+    if (status !== "reviewed" && status !== "dismissed") {
+      return new Response(
+        JSON.stringify({ error: "status must be 'reviewed' or 'dismissed'" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const [updated] = await db
+      .update(flags)
+      .set({ status, reviewedAt: new Date(), reviewedById: auth.user.userId })
+      .where(eq(flags.id, flagId))
+      .returning({ id: flags.id, status: flags.status });
+
+    if (!updated) {
+      return new Response(
+        JSON.stringify({ error: "Flag not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify(updated),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Admin resolve flag error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to resolve flag" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

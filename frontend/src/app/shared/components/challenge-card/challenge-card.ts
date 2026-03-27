@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, Signal, input, OnInit, inject }
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Challenge } from '../../models/baseModels';
+import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
 
 @Component({
   selector: 'app-challenge-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ContentActionsMenu],
   templateUrl: './challenge-card.html',
   styleUrl: './challenge-card.css'
 })
