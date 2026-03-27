@@ -340,6 +340,12 @@ export async function handleAdminGetFlags(req: Request): Promise<Response> {
         createdAt: flags.createdAt,
         reviewedAt: flags.reviewedAt,
         reporterUsername: users.username,
+        contentTitle: sql<string | null>`CASE
+          WHEN ${flags.contentType} = 'idea' THEN (SELECT title FROM ideas WHERE id = ${flags.contentId})
+          WHEN ${flags.contentType} = 'challenge' THEN (SELECT title FROM challenges WHERE id = ${flags.contentId})
+          WHEN ${flags.contentType} = 'comment' THEN (SELECT LEFT(content, 120) FROM comments WHERE id = ${flags.contentId})
+          ELSE NULL
+        END`,
       })
       .from(flags)
       .leftJoin(users, eq(flags.userId, users.id))

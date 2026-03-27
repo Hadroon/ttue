@@ -252,3 +252,32 @@
   gap: 0.375rem;
   flex-wrap: wrap;
 }
+
+/* Flags table — content column */
+.content-cell {
+  max-width: 240px;
+}
+
+.content-link {
+  color: var(--color-primary, #2563eb);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  word-break: break-word;
+}
+
+.content-link:hover {
+  text-decoration: underline;
+}
+
+.content-preview {
+  color: #6b7280;
+  font-size: 0.8125rem;
+  font-style: italic;
+  word-break: break-word;
+}
+
+.content-id {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}

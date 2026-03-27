@@ -268,7 +268,7 @@
               <th>ID</th>
               <th>Reporter</th>
               <th>Type</th>
-              <th>Content ID</th>
+              <th>Content</th>
               <th>Reason</th>
               <th>Reported</th>
               <th>Status</th>
@@ -283,7 +283,22 @@
                 <td>
                   <span class="badge badge-user">{{ flag.contentType }}</span>
                 </td>
-                <td>{{ flag.contentId }}</td>
+                <td class="content-cell">
+                  @if (flag.contentType === 'challenge') {
+                    <a [routerLink]="['/article-workbench']"
+                       [queryParams]="{challengeId: flag.contentId}"
+                       class="content-link"
+                       target="_blank">
+                      {{ truncate(flag.contentTitle ?? '(untitled)', 60) }}
+                      <span class="content-id">#{{ flag.contentId }}</span>
+                    </a>
+                  } @else {
+                    <span class="content-preview">
+                      {{ truncate(flag.contentTitle ?? '(no preview)', 80) }}
+                      <span class="content-id">#{{ flag.contentId }}</span>
+                    </span>
+                  }
+                </td>
                 <td>{{ truncate(flag.reason, 100) }}</td>
                 <td>{{ flag.createdAt | date:'mediumDate' }}</td>
                 <td>

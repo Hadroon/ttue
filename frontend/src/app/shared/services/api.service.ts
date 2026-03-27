@@ -175,6 +175,7 @@ export interface Flag {
   createdAt: string;
   reviewedAt?: string | null;
   reporterUsername?: string;
+  contentTitle?: string | null;
 }
 
 export interface FeaturedChallenge {
