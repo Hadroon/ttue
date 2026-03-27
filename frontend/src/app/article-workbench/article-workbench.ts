@@ -43,7 +43,7 @@ export class ArticleWorkbench implements AfterViewInit {
 
   readonly isBrowser: boolean;
   readonly isEditing: WritableSignal<boolean> = signal(false);
-  readonly activeSection: WritableSignal<string> = signal('draft');
+  readonly activeSection: WritableSignal<string> = signal('challenge');
 
   readonly previousDraft: WritableSignal<string> = signal('');
   readonly draftHtml: WritableSignal<string> = signal('');
@@ -293,11 +293,15 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (!this.isBrowser || !this.editorArea) {
+    if (!this.isBrowser) {
       return;
     }
 
-    this.editorArea.nativeElement.innerHTML = this.draftHtml();
+    setTimeout(() => this.scrollToSection('challenge'), 0);
+
+    if (this.editorArea) {
+      this.editorArea.nativeElement.innerHTML = this.draftHtml();
+    }
   }
 
   onEditorInput(): void {

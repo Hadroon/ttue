@@ -3,6 +3,10 @@
 <main class="workbench" id="main" role="main">
   <nav class="page-nav" role="navigation" aria-label="In-page navigation">
     <div class="page-nav-inner">
+      <button type="button"
+              class="nav-link"
+              [class.active]="activeSection() === 'challenge'"
+              (click)="scrollToSection('challenge')">Challenge</button>
       <button type="button" 
               class="nav-link" 
               [class.active]="activeSection() === 'draft'"
@@ -22,7 +26,7 @@
     </div>
   </nav>
 
-  <section class="section hero compose-hero">
+  <section class="section hero compose-hero" id="challenge">
     <div class="container compose-hero-inner">
       <div class="compose-hero-copy">
         @if (challenge()) {
