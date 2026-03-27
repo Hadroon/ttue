@@ -15,6 +15,10 @@
               class="nav-link" 
               [class.active]="activeSection() === 'comments'"
               (click)="scrollToSection('comments')">Comments</button>
+      <button type="button" 
+              class="nav-link" 
+              [class.active]="activeSection() === 'ideas'"
+              (click)="scrollToSection('ideas')">Ideas</button>
     </div>
   </nav>
 
@@ -312,6 +316,31 @@
         </article>
         }
       </div>
+    </div>
+  </section>
+
+  <section class="section ideas-section" id="ideas">
+    <div class="container ideas-container">
+      <header class="section-head">
+        <div>
+          <h2>Ideas</h2>
+          <p class="section-subtitle">Community-submitted ideas for this challenge, ranked by votes.</p>
+        </div>
+        <button type="button" class="btn primary" (click)="navigateToAddIdea()">Add Idea</button>
+      </header>
+
+      @if (ideasLoading()) {
+        <p class="muted-note" style="text-align:center; padding: 2rem 0;">Loading ideas...</p>
+      } @else if (ideasError()) {
+        <p style="color: var(--color-error, red); text-align:center; padding: 2rem 0;">{{ ideasError() }}</p>
+      } @else {
+        <app-challenge-ideas
+          [challengeId]="challengeId() ?? ''"
+          [allIdeas]="mappedIdeas()"
+          [compact]="false"
+          (voteIdea)="onVoteIdea($event)">
+        </app-challenge-ideas>
+      }
     </div>
   </section>
 

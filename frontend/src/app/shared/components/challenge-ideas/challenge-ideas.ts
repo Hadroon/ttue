@@ -21,7 +21,7 @@ export class ChallengeIdeas implements OnInit {
   isExpanded = false;
   filteredIdeas: Idea[] = [];
   displayedIdeas: Idea[] = [];
-  sortBy: 'votes' | 'recent' | 'status' = 'votes';
+  sortBy: 'votes' | 'recent' | 'oldest' | 'title' = 'votes';
   filterStatus: string = 'all';
 
   ngOnInit() {
@@ -59,9 +59,11 @@ export class ChallengeIdeas implements OnInit {
       case 'recent':
         this.filteredIdeas.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         break;
-      case 'status':
-        const statusOrder = { 'New': 0, 'Under Review': 1, 'In Development': 2, 'Implemented': 3 };
-        this.filteredIdeas.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+      case 'oldest':
+        this.filteredIdeas.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        break;
+      case 'title':
+        this.filteredIdeas.sort((a, b) => a.title.localeCompare(b.title));
         break;
     }
   }
@@ -76,7 +78,7 @@ export class ChallengeIdeas implements OnInit {
 
   onSortChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    this.sortBy = select.value as 'votes' | 'recent' | 'status';
+    this.sortBy = select.value as 'votes' | 'recent' | 'oldest' | 'title';
     this.filterAndSortIdeas();
   }
 

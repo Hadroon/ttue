@@ -1,0 +1,42 @@
+<app-header></app-header>
+
+<main id="main" role="main">
+  @if (isAuthenticated) {
+    <section class="section idea-form-section">
+      <div class="container">
+        <div class="form-card">
+          <h1 class="form-title">Submit an Idea</h1>
+          <p class="form-subtitle">Share your solution or proposal for this challenge</p>
+
+          <form class="idea-form" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Title *</mat-label>
+              <input matInput [(ngModel)]="idea.title" name="title" required
+                     placeholder="Give your idea a clear, concise title">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description *</mat-label>
+              <textarea matInput [(ngModel)]="idea.content" name="content" required
+                        rows="10"
+                        placeholder="Describe your idea in detail. Include context, rationale, and potential impact."></textarea>
+            </mat-form-field>
+
+            @if (errorMessage) {
+              <p class="error-message">{{ errorMessage }}</p>
+            }
+
+            <div class="form-actions">
+              <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
+                {{ isSubmitting ? 'Submitting...' : 'Submit Idea' }}
+              </button>
+              <button mat-button type="button" (click)="onCancel()" [disabled]="isSubmitting">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  }
+</main>

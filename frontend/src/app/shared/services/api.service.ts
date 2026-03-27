@@ -198,6 +198,7 @@ export interface IdeaRevision {
 export interface CreateIdeaRequest {
   title: string;
   content: string;
+  challengeId?: number;
 }
 
 export interface UpdateIdeaRequest {
@@ -289,6 +290,20 @@ export class ApiService {
     });
 
     return request;
+  }
+
+  /**
+   * Get ideas with optional challengeId filter and pagination
+   */
+  getIdeas(params: { challengeId?: number; limit?: number; offset?: number } = {}): Observable<{ ideas: Idea[]; limit: number; offset: number }> {
+    const queryParams: Record<string, string> = {
+      limit: (params.limit ?? 10).toString(),
+      offset: (params.offset ?? 0).toString()
+    };
+    if (params.challengeId != null) {
+      queryParams['challengeId'] = params.challengeId.toString();
+    }
+    return this.http.get<{ ideas: Idea[]; limit: number; offset: number }>(`${this.baseUrl}/ideas`, { params: queryParams });
   }
 
   /**

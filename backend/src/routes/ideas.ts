@@ -9,7 +9,7 @@ export async function handleCreateIdea(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const { title, content, tagNames } = await req.json();
+    const { title, content, tagNames, challengeId } = await req.json();
 
     // Validate input
     if (!title || !content) {
@@ -26,6 +26,7 @@ export async function handleCreateIdea(req: Request): Promise<Response> {
         title,
         content,
         authorId: authResult.user.userId,
+        challengeId: challengeId ? Number(challengeId) : null,
       })
       .returning();
 
@@ -79,6 +80,8 @@ export async function handleGetIdeas(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get("limit") || "20");
     const offset = parseInt(url.searchParams.get("offset") || "0");
+    const challengeIdParam = url.searchParams.get("challengeId");
+    const challengeIdFilter = challengeIdParam ? parseInt(challengeIdParam) : null;
 
     const allIdeas = await db
       .select({
@@ -100,7 +103,8 @@ export async function handleGetIdeas(req: Request): Promise<Response> {
       })
       .from(ideas)
       .leftJoin(users, eq(ideas.authorId, users.id))
-      .orderBy(desc(ideas.isPinned), desc(ideas.createdAt))
+      .where(challengeIdFilter !== null ? eq(ideas.challengeId, challengeIdFilter) : undefined)
+      .orderBy(desc(ideas.isPinned), desc(ideas.score))
       .limit(limit)
       .offset(offset);
 

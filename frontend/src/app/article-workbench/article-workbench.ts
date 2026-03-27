@@ -1,10 +1,12 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, WritableSignal, signal, computed } from '@angular/core';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Header } from '../shared/components';
-import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal } from '../shared/services/api.service';
+import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, Idea } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
+import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
+import { Idea as BaseIdea } from '../shared/models/baseModels';
 
 type DiffKind = 'added' | 'removed' | 'unchanged';
 
@@ -32,7 +34,7 @@ interface RevisionSnapshot {
 @Component({
   selector: 'app-article-workbench',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Header],
+  imports: [CommonModule, FormsModule, RouterLink, Header, ChallengeIdeas],
   templateUrl: './article-workbench.html',
   styleUrl: './article-workbench.css'
 })
@@ -118,6 +120,30 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly loadingChallenge: WritableSignal<boolean> = signal(false);
   readonly challengeError: WritableSignal<string | null> = signal(null);
 
+  // Ideas state
+  readonly ideas: WritableSignal<Idea[]> = signal([]);
+  readonly ideasLoading: WritableSignal<boolean> = signal(false);
+  readonly ideasError: WritableSignal<string | null> = signal(null);
+  readonly ideasPage: WritableSignal<number> = signal(1);
+  readonly ideasHasMore: WritableSignal<boolean> = signal(false);
+  readonly ideasLimit = 50;
+
+  readonly mappedIdeas = computed<BaseIdea[]>(() =>
+    this.ideas().map(idea => ({
+      id: String(idea.id),
+      title: idea.title,
+      description: idea.content || '',
+      author: idea.authorDisplayName || idea.authorUsername || 'Anonymous',
+      votes: idea.score,
+      voted: idea.voted,
+      status: 'New' as const,
+      isMarked: idea.isMarked,
+      createdAt: new Date(idea.createdAt || idea.created_at || Date.now()),
+      challengeId: String(this.challengeId() ?? idea.challengeId ?? ''),
+      category: ''
+    }))
+  );
+
   // Backend draft state
   readonly backendDraft: WritableSignal<ChallengeDraft | null> = signal(null);
   readonly loadingDraft: WritableSignal<boolean> = signal(false);
@@ -165,6 +191,7 @@ export class ArticleWorkbench implements AfterViewInit {
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
     private route: ActivatedRoute,
+    private router: Router,
     private apiService: ApiService,
     private authService: AuthService
   ) {
@@ -193,6 +220,8 @@ export class ArticleWorkbench implements AfterViewInit {
         console.log('Challenge loaded:', challenge);
         // Load draft after challenge is loaded
         this.loadDraft(id);
+        // Load ideas after challenge is loaded
+        this.loadIdeas();
       },
       error: (error) => {
         console.error('Error loading challenge:', error);
@@ -431,6 +460,56 @@ export class ArticleWorkbench implements AfterViewInit {
         console.error('Error loading proposals:', error);
         this.loadingProposals.set(false);
       }
+    });
+  }
+
+  loadIdeas(page?: number): void {
+    const challengeId = this.challengeId();
+    const targetPage = page ?? this.ideasPage();
+    this.ideasLoading.set(true);
+    this.ideasError.set(null);
+    const offset = (targetPage - 1) * this.ideasLimit;
+    this.apiService.getIdeas({ challengeId: challengeId ?? undefined, limit: this.ideasLimit, offset }).subscribe({
+      next: (res) => {
+        this.ideas.set(res.ideas);
+        this.ideasHasMore.set(res.ideas.length === this.ideasLimit);
+        this.ideasPage.set(targetPage);
+        this.ideasLoading.set(false);
+      },
+      error: () => {
+        this.ideasError.set('Failed to load ideas');
+        this.ideasLoading.set(false);
+      }
+    });
+  }
+
+  nextIdeasPage(): void {
+    if (this.ideasHasMore()) {
+      this.loadIdeas(this.ideasPage() + 1);
+    }
+  }
+
+  prevIdeasPage(): void {
+    if (this.ideasPage() > 1) {
+      this.loadIdeas(this.ideasPage() - 1);
+    }
+  }
+
+  navigateToAddIdea(): void {
+    const challengeId = this.challengeId();
+    const extras = challengeId != null ? { queryParams: { challengeId } } : {};
+    this.router.navigate(['/add-idea'], extras);
+  }
+
+  onVoteIdea(ideaId: string): void {
+    const numId = Number(ideaId);
+    this.apiService.voteIdea(numId).subscribe({
+      next: (res) => {
+        this.ideas.update(list =>
+          list.map(idea => idea.id === numId ? { ...idea, score: res.score, voted: res.voted } : idea)
+        );
+      },
+      error: () => {}
     });
   }
 

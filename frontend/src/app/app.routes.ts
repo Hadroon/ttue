@@ -5,6 +5,7 @@ import { ArticleWorkbench } from './article-workbench/article-workbench';
 import { Test } from './test/test';
 import { Challenges } from './challenges/challenges';
 import { AddChallenge } from './add-challenge/add-challenge';
+import { AddIdea } from './add-idea/add-idea';
 import { Admin } from './admin/admin';
 import { adminGuard } from './shared/guards/admin.guard';
 
@@ -28,6 +29,10 @@ export const routes: Routes = [
   {
     path: 'add-challenge',
     component: AddChallenge
+  },
+  {
+    path: 'add-idea',
+    component: AddIdea
   },
   {
     path: 'admin',

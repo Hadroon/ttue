@@ -15,28 +15,27 @@
         </span>
       </div>
       
-      @if (isExpanded) {
-        <div class="ideas-controls">
-          <div class="control-group">
-            <label for="filter-status-{{ challengeId }}">Status:</label>
-            <select id="filter-status-{{ challengeId }}" (change)="onFilterChange($event)" [(ngModel)]="filterStatus">
-              <option value="all">All</option>
-              <option value="New">New</option>
-              <option value="Under Review">Under Review</option>
-              <option value="In Development">In Development</option>
-              <option value="Implemented">Implemented</option>
-            </select>
-          </div>
-          <div class="control-group">
-            <label for="sort-ideas-{{ challengeId }}">Sort:</label>
-            <select id="sort-ideas-{{ challengeId }}" (change)="onSortChange($event)" [(ngModel)]="sortBy">
-              <option value="votes">Most voted</option>
-              <option value="recent">Most recent</option>
-              <option value="status">Status</option>
-            </select>
-          </div>
+      <div class="ideas-controls">
+        <div class="control-group">
+          <label for="filter-status-{{ challengeId }}">Status:</label>
+          <select id="filter-status-{{ challengeId }}" (change)="onFilterChange($event)" [(ngModel)]="filterStatus">
+            <option value="all">All</option>
+            <option value="New">New</option>
+            <option value="Under Review">Under Review</option>
+            <option value="In Development">In Development</option>
+            <option value="Implemented">Implemented</option>
+          </select>
         </div>
-      }
+        <div class="control-group">
+          <label for="sort-ideas-{{ challengeId }}">Sort:</label>
+          <select id="sort-ideas-{{ challengeId }}" (change)="onSortChange($event)" [(ngModel)]="sortBy">
+            <option value="votes">Most voted</option>
+            <option value="recent">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="title">Alphabetical</option>
+          </select>
+        </div>
+      </div>
       
       @if (compact && filteredIdeas.length > 3) {
         <button class="toggle-btn" (click)="toggleExpand()" [attr.aria-expanded]="isExpanded">
