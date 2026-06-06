@@ -6,22 +6,14 @@ import { Header } from '../shared/components';
 import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, Idea } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
 import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
-import { Idea as BaseIdea } from '../shared/models/baseModels';
+import { Comments } from '../shared/components/comments/comments';
+import { Idea as BaseIdea, Comment as BaseComment } from '../shared/models/baseModels';
 
 type DiffKind = 'added' | 'removed' | 'unchanged';
 
 interface DiffSegment {
   kind: DiffKind;
   text: string;
-}
-
-interface CommentThreadEntry {
-  id: number;
-  author: string;
-  role: string;
-  timestampLabel: string;
-  content: string;
-  votes: number;
 }
 
 interface RevisionSnapshot {
@@ -34,7 +26,7 @@ interface RevisionSnapshot {
 @Component({
   selector: 'app-article-workbench',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Header, ChallengeIdeas],
+  imports: [CommonModule, FormsModule, RouterLink, Header, ChallengeIdeas, Comments],
   templateUrl: './article-workbench.html',
   styleUrl: './article-workbench.css'
 })
@@ -82,30 +74,14 @@ export class ArticleWorkbench implements AfterViewInit {
     }
   ]);
 
-  readonly comments: WritableSignal<CommentThreadEntry[]> = signal([
-    {
-      id: 101,
-      author: 'Leah Kim',
-      role: 'Community resilience organizer',
-      timestampLabel: 'Oct 24, 2025 - 19:10',
-      content: 'Love the quarterly dashboards. Recommend tying those metrics to rapid response budgets so agencies feel it.',
-      votes: 42
-    },
-    {
-      id: 102,
-      author: 'Dr. Manuel Ortiz',
-      role: 'Climate scientist',
-      timestampLabel: 'Oct 23, 2025 - 08:55',
-      content: 'Consider referencing the latest floodplain projections in Section II so mitigation targets map to observed risk shifts.',
-      votes: 31
-    }
-  ]);
+  readonly challengeComments: WritableSignal<BaseComment[]> = signal([]);
+  readonly commentsLoading: WritableSignal<boolean> = signal(false);
 
   readonly supportVotes: WritableSignal<number> = signal(284);
   readonly opposeVotes: WritableSignal<number> = signal(9);
   readonly userVote: WritableSignal<'support' | 'oppose' | null> = signal(null);
 
-  commentDraft = '';
+
 
   readonly formattingActions = [
     { icon: 'B', label: 'Bold', command: 'bold' },
@@ -222,6 +198,8 @@ export class ArticleWorkbench implements AfterViewInit {
         this.loadDraft(id);
         // Load ideas after challenge is loaded
         this.loadIdeas();
+        // Load comments for this challenge
+        this.loadChallengeComments(id);
       },
       error: (error) => {
         console.error('Error loading challenge:', error);
@@ -601,28 +579,41 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   submitComment(): void {
-    const content = this.commentDraft.trim();
-    if (!content) {
-      return;
-    }
-
-    const entry: CommentThreadEntry = {
-      id: Date.now(),
-      author: 'You',
-      role: 'Contributor',
-      timestampLabel: this.buildTimestampLabel(new Date()),
-      content,
-      votes: 1
-    };
-
-    this.comments.update((current) => [entry, ...current]);
-    this.commentDraft = '';
   }
 
-  upvoteComment(id: number): void {
-    this.comments.update((current) => current.map((comment) =>
-      comment.id === id ? { ...comment, votes: comment.votes + 1 } : comment
-    ));
+  private loadChallengeComments(challengeId: number): void {
+    this.commentsLoading.set(true);
+    this.apiService.getChallengeComments(challengeId).subscribe({
+      next: (res) => {
+        const mapped: BaseComment[] = res.comments.map(c => ({
+          id: String(c.id),
+          author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+          content: c.content,
+          createdAt: new Date(c.createdAt || c.created_at || Date.now()),
+          votes: c.score,
+          voted: c.voted,
+          parentId: c.parentId != null ? String(c.parentId) : undefined,
+          ideaId: c.ideaId != null ? String(c.ideaId) : undefined,
+          challengeId: String(challengeId),
+        }));
+        this.challengeComments.set(mapped);
+        this.commentsLoading.set(false);
+      },
+      error: () => {
+        this.commentsLoading.set(false);
+      }
+    });
+  }
+
+  onVoteComment(commentId: string): void {
+    this.apiService.voteComment(Number(commentId)).subscribe({
+      next: (res) => {
+        this.challengeComments.update(list =>
+          list.map(c => c.id === commentId ? { ...c, votes: res.score, voted: res.voted } : c)
+        );
+      },
+      error: () => {}
+    });
   }
 
   private syncDraftFromEditor(): void {
@@ -733,15 +724,5 @@ export class ArticleWorkbench implements AfterViewInit {
 
     const summary = text.slice(0, 140).trim();
   return summary.length < text.length ? summary + '...' : summary;
-  }
-
-  private buildTimestampLabel(date: Date): string {
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const day = date.getDate();
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-
-    return `${month} ${day}, ${year} - ${hours}:${minutes}`;
   }
 }

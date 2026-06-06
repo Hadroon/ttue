@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { comments, users, ideas } from "../db/schema";
+import { comments, users, ideas, challenges } from "../db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 
@@ -9,35 +9,53 @@ export async function handleCreateComment(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const { content, ideaId, parentId } = await req.json();
+    const { content, ideaId, challengeId, parentId } = await req.json();
 
-    // Validate input
-    if (!content || !ideaId) {
+    // Validate input — must have content and at least one of ideaId or challengeId
+    if (!content || (!ideaId && !challengeId)) {
       return new Response(
-        JSON.stringify({ error: "Content and ideaId are required" }),
+        JSON.stringify({ error: "Content and either ideaId or challengeId are required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Check if idea exists
-    const [idea] = await db
-      .select()
-      .from(ideas)
-      .where(eq(ideas.id, ideaId))
-      .limit(1);
+    if (ideaId) {
+      // Validate the idea exists and is not marked
+      const [idea] = await db
+        .select()
+        .from(ideas)
+        .where(eq(ideas.id, ideaId))
+        .limit(1);
 
-    if (!idea) {
-      return new Response(
-        JSON.stringify({ error: "Idea not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+      if (!idea) {
+        return new Response(
+          JSON.stringify({ error: "Idea not found" }),
+          { status: 404, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      if (idea.isMarked) {
+        return new Response(
+          JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be commented on" }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
-    if (idea.isMarked) {
-      return new Response(
-        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be commented on" }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
+    if (challengeId && !ideaId) {
+      // Validate the challenge exists
+      const [challenge] = await db
+        .select()
+        .from(challenges)
+        .where(eq(challenges.id, challengeId))
+        .limit(1);
+
+      if (!challenge) {
+        return new Response(
+          JSON.stringify({ error: "Challenge not found" }),
+          { status: 404, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Create comment
@@ -45,14 +63,22 @@ export async function handleCreateComment(req: Request): Promise<Response> {
       .insert(comments)
       .values({
         content,
-        ideaId,
+        ideaId: ideaId || null,
+        challengeId: challengeId || null,
         authorId: authResult.user.userId,
         parentId: parentId || null,
       })
       .returning();
 
+    // Fetch author info to return in response
+    const [author] = await db
+      .select({ username: users.username, displayName: users.displayName, avatarUrl: users.avatarUrl })
+      .from(users)
+      .where(eq(users.id, authResult.user.userId))
+      .limit(1);
+
     return new Response(
-      JSON.stringify({ comment: newComment }),
+      JSON.stringify({ comment: { ...newComment, authorUsername: author?.username, authorDisplayName: author?.displayName, authorAvatarUrl: author?.avatarUrl } }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {

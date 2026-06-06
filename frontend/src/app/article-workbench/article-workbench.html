@@ -290,36 +290,16 @@
         </div>
       </header>
 
-      <div class="comment-composer card">
-        <div class="card-body">
-          <h3>Add a comment</h3>
-          <textarea rows="4"
-                    placeholder="Share rationale, risks, or evidence references..."
-                    [(ngModel)]="commentDraft"></textarea>
-          <div class="composer-actions">
-            <button type="button" class="btn primary" (click)="submitComment()">Post comment</button>
-            <span class="muted-note">Comments are visible to invited collaborators only.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="comment-list">
-        @for (comment of comments(); track comment.id) {
-        <article class="comment-card">
-          <header class="comment-head">
-            <div>
-              <h3>{{ comment.author }}</h3>
-              <span class="comment-role">{{ comment.role }}</span>
-            </div>
-            <div class="comment-meta">{{ comment.timestampLabel }}</div>
-          </header>
-          <p class="comment-body">{{ comment.content }}</p>
-          <footer class="comment-footer">
-            <button type="button" class="link-btn" (click)="upvoteComment(comment.id)">^ Support ({{ comment.votes }})</button>
-          </footer>
-        </article>
-        }
-      </div>
+      @if (commentsLoading()) {
+        <p class="muted-note" style="text-align:center; padding: 2rem 0;">Loading comments...</p>
+      } @else {
+        <app-comments
+          [entityId]="challengeId() ?? ''"
+          entityType="challenge"
+          [allComments]="challengeComments()"
+          (voteComment)="onVoteComment($event)">
+        </app-comments>
+      }
     </div>
   </section>
 

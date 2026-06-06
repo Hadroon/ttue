@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentVotes, challengeDrafts, challengeDraftRevisions, challengeDraftProposals } from "../db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, or } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 
 // Get all challenges with top idea and comments
@@ -100,14 +100,19 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
           };
         }
 
-        // Get top 3 comments for the top idea
+        // Get top 3 comments for the top idea OR directly on the challenge
         let challengeComments: any[] = [];
-        if (topIdea) {
+        {
+          const whereClause = topIdea
+            ? or(eq(comments.ideaId, topIdea.id), eq(comments.challengeId, challenge.id))
+            : eq(comments.challengeId, challenge.id);
+
           const commentsData = await db
             .select({
               id: comments.id,
               content: comments.content,
               ideaId: comments.ideaId,
+              challengeId: comments.challengeId,
               authorId: comments.authorId,
               parentId: comments.parentId,
               score: comments.score,
@@ -121,7 +126,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
             })
             .from(comments)
             .innerJoin(users, eq(comments.authorId, users.id))
-            .where(eq(comments.ideaId, topIdea.id))
+            .where(whereClause)
             .orderBy(desc(comments.score), desc(comments.createdAt))
             .limit(3);
           
@@ -439,14 +444,19 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
           };
         }
 
-        // Get comments for the top idea
+        // Get comments for the top idea OR directly on the challenge
         let challengeComments: any[] = [];
-        if (topIdea) {
+        {
+          const whereClause = topIdea
+            ? or(eq(comments.ideaId, topIdea.id), eq(comments.challengeId, challenge.id))
+            : eq(comments.challengeId, challenge.id);
+
           const commentsData = await db
             .select({
               id: comments.id,
               content: comments.content,
               ideaId: comments.ideaId,
+              challengeId: comments.challengeId,
               authorId: comments.authorId,
               parentId: comments.parentId,
               score: comments.score,
@@ -460,7 +470,7 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
             })
             .from(comments)
             .innerJoin(users, eq(comments.authorId, users.id))
-            .where(eq(comments.ideaId, topIdea.id))
+            .where(whereClause)
             .orderBy(desc(comments.score), desc(comments.createdAt))
             .limit(10);
           
@@ -940,6 +950,44 @@ export async function handleResolveDraftProposal(req: Request, challengeId: numb
     console.error("Error resolving draft proposal:", error);
     return new Response(
       JSON.stringify({ error: "Failed to resolve proposal" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// Get all comments for a challenge: direct challenge comments + comments on its ideas
+export async function handleGetChallengeComments(req: Request, challengeId: number): Promise<Response> {
+  try {
+    // Direct challenge-level comments
+    const directComments = await db
+      .select({
+        id: comments.id,
+        content: comments.content,
+        ideaId: comments.ideaId,
+        challengeId: comments.challengeId,
+        parentId: comments.parentId,
+        score: comments.score,
+        isAccepted: comments.isAccepted,
+        isMarked: comments.isMarked,
+        createdAt: comments.createdAt,
+        updatedAt: comments.updatedAt,
+        authorUsername: users.username,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.authorId, users.id))
+      .where(eq(comments.challengeId, challengeId))
+      .orderBy(desc(comments.score), comments.createdAt);
+
+    return new Response(
+      JSON.stringify({ comments: directComments }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Get challenge comments error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to get challenge comments" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

@@ -119,20 +119,34 @@ export class Comments implements OnInit {
     }
 
     if (this.newCommentText.trim()) {
-      const newComment: Comment = {
-        id: 'comment-' + Date.now(),
-        author: 'Current User',
-        content: this.newCommentText,
-        createdAt: new Date(),
-        votes: 0,
-        challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
-        ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined
-      };
-      
-      this.allComments.push(newComment);
-      this.newCommentText = '';
-      this.showCommentBox = false;
-      this.filterAndSortComments();
+      const data: any = { content: this.newCommentText };
+      if (this.entityType === 'idea') {
+        data.ideaId = Number(this.entityId);
+      } else {
+        data.challengeId = Number(this.entityId);
+      }
+
+      this.apiService.createComment(data).subscribe({
+        next: (res) => {
+          const c = res.comment;
+          const newComment: Comment = {
+            id: String(c.id),
+            author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+            content: c.content,
+            createdAt: new Date(c.createdAt || Date.now()),
+            votes: c.score ?? 0,
+            ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined,
+            challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
+          };
+          this.allComments.push(newComment);
+          this.newCommentText = '';
+          this.showCommentBox = false;
+          this.filterAndSortComments();
+        },
+        error: () => {
+          // Keep comment box open so user can retry
+        }
+      });
     }
   }
 
@@ -157,21 +171,35 @@ export class Comments implements OnInit {
     }
 
     if (this.replyText.trim()) {
-      const newReply: Comment = {
-        id: 'reply-' + Date.now(),
-        author: 'Current User',
-        content: this.replyText,
-        createdAt: new Date(),
-        votes: 0,
-        parentId: parentId,
-        challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
-        ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined
-      };
-      
-      this.allComments.push(newReply);
-      this.replyText = '';
-      this.replyToId = null;
-      this.filterAndSortComments();
+      const data: any = { content: this.replyText, parentId: Number(parentId) };
+      if (this.entityType === 'idea') {
+        data.ideaId = Number(this.entityId);
+      } else {
+        data.challengeId = Number(this.entityId);
+      }
+
+      this.apiService.createComment(data).subscribe({
+        next: (res) => {
+          const c = res.comment;
+          const newReply: Comment = {
+            id: String(c.id),
+            author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+            content: c.content,
+            createdAt: new Date(c.createdAt || Date.now()),
+            votes: c.score ?? 0,
+            parentId: String(parentId),
+            ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined,
+            challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
+          };
+          this.allComments.push(newReply);
+          this.replyText = '';
+          this.replyToId = null;
+          this.filterAndSortComments();
+        },
+        error: () => {
+          // Keep reply box open so user can retry
+        }
+      });
     }
   }
 

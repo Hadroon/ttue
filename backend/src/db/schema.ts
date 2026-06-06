@@ -47,7 +47,8 @@ export const ideas = pgTable("ideas", {
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
-  ideaId: integer("idea_id").notNull().references(() => ideas.id, { onDelete: "cascade" }),
+  ideaId: integer("idea_id").references(() => ideas.id, { onDelete: "cascade" }),
+  challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "cascade" }),
   authorId: integer("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   parentId: integer("parent_id").references(() => comments.id, { onDelete: "cascade" }),
   score: integer("score").default(0).notNull(),
@@ -57,6 +58,7 @@ export const comments = pgTable("comments", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   ideaIdx: index("comment_idea_idx").on(table.ideaId),
+  challengeIdx: index("comment_challenge_idx").on(table.challengeId),
   authorIdx: index("comment_author_idx").on(table.authorId),
   parentIdx: index("comment_parent_idx").on(table.parentId),
 }));
@@ -218,6 +220,10 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
   idea: one(ideas, {
     fields: [comments.ideaId],
     references: [ideas.id],
+  }),
+  challenge: one(challenges, {
+    fields: [comments.challengeId],
+    references: [challenges.id],
   }),
   author: one(users, {
     fields: [comments.authorId],

@@ -48,6 +48,7 @@ export interface Comment {
   content: string;
   ideaId?: number; // New camelCase from backend
   idea_id?: number; // Legacy support
+  challengeId?: number; // For challenge-level comments
   authorId?: number; // New camelCase from backend
   user_id?: number; // Legacy support
   parentId?: number | null; // New camelCase from backend
@@ -208,8 +209,9 @@ export interface UpdateIdeaRequest {
 
 export interface CreateCommentRequest {
   content: string;
-  idea_id: number;
-  parent_id?: number;
+  ideaId?: number;
+  challengeId?: number;
+  parentId?: number;
 }
 
 export interface CreateVoteRequest {
@@ -321,6 +323,13 @@ export class ApiService {
   }
 
   /**
+   * Get all comments for ideas belonging to a challenge
+   */
+  getChallengeComments(challengeId: number): Observable<{ comments: Comment[] }> {
+    return this.http.get<{ comments: Comment[] }>(`${this.baseUrl}/challenges/${challengeId}/comments`);
+  }
+
+  /**
    * Get user by ID
    */
   getUser(userId: number): Observable<User> {
@@ -394,7 +403,7 @@ export class ApiService {
    * Create a new comment
    */
   createComment(data: CreateCommentRequest) {
-    return this.http.post<ApiResponse<Comment>>(`${this.baseUrl}/comments`, data);
+    return this.http.post<{ comment: Comment }>(`${this.baseUrl}/comments`, data);
   }
 
   /**
