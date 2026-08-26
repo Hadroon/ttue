@@ -18,6 +18,7 @@ export class ChallengeItem implements OnInit {
   @Input() challenge!: Challenge;
   @Input() allIdeas: Idea[] = [];
   @Input() allComments: Comment[] = [];
+  @Input() hideAddCommentButton: boolean = false;
   @Output() voteChallenge = new EventEmitter<number>();
   @Output() voteIdea = new EventEmitter<string>();
   @Output() voteComment = new EventEmitter<string>();

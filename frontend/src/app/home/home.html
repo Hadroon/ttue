@@ -112,6 +112,7 @@
               [challenge]="challenge" 
               [allIdeas]="getIdeasForChallenge(challenge.id)" 
               [allComments]="getCommentsForChallenge(challenge.id)"
+              [hideAddCommentButton]="true"
               (voteChallenge)="onVoteChallenge($event)"
               (voteIdea)="onVoteIdea($event)"
               (voteComment)="onVoteComment($event)">

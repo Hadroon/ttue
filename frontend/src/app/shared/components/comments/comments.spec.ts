@@ -80,6 +80,14 @@ describe('Comments', () => {
     expect(component.showCommentBox).toBe(false);
   });
 
+  it('should hide the add comment button when configured to do so', () => {
+    component.hideAddCommentButton = true;
+    fixture.detectChanges();
+
+    const addButton = fixture.nativeElement.querySelector('.comments-controls .btn.primary');
+    expect(addButton).toBeNull();
+  });
+
   it('should submit new comment', () => {
     const initialLength = component.allComments.length;
     component.newCommentText = 'This is a test comment';

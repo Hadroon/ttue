@@ -17,9 +17,11 @@
         </select>
       </div>
     }
-      <a class="btn primary" (click)="toggleCommentBox()" [class.disabled]="parentIsMarked" [attr.disabled]="parentIsMarked ? true : null">
-        {{ showCommentBox ? 'Cancel' : 'Add comment' }}
-      </a>
+      @if (!hideAddCommentButton) {
+        <a class="btn primary" (click)="toggleCommentBox()" [class.disabled]="parentIsMarked" [attr.disabled]="parentIsMarked ? true : null">
+          {{ showCommentBox ? 'Cancel' : 'Add comment' }}
+        </a>
+      }
     </div>
   </div>
 
