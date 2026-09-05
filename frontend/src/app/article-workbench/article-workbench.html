@@ -1,31 +1,31 @@
 <app-header></app-header>
 
 <main class="workbench" id="main" role="main">
-  <nav class="page-nav" role="navigation" aria-label="In-page navigation">
+  <nav mat-tab-nav-bar
+       class="page-nav"
+       [tabPanel]="pageNavPanel"
+       aria-label="In-page navigation">
     <div class="page-nav-inner">
-      <button type="button"
-              class="nav-link"
-              [class.active]="activeSection() === 'challenge'"
-              (click)="scrollToSection('challenge')">Challenge</button>
-      <button type="button" 
-              class="nav-link" 
-              [class.active]="activeSection() === 'draft'"
-              (click)="scrollToSection('draft')">Draft</button>
-      <button type="button" 
-              class="nav-link" 
-              [class.active]="activeSection() === 'diff'"
-              (click)="scrollToSection('diff')">Diff</button>
-      <button type="button" 
-              class="nav-link" 
-              [class.active]="activeSection() === 'comments'"
-              (click)="scrollToSection('comments')">Comments</button>
-      <button type="button" 
-              class="nav-link" 
-              [class.active]="activeSection() === 'ideas'"
-              (click)="scrollToSection('ideas')">Ideas</button>
+      <a mat-tab-link
+         [active]="activeSection() === 'challenge'"
+         (click)="scrollToSection('challenge')">Challenge</a>
+      <a mat-tab-link
+         [active]="activeSection() === 'draft'"
+         (click)="scrollToSection('draft')">Draft</a>
+      <a mat-tab-link
+         [active]="activeSection() === 'diff'"
+         (click)="scrollToSection('diff')">Diff</a>
+      <a mat-tab-link
+         [active]="activeSection() === 'comments'"
+         (click)="scrollToSection('comments')">Comments</a>
+      <a mat-tab-link
+         [active]="activeSection() === 'ideas'"
+         (click)="scrollToSection('ideas')">Ideas</a>
     </div>
   </nav>
+  <mat-tab-nav-panel #pageNavPanel></mat-tab-nav-panel>
 
+  @if (activeSection() === 'challenge') {
   <section class="section hero compose-hero" id="challenge">
     <div class="container compose-hero-inner">
       <div class="compose-hero-copy">
@@ -96,9 +96,12 @@
       </aside>
     </div>
   </section>
+  }
 
+  @if (activeSection() === 'draft' || activeSection() === 'diff') {
   <section class="section compose-board" id="draft">
     <div class="container compose-grid">
+      @if (activeSection() === 'draft') {
       <article class="card editor-panel" id="editor" aria-label="Editor panel">
         <header class="panel-head">
           <div>
@@ -160,7 +163,9 @@
         </footer>
         }
       </article>
+      }
 
+      @if (activeSection() === 'diff') {
       <article class="card diff-panel" id="diff" aria-label="Diff panel">
         <header class="panel-head">
           <div>
@@ -278,9 +283,12 @@
           </ul>
         </footer>
       </article>
+      }
     </div>
   </section>
+  }
 
+  @if (activeSection() === 'comments') {
   <section class="section comments-section" id="comments">
     <div class="container comments-container">
       <header class="section-head">
@@ -302,7 +310,9 @@
       }
     </div>
   </section>
+  }
 
+  @if (activeSection() === 'ideas') {
   <section class="section ideas-section" id="ideas">
     <div class="container ideas-container">
       <header class="section-head">
@@ -327,6 +337,7 @@
       }
     </div>
   </section>
+  }
 
   <footer class="site-footer" role="contentinfo">
     <div class="container footer-inner">

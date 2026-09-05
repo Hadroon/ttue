@@ -2,6 +2,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, WritableSignal, signal, computed } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MatTabsModule } from '@angular/material/tabs';
 import { Header } from '../shared/components';
 import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, Idea } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
@@ -27,7 +28,7 @@ interface RevisionSnapshot {
 @Component({
   selector: 'app-article-workbench',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Header, ChallengeIdeas, Comments],
+  imports: [CommonModule, FormsModule, RouterLink, MatTabsModule, Header, ChallengeIdeas, Comments],
   templateUrl: './article-workbench.html',
   styleUrl: './article-workbench.css'
 })
@@ -315,23 +316,13 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   scrollToSection(sectionId: string): void {
+    this.activeSection.set(sectionId);
+
     if (!this.isBrowser) {
       return;
     }
 
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const navHeight = 64; // Height of page-nav
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - navHeight - 20;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-
-      this.activeSection.set(sectionId);
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   applyFormatting(command: string): void {
