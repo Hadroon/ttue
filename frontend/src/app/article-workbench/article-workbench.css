@@ -14,9 +14,9 @@
 }
 
 .page-nav-inner {
-  max-width: 1400px;
+  max-width: 1160px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 20px;
   display: flex;
   gap: 8px;
   overflow-x: auto;
@@ -26,6 +26,20 @@
 
 .page-nav-inner::-webkit-scrollbar {
   display: none;
+}
+
+@media (min-width: 1440px) {
+  .page-nav-inner {
+    max-width: 1360px;
+    padding: 0 40px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .page-nav-inner {
+    max-width: 1760px;
+    padding: 0 60px;
+  }
 }
 
 .nav-link {
