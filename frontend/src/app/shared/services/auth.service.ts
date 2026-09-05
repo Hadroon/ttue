@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { Subject } from 'rxjs';
 import { ApiService, User } from './api.service';
 
 @Injectable({
@@ -8,6 +9,7 @@ export class AuthService {
   private readonly _currentUser = signal<User | null>(null);
   private readonly _isLoading = signal(false);
   private readonly _error = signal<string | null>(null);
+  private readonly _loginSuccess$ = new Subject<User>();
 
   // Read-only signals for components
   readonly currentUser = this._currentUser.asReadonly();
@@ -15,6 +17,8 @@ export class AuthService {
   readonly error = this._error.asReadonly();
   readonly isLoggedIn = computed(() => this._currentUser() !== null);
   readonly isAdmin = computed(() => this._currentUser()?.isAdmin === true);
+  // Emits after a successful login so views can refresh vote state
+  readonly loginSuccess$ = this._loginSuccess$.asObservable();
 
   constructor(private apiService: ApiService) {
     this.initializeAuth();
@@ -47,6 +51,7 @@ export class AuthService {
     localStorage.setItem('auth_token', token);
     localStorage.setItem('current_user', JSON.stringify(user));
     this._error.set(null);
+    this._loginSuccess$.next(user);
   }
 
   /**

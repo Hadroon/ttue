@@ -11,6 +11,8 @@ import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { AddChallengeModalComponent } from '../shared/components/add-challenge-modal/add-challenge-modal';
+import { AuthGuardService } from '../shared/services/auth-guard.service';
+import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -22,6 +24,8 @@ export class Home implements OnInit {
   environment = environment;
   apiService = inject(ApiService);
   dialog = inject(MatDialog);
+  authGuard = inject(AuthGuardService);
+  authService = inject(AuthService);
   activeTab: 'challenges' | 'ideas' = 'challenges';
   welcome : WritableSignal<boolean> = signal(false);
   welcomePassword = '';
@@ -36,6 +40,8 @@ export class Home implements OnInit {
     let needWelcome = window.location.hostname?.toString().includes('localhost')
     this.welcome.set(needWelcome);
     this.loadFeaturedChallenge();
+    // Refresh voted state now that requests carry the auth token
+    this.authService.loginSuccess$.subscribe(() => this.loadFeaturedChallenge());
   }
 
   loadFeaturedChallenge() {
@@ -116,6 +122,9 @@ export class Home implements OnInit {
   // }
 
   onVoteChallenge(challengeId: number) {
+    if (!this.authGuard.requireAuth('vote on this challenge')) {
+      return;
+    }
     this.apiService.voteChallenge(challengeId).subscribe({
       next: (response: { message: string; voted: boolean }) => {
         console.log('Vote response for challenge', challengeId, ':', response);
@@ -172,6 +181,9 @@ export class Home implements OnInit {
   }
 
   onVoteIdea(ideaId: string) {
+    if (!this.authGuard.requireAuth('vote on this idea')) {
+      return;
+    }
     console.log('Voting on idea:', ideaId);
     const postId = parseInt(ideaId);
     this.apiService.voteIdea(postId).subscribe({
@@ -198,6 +210,9 @@ export class Home implements OnInit {
   }
 
   onVoteComment(commentId: string) {
+    if (!this.authGuard.requireAuth('vote on this comment')) {
+      return;
+    }
     const commentIdNum = parseInt(commentId);
     this.apiService.voteComment(commentIdNum).subscribe({
       next: (response: { message: string; score: number; voted: boolean }) => {

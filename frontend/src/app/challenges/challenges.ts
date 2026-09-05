@@ -2,6 +2,8 @@ import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { Header, ChallengeItem } from '../shared/components';
 import { ApiService, FeaturedChallenge } from '../shared/services/api.service';
 import { Idea, Comment as BaseComment } from '../shared/models/baseModels';
+import { AuthGuardService } from '../shared/services/auth-guard.service';
+import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-challenges',
@@ -11,6 +13,8 @@ import { Idea, Comment as BaseComment } from '../shared/models/baseModels';
 })
 export class Challenges implements OnInit {
   private apiService = inject(ApiService);
+  private authGuard = inject(AuthGuardService);
+  private authService = inject(AuthService);
   
   // State management with signals
   challengesData = signal<FeaturedChallenge[]>([]); // Made public for debugging
@@ -63,6 +67,15 @@ export class Challenges implements OnInit {
 
   ngOnInit() {
     this.loadChallenges();
+    // Refetch currently loaded challenges so voted state reflects the logged-in user
+    this.authService.loginSuccess$.subscribe(() => this.refreshVotedState());
+  }
+
+  private refreshVotedState() {
+    this.apiService.getChallenges(1, this.currentPage() * this.pageSize).subscribe({
+      next: (data) => this.challengesData.set(data),
+      error: (error) => console.error('Error refreshing voted state:', error)
+    });
   }
 
   loadChallenges(append: boolean = false) {
@@ -118,6 +131,9 @@ export class Challenges implements OnInit {
   }
 
   onVoteChallenge(challengeId: number) {
+    if (!this.authGuard.requireAuth('vote on this challenge')) {
+      return;
+    }
     // Optimistically update UI
     const currentChallenges = this.challengesData();
     const challengeIndex = currentChallenges.findIndex(c => c.challenge.id === challengeId);
@@ -177,6 +193,9 @@ export class Challenges implements OnInit {
   }
 
   onVoteIdea(ideaId: string) {
+    if (!this.authGuard.requireAuth('vote on this idea')) {
+      return;
+    }
     const postId = parseInt(ideaId);
     // Find and update the idea optimistically
     const currentChallenges = this.challengesData();
@@ -240,6 +259,9 @@ export class Challenges implements OnInit {
   }
 
   onVoteComment(commentIdStr: string) {
+    if (!this.authGuard.requireAuth('vote on this comment')) {
+      return;
+    }
     const commentId = parseInt(commentIdStr);
     // Find and update the comment optimistically
     const currentChallenges = this.challengesData();

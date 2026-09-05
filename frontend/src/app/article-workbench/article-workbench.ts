@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Header } from '../shared/components';
 import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, Idea } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
+import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
 import { Comments } from '../shared/components/comments/comments';
 import { Idea as BaseIdea, Comment as BaseComment } from '../shared/models/baseModels';
@@ -169,7 +170,8 @@ export class ArticleWorkbench implements AfterViewInit {
     private route: ActivatedRoute,
     private router: Router,
     private apiService: ApiService,
-    private authService: AuthService
+    private authService: AuthService,
+    private authGuard: AuthGuardService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     
@@ -182,6 +184,16 @@ export class ArticleWorkbench implements AfterViewInit {
         console.log('Article Workbench loaded with challengeId:', id);
         this.fetchChallenge(numericId);
       }
+    });
+
+    // Refetch ideas/comments so voted state reflects the logged-in user
+    this.authService.loginSuccess$.subscribe(() => {
+      const challengeId = this.challengeId();
+      if (challengeId == null) {
+        return;
+      }
+      this.loadIdeas();
+      this.loadChallengeComments(challengeId);
     });
   }
 
@@ -484,6 +496,9 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   onVoteIdea(ideaId: string): void {
+    if (!this.authGuard.requireAuth('vote on this idea')) {
+      return;
+    }
     const numId = Number(ideaId);
     this.apiService.voteIdea(numId).subscribe({
       next: (res) => {
@@ -556,6 +571,9 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   castVote(choice: 'support' | 'oppose'): void {
+    if (!this.authGuard.requireAuth('vote on this challenge')) {
+      return;
+    }
     const current = this.userVote();
     if (current === choice) {
       return;
@@ -606,6 +624,9 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   onVoteComment(commentId: string): void {
+    if (!this.authGuard.requireAuth('vote on this comment')) {
+      return;
+    }
     this.apiService.voteComment(Number(commentId)).subscribe({
       next: (res) => {
         this.challengeComments.update(list =>

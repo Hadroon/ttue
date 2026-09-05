@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { SigninModalComponent } from '../shared/components/signin-modal/signin-modal';
 import { AuthService } from '../shared/services/auth.service';
 import { ApiService } from '../shared/services/api.service';
+import { AuthGuardService } from '../shared/services/auth-guard.service';
 
 @Component({
   selector: 'app-add-idea',
@@ -28,6 +29,7 @@ export class AddIdea implements OnInit {
   dialog = inject(MatDialog);
   authService = inject(AuthService);
   apiService = inject(ApiService);
+  authGuard = inject(AuthGuardService);
   router = inject(Router);
   route = inject(ActivatedRoute);
 
@@ -77,6 +79,9 @@ export class AddIdea implements OnInit {
   }
 
   onSubmit() {
+    if (!this.authGuard.requireAuth('submit an idea')) {
+      return;
+    }
     if (!this.idea.title.trim() || !this.idea.content.trim()) {
       this.errorMessage = 'Please fill in all required fields';
       return;

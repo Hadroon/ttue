@@ -14,6 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { SigninModalComponent } from '../shared/components/signin-modal/signin-modal';
 import { AuthService } from '../shared/services/auth.service';
 import { ApiService } from '../shared/services/api.service';
+import { AuthGuardService } from '../shared/services/auth-guard.service';
 
 @Component({
   selector: 'app-add-challenge',
@@ -36,6 +37,7 @@ export class AddChallenge implements OnInit {
   dialog = inject(MatDialog);
   authService = inject(AuthService);
   apiService = inject(ApiService);
+  authGuard = inject(AuthGuardService);
   router = inject(Router);
 
   isAuthenticated = false;
@@ -111,6 +113,9 @@ export class AddChallenge implements OnInit {
   }
 
   onSubmit() {
+    if (!this.authGuard.requireAuth('submit a challenge')) {
+      return;
+    }
     if (!this.challenge.title || !this.challenge.category || !this.challenge.description) {
       this.errorMessage = 'Please fill in all required fields';
       return;
