@@ -55,29 +55,29 @@ describe('Comments', () => {
 
   it('should filter comments by challengeId', () => {
     component.ngOnInit();
-    expect(component.filteredComments.length).toBe(2);
-    expect(component.filteredComments.every(c => c.challengeId === 'climate-adaptation' && !c.parentId)).toBe(true);
+    expect(component.filteredComments().length).toBe(2);
+    expect(component.filteredComments().every(c => c.challengeId === 'climate-adaptation' && !c.parentId)).toBe(true);
   });
 
   it('should attach replies to parent comments', () => {
     component.ngOnInit();
-    const parentComment = component.filteredComments.find(c => c.id === 'comment-2');
+    const parentComment = component.filteredComments().find(c => c.id === 'comment-2');
     expect(parentComment?.replies?.length).toBe(1);
     expect(parentComment?.replies?.[0].id).toBe('reply-1');
   });
 
   it('should sort comments by votes', () => {
-    component.sortBy = 'votes';
+    component.sortBy.set('votes');
     component.filterAndSortComments();
-    expect(component.filteredComments[0].votes).toBeGreaterThanOrEqual(component.filteredComments[1].votes);
+    expect(component.filteredComments()[0].votes).toBeGreaterThanOrEqual(component.filteredComments()[1].votes);
   });
 
   it('should toggle comment box', () => {
-    expect(component.showCommentBox).toBe(false);
+    expect(component.showCommentBox()).toBe(false);
     component.toggleCommentBox();
-    expect(component.showCommentBox).toBe(true);
+    expect(component.showCommentBox()).toBe(true);
     component.toggleCommentBox();
-    expect(component.showCommentBox).toBe(false);
+    expect(component.showCommentBox()).toBe(false);
   });
 
   it('should hide the add comment button when configured to do so', () => {
@@ -90,11 +90,11 @@ describe('Comments', () => {
 
   it('should submit new comment', () => {
     const initialLength = component.allComments.length;
-    component.newCommentText = 'This is a test comment';
+    component.newCommentText.set('This is a test comment');
     component.submitComment();
     expect(component.allComments.length).toBe(initialLength + 1);
-    expect(component.newCommentText).toBe('');
-    expect(component.showCommentBox).toBe(false);
+    expect(component.newCommentText()).toBe('');
+    expect(component.showCommentBox()).toBe(false);
   });
 
   it('should vote on comment', () => {

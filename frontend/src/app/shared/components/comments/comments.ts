@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Comment } from '../../models/baseModels';
@@ -6,11 +6,12 @@ import { MatIconModule } from "@angular/material/icon";
 import { AuthGuardService } from '../../services/auth-guard.service';
 import { ApiService } from '../../services/api.service';
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
+import { AutofocusDirective } from '../../directives/autofocus.directive';
 
 @Component({
   selector: 'app-comments',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, ContentActionsMenu],
+  imports: [CommonModule, FormsModule, MatIconModule, ContentActionsMenu, AutofocusDirective],
   templateUrl: './comments.html',
   styleUrl: './comments.css'
 })
@@ -26,13 +27,13 @@ export class Comments implements OnInit {
   private authGuard = inject(AuthGuardService);
   private apiService = inject(ApiService);
 
-  filteredComments: Comment[] = [];
-  displayedComments: Comment[] = [];
-  newCommentText: string = '';
-  replyToId: string | null = null;
-  replyText: string = '';
-  sortBy: 'recent' | 'votes' | 'oldest' = 'recent';
-  showCommentBox: boolean = false;
+  filteredComments = signal<Comment[]>([]);
+  displayedComments = signal<Comment[]>([]);
+  newCommentText = signal('');
+  replyToId = signal<string | null>(null);
+  replyText = signal('');
+  sortBy = signal<'recent' | 'votes' | 'oldest'>('recent');
+  showCommentBox = signal(false);
 
   ngOnInit() {
     console.log('Comments initialized:', {
@@ -54,62 +55,58 @@ export class Comments implements OnInit {
   }
 
   filterAndSortComments() {
-    console.log('Filtering comments for:', this.entityType, this.entityId);
     // Filter top-level comments by entity
+    let filtered: Comment[];
     if (this.entityType === 'challenge') {
-      this.filteredComments = this.allComments.filter(c => c.challengeId === this.entityId?.toString() && !c.parentId);
+      filtered = this.allComments.filter(c => c.challengeId === this.entityId?.toString() && !c.parentId);
     } else {
-      this.filteredComments = this.allComments.filter(c => c.ideaId === this.entityId?.toString() && !c.parentId);
+      filtered = this.allComments.filter(c => c.ideaId === this.entityId?.toString() && !c.parentId);
     }
-    console.log('Filtered comments:', this.filteredComments.length, this.filteredComments);
 
     // Attach replies to each comment
-    this.filteredComments.forEach(comment => {
+    filtered.forEach(comment => {
       comment.replies = this.allComments.filter(c => c.parentId === comment.id);
     });
 
-    this.sortComments();
-    this.updateDisplayedComments();
+    this.sortComments(filtered);
+    this.filteredComments.set(filtered);
+    this.updateDisplayedComments(filtered);
   }
 
-  sortComments() {
-    switch (this.sortBy) {
+  sortComments(list: Comment[]) {
+    switch (this.sortBy()) {
       case 'votes':
-        this.filteredComments.sort((a, b) => b.votes - a.votes);
+        list.sort((a, b) => b.votes - a.votes);
         break;
       case 'recent':
-        this.filteredComments.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         break;
       case 'oldest':
-        this.filteredComments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        list.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
         break;
     }
   }
 
-  updateDisplayedComments() {
-    if (this.compact) {
-      this.displayedComments = this.filteredComments.slice(0, 1);
-    } else {
-      this.displayedComments = this.filteredComments;
-    }
+  updateDisplayedComments(filtered: Comment[]) {
+    this.displayedComments.set(this.compact ? filtered.slice(0, 1) : filtered);
   }
 
   onSortChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    this.sortBy = select.value as 'recent' | 'votes' | 'oldest';
+    this.sortBy.set(select.value as 'recent' | 'votes' | 'oldest');
     this.filterAndSortComments();
   }
 
   toggleCommentBox() {
-    if (!this.showCommentBox) {
+    if (!this.showCommentBox()) {
       // Opening comment box - check auth
       if (!this.authGuard.requireAuth('comment on this')) {
         return; // Auth modal shown, don't open comment box
       }
     }
-    this.showCommentBox = !this.showCommentBox;
-    if (!this.showCommentBox) {
-      this.newCommentText = '';
+    this.showCommentBox.update(v => !v);
+    if (!this.showCommentBox()) {
+      this.newCommentText.set('');
     }
   }
 
@@ -119,8 +116,8 @@ export class Comments implements OnInit {
       return;
     }
 
-    if (this.newCommentText.trim()) {
-      const data: any = { content: this.newCommentText };
+    if (this.newCommentText().trim()) {
+      const data: any = { content: this.newCommentText() };
       if (this.entityType === 'idea') {
         data.ideaId = Number(this.entityId);
       } else {
@@ -140,8 +137,8 @@ export class Comments implements OnInit {
             challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
           };
           this.allComments.push(newComment);
-          this.newCommentText = '';
-          this.showCommentBox = false;
+          this.newCommentText.set('');
+          this.showCommentBox.set(false);
           this.filterAndSortComments();
         },
         error: () => {
@@ -156,13 +153,13 @@ export class Comments implements OnInit {
     if (!this.authGuard.requireAuth('reply to this comment')) {
       return;
     }
-    this.replyToId = commentId;
-    this.replyText = '';
+    this.replyToId.set(commentId);
+    this.replyText.set('');
   }
 
   cancelReply() {
-    this.replyToId = null;
-    this.replyText = '';
+    this.replyToId.set(null);
+    this.replyText.set('');
   }
 
   submitReply(parentId: string) {
@@ -171,8 +168,8 @@ export class Comments implements OnInit {
       return;
     }
 
-    if (this.replyText.trim()) {
-      const data: any = { content: this.replyText, parentId: Number(parentId) };
+    if (this.replyText().trim()) {
+      const data: any = { content: this.replyText(), parentId: Number(parentId) };
       if (this.entityType === 'idea') {
         data.ideaId = Number(this.entityId);
       } else {
@@ -193,8 +190,8 @@ export class Comments implements OnInit {
             challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
           };
           this.allComments.push(newReply);
-          this.replyText = '';
-          this.replyToId = null;
+          this.replyText.set('');
+          this.replyToId.set(null);
           this.filterAndSortComments();
         },
         error: () => {
