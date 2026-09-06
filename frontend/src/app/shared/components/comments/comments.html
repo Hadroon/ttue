@@ -3,14 +3,14 @@
     <div class="comments-count">
       <!-- <span class="count-icon">💬</span> -->
       <mat-icon class="material-symbols-outlined">comment</mat-icon>
-      <span class="count-text">{{ filteredComments.length }} comment{{ filteredComments.length !== 1 ? 's' : '' }}</span>
+      <span class="count-text">{{ filteredComments().length }} comment{{ filteredComments().length !== 1 ? 's' : '' }}</span>
     </div>
 
     <div class="comments-controls">
       @if(!compact) {
       <div class="control-group">
         <label for="sort-comments-{{ entityId }}">Sort:</label>
-        <select id="sort-comments-{{ entityId }}" (change)="onSortChange($event)" [(ngModel)]="sortBy">
+        <select id="sort-comments-{{ entityId }}" (change)="onSortChange($event)" [value]="sortBy()">
           <option value="recent">Most recent</option>
           <option value="votes">Most voted</option>
           <option value="oldest">Oldest first</option>
@@ -19,29 +19,30 @@
     }
       @if (!hideAddCommentButton) {
         <a class="btn primary" (click)="toggleCommentBox()" [class.disabled]="parentIsMarked" [attr.disabled]="parentIsMarked ? true : null">
-          {{ showCommentBox ? 'Cancel' : 'Add comment' }}
+          {{ showCommentBox() ? 'Cancel' : 'Add comment' }}
         </a>
       }
     </div>
   </div>
 
-  @if (showCommentBox) {
+  @if (showCommentBox()) {
     <div class="comment-input-box">
       <textarea 
-        [(ngModel)]="newCommentText"
+        [ngModel]="newCommentText()"
+        (ngModelChange)="newCommentText.set($event)"
         placeholder="Share your thoughts, questions, or suggestions..."
         rows="3"
         class="comment-textarea"></textarea>
       <div class="comment-actions">
         <button class="btn ghost sm" (click)="toggleCommentBox()">Cancel</button>
-        <button class="btn primary sm" (click)="submitComment()" [disabled]="!newCommentText.trim()">
+        <button class="btn primary sm" (click)="submitComment()" [disabled]="!newCommentText().trim()">
           Post comment
         </button>
       </div>
     </div>
   }
 
-  @if (filteredComments.length === 0) {
+  @if (filteredComments().length === 0) {
     <div class="empty-state">
       <!-- <div class="empty-icon">💬</div> -->
       <p class="empty-message">No comments yet</p>
@@ -49,7 +50,7 @@
     </div>
   } @else {
     <div class="comments-list">
-      @for (comment of displayedComments; track comment.id) {
+      @for (comment of displayedComments(); track comment.id) {
         <article class="comment-card" [class.is-marked]="comment.isMarked">
           @if (comment.isMarked) {
             <div class="marked-banner">⚠ Reviewed by moderator</div>
@@ -91,16 +92,18 @@
               }
             </div>
 
-            @if (replyToId === comment.id) {
+            @if (replyToId() === comment.id) {
               <div class="reply-input-box">
                 <textarea 
-                  [(ngModel)]="replyText"
+                  [ngModel]="replyText()"
+                  (ngModelChange)="replyText.set($event)"
                   placeholder="Write your reply..."
                   rows="2"
+                  appAutofocus
                   class="comment-textarea"></textarea>
                 <div class="comment-actions">
                   <button class="btn ghost sm" (click)="cancelReply()">Cancel</button>
-                  <button class="btn primary sm" (click)="submitReply(comment.id)" [disabled]="!replyText.trim()">
+                  <button class="btn primary sm" (click)="submitReply(comment.id)" [disabled]="!replyText().trim()">
                     Post reply
                   </button>
                 </div>
@@ -143,10 +146,10 @@
       }
     </div>
 
-    @if (!compact && filteredComments.length > displayedComments.length) {
+    @if (!compact && filteredComments().length > displayedComments().length) {
       <div class="show-more">
         <a class="btn ghost sm" href="#view-all-comments">
-          View all {{ filteredComments.length }} comments
+          View all {{ filteredComments().length }} comments
         </a>
       </div>
     }
