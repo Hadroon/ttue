@@ -100,6 +100,12 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
           };
         }
 
+        // Get the total number of ideas submitted for this challenge
+        const [{ ideaCount }] = await db
+          .select({ ideaCount: sql<number>`count(*)::int` })
+          .from(ideas)
+          .where(eq(ideas.challengeId, challenge.id));
+
         // Get top 3 comments for the top idea OR directly on the challenge
         let challengeComments: any[] = [];
         {
@@ -143,6 +149,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
             voted,
           },
           topIdea,
+          ideaCount,
           comments: challengeComments,
         };
       })
@@ -444,6 +451,12 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
           };
         }
 
+        // Get the total number of ideas submitted for this challenge
+        const [{ ideaCount }] = await db
+          .select({ ideaCount: sql<number>`count(*)::int` })
+          .from(ideas)
+          .where(eq(ideas.challengeId, challenge.id));
+
         // Get comments for the top idea OR directly on the challenge
         let challengeComments: any[] = [];
         {
@@ -487,6 +500,7 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
             voted,
           },
           topIdea,
+          ideaCount,
           comments: challengeComments,
         };
       })

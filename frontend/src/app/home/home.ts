@@ -33,6 +33,7 @@ export class Home implements OnInit {
   isLoadingChallenges = false;
   featuredChallenges = signal<Challenge[]>([]);
   featuredIdeasMap = signal<Map<number, Idea[]>>(new Map());
+  featuredIdeaCountMap = signal<Map<number, number>>(new Map());
   featuredCommentsMap = signal<Map<number, Comment[]>>(new Map());
   isLoadingFeatured = false;
 
@@ -52,6 +53,7 @@ export class Home implements OnInit {
         
         const challengesList: Challenge[] = [];
         const ideasMap = new Map<number, Idea[]>();
+        const ideaCountMap = new Map<number, number>();
         const commentsMap = new Map<number, Comment[]>();
         
         // Process each featured challenge
@@ -63,6 +65,7 @@ export class Home implements OnInit {
           };
           challengesList.push(challenge);
           console.log('✅ Processed featured challenge:', challenge);
+          ideaCountMap.set(challenge.id, featured.ideaCount);
           
           // Convert API Idea to component Idea model
           if (featured.topIdea) {
@@ -102,6 +105,7 @@ export class Home implements OnInit {
         
         this.featuredChallenges.set(challengesList);
         this.featuredIdeasMap.set(ideasMap);
+        this.featuredIdeaCountMap.set(ideaCountMap);
         this.featuredCommentsMap.set(commentsMap);
         
         this.isLoadingFeatured = false;
@@ -112,6 +116,7 @@ export class Home implements OnInit {
         // Set to empty on error
         this.featuredChallenges.set([]);
         this.featuredIdeasMap.set(new Map());
+        this.featuredIdeaCountMap.set(new Map());
         this.featuredCommentsMap.set(new Map());
       }
     });
@@ -239,6 +244,10 @@ export class Home implements OnInit {
 
   getIdeasForChallenge(challengeId: number): Idea[] {
     return this.featuredIdeasMap().get(challengeId) || [];
+  }
+
+  getIdeaCountForChallenge(challengeId: number): number {
+    return this.featuredIdeaCountMap().get(challengeId) ?? 0;
   }
 
   getCommentsForChallenge(challengeId: number): Comment[] {

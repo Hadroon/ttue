@@ -97,6 +97,7 @@
   <app-challenge-ideas 
     [challengeId]="challenge.id" 
     [allIdeas]="allIdeas" 
+    [totalCount]="ideaCount"
     [compact]="true"
     (voteIdea)="onVoteIdea($event)">
   </app-challenge-ideas>

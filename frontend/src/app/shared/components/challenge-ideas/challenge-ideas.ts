@@ -16,6 +16,7 @@ export class ChallengeIdeas implements OnInit {
   @Input() challengeId!: string | number;
   @Input() allIdeas: Idea[] = [];
   @Input() compact: boolean = true;
+  @Input() totalCount?: number;
   @Output() voteIdea = new EventEmitter<string>();
 
   isExpanded = false;

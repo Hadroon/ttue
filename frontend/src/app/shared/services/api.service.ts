@@ -182,6 +182,7 @@ export interface Flag {
 export interface FeaturedChallenge {
   challenge: Challenge;
   topIdea: Idea | null;
+  ideaCount: number;
   comments: Comment[];
 }
 

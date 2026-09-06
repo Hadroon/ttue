@@ -30,6 +30,7 @@ export class Challenges implements OnInit {
     return this.challengesData().map(item => ({
       challenge: item.challenge,
       ideas: item.topIdea ? [this.apiIdeaToIdea(item.topIdea)] : [],
+      ideaCount: item.ideaCount,
       comments: item.comments.map(c => this.apiCommentToBaseComment(c, item.challenge.id))
     }));
   });

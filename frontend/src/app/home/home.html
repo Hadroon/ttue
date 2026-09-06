@@ -111,6 +111,7 @@
             <app-challenge-item 
               [challenge]="challenge" 
               [allIdeas]="getIdeasForChallenge(challenge.id)" 
+              [ideaCount]="getIdeaCountForChallenge(challenge.id)"
               [allComments]="getCommentsForChallenge(challenge.id)"
               [hideAddCommentButton]="true"
               (voteChallenge)="onVoteChallenge($event)"

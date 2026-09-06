@@ -17,6 +17,7 @@ import { ApiService } from '../../services/api.service';
 export class ChallengeItem implements OnInit {
   @Input() challenge!: Challenge;
   @Input() allIdeas: Idea[] = [];
+  @Input() ideaCount?: number;
   @Input() allComments: Comment[] = [];
   @Input() hideAddCommentButton: boolean = false;
   @Output() voteChallenge = new EventEmitter<number>();
