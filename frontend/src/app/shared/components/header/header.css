@@ -50,7 +50,12 @@
 
 .header-cta {
   display: flex;
+  align-items: center;
   gap: 10px;
+}
+
+.header-cta .btn.ghost {
+  font-size: 16px;
 }
 
 .hamburger {
