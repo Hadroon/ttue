@@ -19,7 +19,7 @@
       @if (!authService.isLoggedIn()) {
         <a class="btn ghost" href="#signin" (click)="openSignInModal(); $event.preventDefault()">Sign in</a>
       } @else {
-        <span class="user-greeting">Hi, {{ authService.currentUser()?.displayName || authService.currentUser()?.username }}</span>
+        <a class="user-greeting" routerLink="/profile">Hi, {{ authService.currentUser()?.displayName || authService.currentUser()?.username }}</a>
         @if (authService.isAdmin()) {
           <a class="btn ghost" routerLink="/admin">Admin</a>
         }

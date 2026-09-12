@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { SigninModalComponent } from '../signin-modal/signin-modal';
@@ -15,6 +15,7 @@ export class Header {
   private navOpen = false;
   private elementRef = inject(ElementRef);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
   readonly authService = inject(AuthService);
   // toggleNav
   toggleNav() {
@@ -44,5 +45,6 @@ export class Header {
 
   logout() {
     this.authService.logout();
+    this.router.navigate(['/']);
   }
 }

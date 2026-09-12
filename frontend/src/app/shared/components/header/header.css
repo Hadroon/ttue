@@ -54,6 +54,22 @@
   gap: 10px;
 }
 
+.user-greeting {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-greeting:hover {
+  color: var(--brand);
+}
+
+.user-greeting:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+}
+
 .header-cta .btn.ghost {
   font-size: 16px;
 }

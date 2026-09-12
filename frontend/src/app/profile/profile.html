@@ -1,0 +1,59 @@
+<app-header></app-header>
+
+<main class="profile-page" role="main">
+  <div class="container">
+    @if (user(); as currentUser) {
+      <section class="profile-header" aria-labelledby="profile-title">
+        @if (currentUser.avatarUrl) {
+          <img class="avatar" [src]="currentUser.avatarUrl" [alt]="(currentUser.displayName || currentUser.username) + ' profile picture'" />
+        } @else {
+          <div class="avatar avatar-fallback" aria-hidden="true">{{ initial() }}</div>
+        }
+
+        <div class="identity">
+          <p class="eyebrow">Member profile</p>
+          <h1 id="profile-title">{{ currentUser.displayName || currentUser.username }}</h1>
+          <p class="username">&#64;{{ currentUser.username }}</p>
+        </div>
+
+        <div class="reputation" aria-label="Reputation">
+          <strong>{{ currentUser.reputation }}</strong>
+          <span>Reputation</span>
+        </div>
+      </section>
+
+      <section class="account-section" aria-labelledby="account-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Account</p>
+            <h2 id="account-title">Profile details</h2>
+          </div>
+          <a class="btn primary" routerLink="/article-workbench">Create proposal</a>
+        </div>
+
+        <dl class="details-list">
+          <div class="detail-row">
+            <dt>Display name</dt>
+            <dd>{{ currentUser.displayName || 'Not set' }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Username</dt>
+            <dd>{{ currentUser.username }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Email</dt>
+            <dd>{{ currentUser.email }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Role</dt>
+            <dd>{{ currentUser.isAdmin ? 'Administrator' : 'Member' }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Member since</dt>
+            <dd>{{ currentUser.created_at | date: 'longDate' }}</dd>
+          </div>
+        </dl>
+      </section>
+    }
+  </div>
+</main>

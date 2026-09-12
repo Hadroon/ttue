@@ -7,7 +7,9 @@ import { Challenges } from './challenges/challenges';
 import { AddChallenge } from './add-challenge/add-challenge';
 import { AddIdea } from './add-idea/add-idea';
 import { Admin } from './admin/admin';
+import { Profile } from './profile/profile';
 import { adminGuard } from './shared/guards/admin.guard';
+import { authGuard } from './shared/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -38,6 +40,11 @@ export const routes: Routes = [
     path: 'admin',
     component: Admin,
     canActivate: [adminGuard]
+  },
+  {
+    path: 'profile',
+    component: Profile,
+    canActivate: [authGuard]
   },
   {
     path: 'test',
