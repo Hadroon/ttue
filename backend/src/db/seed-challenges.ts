@@ -1,5 +1,7 @@
 import { db } from "./index";
-import { challenges, users, ideas, comments } from "./schema";
+import { challenges, users, ideas, comments, domains } from "./schema";
+import { eq } from "drizzle-orm";
+import { mapCategoryToDomainSlug } from "../services/reputation";
 
 const seedChallenges = [
   {
@@ -58,9 +60,19 @@ async function seed() {
     console.log(`📝 Using user ID: ${userId}`);
     
     for (const challenge of seedChallenges) {
+      const [domain] = await db
+        .select({ id: domains.id })
+        .from(domains)
+        .where(eq(domains.slug, mapCategoryToDomainSlug(challenge.category)))
+        .limit(1);
+
+      if (!domain) {
+        throw new Error(`Missing civic domain for category: ${challenge.category}`);
+      }
+
       const [insertedChallenge] = await db
         .insert(challenges)
-        .values(challenge)
+        .values({ ...challenge, creatorId: userId, domainId: domain.id })
         .returning();
       
       console.log(`✅ Created challenge: ${insertedChallenge.title} (ID: ${insertedChallenge.id})`);

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -10,6 +10,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../services/api.service';
+import { CivicDomain } from '../../models/civic-profile';
 
 @Component({
   selector: 'app-add-challenge-modal',
@@ -32,6 +33,7 @@ import { ApiService } from '../../services/api.service';
 export class AddChallengeModalComponent {
   challenge = {
     category: '',
+    domainSlug: '',
     title: '',
     description: '',
     urgency: 'Medium',
@@ -52,6 +54,8 @@ export class AddChallengeModalComponent {
   ];
 
   urgencyLevels = ['Low', 'Medium', 'High', 'Critical'];
+  readonly domains = signal<CivicDomain[]>([]);
+  readonly domainsLoading = signal(true);
 
   tagInput = '';
   isSubmitting = false;
@@ -60,7 +64,19 @@ export class AddChallengeModalComponent {
   constructor(
     public dialogRef: MatDialogRef<AddChallengeModalComponent>,
     private apiService: ApiService
-  ) {}
+  ) {
+    this.apiService.getDomains().subscribe({
+      next: ({ domains }) => {
+        this.domains.set(domains);
+        this.domainsLoading.set(false);
+      },
+      error: () => {
+        this.domains.set([{ id: 0, slug: 'general-civic', name: 'General Civic', description: null }]);
+        this.challenge.domainSlug = 'general-civic';
+        this.domainsLoading.set(false);
+      }
+    });
+  }
 
   addTag() {
     const tag = this.tagInput.trim();
@@ -75,7 +91,7 @@ export class AddChallengeModalComponent {
   }
 
   onSubmit() {
-    if (!this.challenge.title || !this.challenge.category || !this.challenge.description) {
+    if (!this.challenge.title || !this.challenge.category || !this.challenge.domainSlug || !this.challenge.description) {
       this.errorMessage = 'Please fill in all required fields';
       return;
     }
@@ -85,6 +101,7 @@ export class AddChallengeModalComponent {
 
     const challengeData = {
       category: this.challenge.category,
+      domainSlug: this.challenge.domainSlug,
       title: this.challenge.title,
       description: this.challenge.description,
       urgency: this.challenge.urgency,
@@ -95,7 +112,7 @@ export class AddChallengeModalComponent {
 
     this.apiService.createChallenge(challengeData).subscribe({
       next: (response) => {
-        this.dialogRef.close({ success: true, challenge: response.data });
+        this.dialogRef.close({ success: true, challenge: response });
       },
       error: (error) => {
         this.isSubmitting = false;

@@ -1,7 +1,8 @@
 import { db } from "../db";
-import { ideaVotes, commentVotes, ideas, comments, users } from "../db/schema";
+import { ideaVotes, commentVotes, ideas, comments } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
+import { applyReputationChange, getVoteDelta, resolveContentDomainId } from "../services/reputation";
 
 // Vote on an idea
 export async function handleVoteIdea(req: Request, ideaId: number): Promise<Response> {
@@ -19,91 +20,80 @@ export async function handleVoteIdea(req: Request, ideaId: number): Promise<Resp
       );
     }
 
-    // Check if idea exists
-    const [idea] = await db
-      .select()
-      .from(ideas)
-      .where(eq(ideas.id, ideaId))
-      .limit(1);
+    const result = await db.transaction(async (tx) => {
+      const [idea] = await tx
+        .select()
+        .from(ideas)
+        .where(eq(ideas.id, ideaId))
+        .limit(1)
+        .for("update");
 
-    if (!idea) {
-      return new Response(
-        JSON.stringify({ error: "Idea not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    if (idea.isMarked) {
-      return new Response(
-        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be voted on" }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Check for existing vote
-    const [existingVote] = await db
-      .select()
-      .from(ideaVotes)
-      .where(and(
-        eq(ideaVotes.ideaId, ideaId),
-        eq(ideaVotes.userId, authResult.user.userId)
-      ))
-      .limit(1);
-
-    if (existingVote) {
-      if (existingVote.value === value) {
-        // Remove vote if same value (toggle off)
-        await db
-          .delete(ideaVotes)
-          .where(eq(ideaVotes.id, existingVote.id));
-
-        // Update idea score
-        await db
-          .update(ideas)
-          .set({ score: sql`${ideas.score} - ${value}` })
-          .where(eq(ideas.id, ideaId));
-
-        return new Response(
-          JSON.stringify({ message: "Vote removed", score: idea.score - value, voted: false }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-      } else {
-        // Update vote to opposite value
-        await db
-          .update(ideaVotes)
-          .set({ value })
-          .where(eq(ideaVotes.id, existingVote.id));
-
-        // Update idea score (swing of 2 points)
-        await db
-          .update(ideas)
-          .set({ score: sql`${ideas.score} + ${value * 2}` })
-          .where(eq(ideas.id, ideaId));
-
-        return new Response(
-          JSON.stringify({ message: "Vote updated", score: idea.score + (value * 2), voted: true }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+      if (!idea) {
+        return { status: 404, body: { error: "Idea not found" } };
       }
-    }
 
-    // Create new vote
-    await db.insert(ideaVotes).values({
-      ideaId,
-      userId: authResult.user.userId,
-      value,
+      if (idea.isMarked) {
+        return { status: 403, body: { error: "This content has been reviewed by a moderator and cannot be voted on" } };
+      }
+
+      if (idea.authorId === authResult.user.userId) {
+        return { status: 403, body: { error: "You cannot vote on your own content" } };
+      }
+
+      const [existingVote] = await tx
+        .select()
+        .from(ideaVotes)
+        .where(and(
+          eq(ideaVotes.ideaId, ideaId),
+          eq(ideaVotes.userId, authResult.user.userId)
+        ))
+        .limit(1);
+
+      const nextValue = existingVote?.value === value ? null : value;
+      const reputationDelta = getVoteDelta(existingVote?.value ?? null, nextValue);
+
+      if (existingVote && nextValue == null) {
+        await tx.delete(ideaVotes).where(eq(ideaVotes.id, existingVote.id));
+      } else if (existingVote) {
+        await tx.update(ideaVotes).set({ value }).where(eq(ideaVotes.id, existingVote.id));
+      } else {
+        await tx.insert(ideaVotes).values({
+          ideaId,
+          userId: authResult.user.userId,
+          value,
+        });
+      }
+
+      await tx
+        .update(ideas)
+        .set({ score: sql`${ideas.score} + ${reputationDelta}` })
+        .where(eq(ideas.id, ideaId));
+
+      const domainId = await resolveContentDomainId(tx, idea.challengeId);
+      await applyReputationChange(tx, {
+        userId: idea.authorId,
+        actorId: authResult.user.userId,
+        domainId,
+        amount: reputationDelta,
+        actionType: "IDEA_VOTE",
+        contentType: "idea",
+        contentId: ideaId,
+      });
+
+      return {
+        status: existingVote ? 200 : 201,
+        body: {
+          message: nextValue == null ? "Vote removed" : existingVote ? "Vote updated" : "Vote recorded",
+          score: idea.score + reputationDelta,
+          voted: nextValue != null,
+        },
+      };
     });
 
-    // Update idea score
-    await db
-      .update(ideas)
-      .set({ score: sql`${ideas.score} + ${value}` })
-      .where(eq(ideas.id, ideaId));
-
-    return new Response(
-      JSON.stringify({ message: "Vote recorded", score: idea.score + value, voted: true }),
-      { status: 201, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify(result.body), {
+      status: result.status,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Vote idea error:", error);
     return new Response(
@@ -129,91 +119,80 @@ export async function handleVoteComment(req: Request, commentId: number): Promis
       );
     }
 
-    // Check if comment exists
-    const [comment] = await db
-      .select()
-      .from(comments)
-      .where(eq(comments.id, commentId))
-      .limit(1);
+    const result = await db.transaction(async (tx) => {
+      const [comment] = await tx
+        .select()
+        .from(comments)
+        .where(eq(comments.id, commentId))
+        .limit(1)
+        .for("update");
 
-    if (!comment) {
-      return new Response(
-        JSON.stringify({ error: "Comment not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    if (comment.isMarked) {
-      return new Response(
-        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be voted on" }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Check for existing vote
-    const [existingVote] = await db
-      .select()
-      .from(commentVotes)
-      .where(and(
-        eq(commentVotes.commentId, commentId),
-        eq(commentVotes.userId, authResult.user.userId)
-      ))
-      .limit(1);
-
-    if (existingVote) {
-      if (existingVote.value === value) {
-        // Remove vote if same value (toggle off)
-        await db
-          .delete(commentVotes)
-          .where(eq(commentVotes.id, existingVote.id));
-
-        // Update comment score
-        await db
-          .update(comments)
-          .set({ score: sql`${comments.score} - ${value}` })
-          .where(eq(comments.id, commentId));
-
-        return new Response(
-          JSON.stringify({ message: "Vote removed", score: comment.score - value, voted: false }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-      } else {
-        // Update vote to opposite value
-        await db
-          .update(commentVotes)
-          .set({ value })
-          .where(eq(commentVotes.id, existingVote.id));
-
-        // Update comment score (swing of 2 points)
-        await db
-          .update(comments)
-          .set({ score: sql`${comments.score} + ${value * 2}` })
-          .where(eq(comments.id, commentId));
-
-        return new Response(
-          JSON.stringify({ message: "Vote updated", score: comment.score + (value * 2), voted: true }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+      if (!comment) {
+        return { status: 404, body: { error: "Comment not found" } };
       }
-    }
 
-    // Create new vote
-    await db.insert(commentVotes).values({
-      commentId,
-      userId: authResult.user.userId,
-      value,
+      if (comment.isMarked) {
+        return { status: 403, body: { error: "This content has been reviewed by a moderator and cannot be voted on" } };
+      }
+
+      if (comment.authorId === authResult.user.userId) {
+        return { status: 403, body: { error: "You cannot vote on your own content" } };
+      }
+
+      const [existingVote] = await tx
+        .select()
+        .from(commentVotes)
+        .where(and(
+          eq(commentVotes.commentId, commentId),
+          eq(commentVotes.userId, authResult.user.userId)
+        ))
+        .limit(1);
+
+      const nextValue = existingVote?.value === value ? null : value;
+      const reputationDelta = getVoteDelta(existingVote?.value ?? null, nextValue);
+
+      if (existingVote && nextValue == null) {
+        await tx.delete(commentVotes).where(eq(commentVotes.id, existingVote.id));
+      } else if (existingVote) {
+        await tx.update(commentVotes).set({ value }).where(eq(commentVotes.id, existingVote.id));
+      } else {
+        await tx.insert(commentVotes).values({
+          commentId,
+          userId: authResult.user.userId,
+          value,
+        });
+      }
+
+      await tx
+        .update(comments)
+        .set({ score: sql`${comments.score} + ${reputationDelta}` })
+        .where(eq(comments.id, commentId));
+
+      const domainId = await resolveContentDomainId(tx, comment.challengeId, comment.ideaId);
+      await applyReputationChange(tx, {
+        userId: comment.authorId,
+        actorId: authResult.user.userId,
+        domainId,
+        amount: reputationDelta,
+        actionType: "COMMENT_VOTE",
+        contentType: "comment",
+        contentId: commentId,
+      });
+
+      return {
+        status: existingVote ? 200 : 201,
+        body: {
+          message: nextValue == null ? "Vote removed" : existingVote ? "Vote updated" : "Vote recorded",
+          score: comment.score + reputationDelta,
+          voted: nextValue != null,
+        },
+      };
     });
 
-    // Update comment score
-    await db
-      .update(comments)
-      .set({ score: sql`${comments.score} + ${value}` })
-      .where(eq(comments.id, commentId));
-
-    return new Response(
-      JSON.stringify({ message: "Vote recorded", score: comment.score + value, voted: true }),
-      { status: 201, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify(result.body), {
+      status: result.status,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Vote comment error:", error);
     return new Response(

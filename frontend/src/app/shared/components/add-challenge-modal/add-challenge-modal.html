@@ -14,6 +14,15 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Civic domain *</mat-label>
+      <mat-select [(ngModel)]="challenge.domainSlug" name="domainSlug" required [disabled]="domainsLoading()">
+        @for (domain of domains(); track domain.slug) {
+          <mat-option [value]="domain.slug">{{ domain.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Title *</mat-label>
       <input matInput [(ngModel)]="challenge.title" name="title" required placeholder="Enter challenge title">
     </mat-form-field>

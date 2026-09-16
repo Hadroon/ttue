@@ -2,58 +2,186 @@
 
 <main class="profile-page" role="main">
   <div class="container">
-    @if (user(); as currentUser) {
-      <section class="profile-header" aria-labelledby="profile-title">
-        @if (currentUser.avatarUrl) {
-          <img class="avatar" [src]="currentUser.avatarUrl" [alt]="(currentUser.displayName || currentUser.username) + ' profile picture'" />
-        } @else {
-          <div class="avatar avatar-fallback" aria-hidden="true">{{ initial() }}</div>
+    @if (loading()) {
+      <section class="state-panel" aria-live="polite">
+        <span class="loading-mark" aria-hidden="true"></span>
+        <h1>Loading civic passport</h1>
+      </section>
+    } @else if (error() && !profile()) {
+      <section class="state-panel">
+        <p class="eyebrow">{{ notFound() ? 'Profile not found' : 'Connection error' }}</p>
+        <h1>{{ error() }}</h1>
+        @if (!notFound()) {
+          <button class="btn primary" type="button" (click)="loadProfile()">Try again</button>
         }
-
-        <div class="identity">
-          <p class="eyebrow">Member profile</p>
-          <h1 id="profile-title">{{ currentUser.displayName || currentUser.username }}</h1>
-          <p class="username">&#64;{{ currentUser.username }}</p>
-        </div>
-
-        <div class="reputation" aria-label="Reputation">
-          <strong>{{ currentUser.reputation }}</strong>
-          <span>Reputation</span>
-        </div>
       </section>
+    } @else {
+      @if (profile(); as civicProfile) {
+        <div class="passport-layout">
+        <aside class="identity-rail" aria-labelledby="profile-title">
+          <div class="identity-header">
+            @if (civicProfile.identity.avatarUrl) {
+              <img class="avatar" [src]="civicProfile.identity.avatarUrl" [alt]="(civicProfile.identity.displayName || civicProfile.identity.username) + ' profile picture'" />
+            } @else {
+              <div class="avatar avatar-fallback" aria-hidden="true">{{ initial() }}</div>
+            }
+            <div>
+              <span class="rank-badge">{{ civicProfile.civicStatus.rank }}</span>
+              <h1 id="profile-title">{{ civicProfile.identity.displayName || civicProfile.identity.username }}</h1>
+              <p class="username">&#64;{{ civicProfile.identity.username }}</p>
+            </div>
+          </div>
 
-      <section class="account-section" aria-labelledby="account-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Account</p>
-            <h2 id="account-title">Profile details</h2>
-          </div>
-          <a class="btn primary" routerLink="/article-workbench">Create proposal</a>
-        </div>
+          @if (civicProfile.identity.bio) {
+            <p class="bio">{{ civicProfile.identity.bio }}</p>
+          }
 
-        <dl class="details-list">
-          <div class="detail-row">
-            <dt>Display name</dt>
-            <dd>{{ currentUser.displayName || 'Not set' }}</dd>
+          <dl class="identity-meta">
+            @if (civicProfile.identity.location) {
+              <div><dt>Region</dt><dd>{{ civicProfile.identity.location }}</dd></div>
+            }
+            <div><dt>Joined</dt><dd>{{ civicProfile.identity.joinedAt | date: 'MMMM y' }}</dd></div>
+            @if (civicProfile.identity.websiteUrl) {
+              <div><dt>Website</dt><dd><a [href]="civicProfile.identity.websiteUrl" target="_blank" rel="noopener">Visit website</a></dd></div>
+            }
+          </dl>
+
+          <section class="reputation-summary" aria-labelledby="reputation-summary-title">
+            <p class="eyebrow" id="reputation-summary-title">Civic authority</p>
+            <strong>{{ civicProfile.civicStatus.reputation }}</strong>
+            <span>Total reputation</span>
+            @if (civicProfile.civicStatus.nextRank; as nextRank) {
+              <div class="rank-progress" role="progressbar" [attr.aria-valuenow]="civicProfile.civicStatus.rankProgress * 100" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Progress to ' + nextRank.title">
+                <span [style.width.%]="civicProfile.civicStatus.rankProgress * 100"></span>
+              </div>
+              <small>{{ nextRank.minimumReputation - civicProfile.civicStatus.reputation }} points to {{ nextRank.title }}</small>
+            } @else {
+              <small>Highest civic rank reached</small>
+            }
+          </section>
+
+          <section class="domain-section" aria-labelledby="domain-title">
+            <p class="eyebrow">Competence map</p>
+            <h2 id="domain-title">Domain reputation</h2>
+            <ul class="domain-list">
+              @for (domain of civicProfile.reputationBreakdown; track domain.domainId) {
+                <li>
+                  <div class="domain-heading"><span>{{ domain.domainName }}</span><strong>{{ domain.score }}</strong></div>
+                  <div class="domain-track" [class.negative]="domain.score < 0"><span [style.width.%]="domainBarWidth(domain.score)"></span></div>
+                </li>
+              }
+            </ul>
+          </section>
+
+          @if (civicProfile.isOwner) {
+            <button class="btn secondary edit-button" type="button" (click)="startEditing()">Edit profile</button>
+          }
+        </aside>
+
+        <section class="passport-content">
+          <header class="content-header">
+            <div><p class="eyebrow">Public record</p><h2>Civic activity and accountability</h2></div>
+            <a class="btn primary" routerLink="/article-workbench">Create proposal</a>
+          </header>
+
+          @if (error()) {
+            <p class="inline-error" role="alert">{{ error() }}</p>
+          }
+
+          <nav class="profile-tabs" aria-label="Profile sections" role="tablist">
+            <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'activity'" (click)="selectTab('activity')">Activity</button>
+            <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'contributions'" (click)="selectTab('contributions')">Contributions</button>
+            <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'reputation'" (click)="selectTab('reputation')">Reputation ledger</button>
+          </nav>
+
+          @switch (activeTab()) {
+            @case ('activity') {
+              <section class="tab-panel" role="tabpanel">
+                <h3>Recent activity</h3>
+                @if (activityItems().length) {
+                  <ol class="record-list">
+                    @for (item of activityItems(); track item.kind + '-' + item.contentId) {
+                      <li>
+                        <div class="record-marker" aria-hidden="true"></div>
+                        <article>
+                          <div class="record-meta"><span>{{ activityLabel(item.kind) }}</span><span>{{ item.domainName }}</span><time>{{ item.createdAt | date: 'mediumDate' }}</time></div>
+                          <h4>{{ item.title }}</h4>
+                          <p>{{ item.summary }}</p>
+                          <div class="record-footer"><span>{{ item.status }}</span><strong>{{ item.score }} votes</strong></div>
+                        </article>
+                      </li>
+                    }
+                  </ol>
+                  @if (activityHasMore()) {
+                    <button class="btn secondary load-more" type="button" [disabled]="loadingMore()" (click)="loadMoreActivity()">{{ loadingMore() ? 'Loading...' : 'Load more activity' }}</button>
+                  }
+                } @else {
+                  <p class="empty-state">No public civic activity yet.</p>
+                }
+              </section>
+            }
+            @case ('contributions') {
+              <section class="tab-panel" role="tabpanel">
+                <h3>Contribution portfolio</h3>
+                <dl class="contribution-stats">
+                  <div><dt>Challenges</dt><dd>{{ civicProfile.contributionCounts.challenges }}</dd></div>
+                  <div><dt>Ideas</dt><dd>{{ civicProfile.contributionCounts.ideas }}</dd></div>
+                  <div><dt>Comments</dt><dd>{{ civicProfile.contributionCounts.comments }}</dd></div>
+                  <div><dt>Drafts</dt><dd>{{ civicProfile.contributionCounts.drafts }}</dd></div>
+                  <div><dt>Merged work</dt><dd>{{ civicProfile.contributionCounts.acceptedProposals }}</dd></div>
+                </dl>
+                @if (activityItems().length) {
+                  <div class="portfolio-list">
+                    @for (item of activityItems(); track item.kind + '-' + item.contentId) {
+                      <article><span>{{ activityLabel(item.kind) }} &middot; {{ item.domainName }}</span><h4>{{ item.title }}</h4><p>{{ item.summary }}</p></article>
+                    }
+                  </div>
+                } @else {
+                  <p class="empty-state">Published work will appear here.</p>
+                }
+              </section>
+            }
+            @case ('reputation') {
+              <section class="tab-panel" role="tabpanel">
+                <div class="ledger-heading"><h3>Reputation audit ledger</h3><p>Every score change is tied to public content. Voter identity remains private.</p></div>
+                @if (reputationEntries().length) {
+                  <ol class="ledger-list">
+                    @for (entry of reputationEntries(); track entry.id) {
+                      <li>
+                        <strong [class.positive]="entry.amount > 0" [class.negative-text]="entry.amount < 0">{{ entry.amount > 0 ? '+' : '' }}{{ entry.amount }}</strong>
+                        <div><h4>{{ reputationLabel(entry) }}</h4><p>{{ entry.domainName }} &middot; {{ entry.createdAt | date: 'medium' }}</p></div>
+                      </li>
+                    }
+                  </ol>
+                  @if (reputationHasMore()) {
+                    <button class="btn secondary load-more" type="button" [disabled]="loadingMore()" (click)="loadMoreReputation()">{{ loadingMore() ? 'Loading...' : 'Load more entries' }}</button>
+                  }
+                } @else {
+                  <p class="empty-state">No reputation events have been recorded yet.</p>
+                }
+              </section>
+            }
+          }
+
+          @if (civicProfile.isOwner && civicProfile.identity.email) {
+            <section class="private-account"><p class="eyebrow">Private account detail</p><h3>{{ civicProfile.identity.email }}</h3><p>Only you can see this email address.</p></section>
+          }
+        </section>
+      </div>
+
+        @if (editing()) {
+          <div class="dialog-backdrop" (click)="cancelEditing()">
+            <form class="edit-dialog" (ngSubmit)="saveProfile()" (click)="$event.stopPropagation()" aria-labelledby="edit-title">
+              <div class="dialog-heading"><div><p class="eyebrow">Civic identity</p><h2 id="edit-title">Edit profile</h2></div><button type="button" class="close-button" aria-label="Close" (click)="cancelEditing()">&times;</button></div>
+              <label>Display name<input name="displayName" maxlength="100" [(ngModel)]="editForm.displayName" /></label>
+              <label>Bio<textarea name="bio" maxlength="2000" rows="5" [(ngModel)]="editForm.bio"></textarea></label>
+              <label>Region<input name="location" maxlength="100" [(ngModel)]="editForm.location" /></label>
+              <label>Website<input name="websiteUrl" maxlength="500" type="url" placeholder="https://" [(ngModel)]="editForm.websiteUrl" /></label>
+              <div class="dialog-actions"><button class="btn secondary" type="button" (click)="cancelEditing()">Cancel</button><button class="btn primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save profile' }}</button></div>
+            </form>
           </div>
-          <div class="detail-row">
-            <dt>Username</dt>
-            <dd>{{ currentUser.username }}</dd>
-          </div>
-          <div class="detail-row">
-            <dt>Email</dt>
-            <dd>{{ currentUser.email }}</dd>
-          </div>
-          <div class="detail-row">
-            <dt>Role</dt>
-            <dd>{{ currentUser.isAdmin ? 'Administrator' : 'Member' }}</dd>
-          </div>
-          <div class="detail-row">
-            <dt>Member since</dt>
-            <dd>{{ currentUser.created_at | date: 'longDate' }}</dd>
-          </div>
-        </dl>
-      </section>
+        }
+      }
     }
   </div>
 </main>

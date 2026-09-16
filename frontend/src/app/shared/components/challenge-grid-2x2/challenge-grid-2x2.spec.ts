@@ -1,3 +1,4 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChallengeGrid2x2 } from './challenge-grid-2x2';
 
@@ -7,7 +8,8 @@ describe('ChallengeGrid2x2', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ChallengeGrid2x2]
+      imports: [ChallengeGrid2x2],
+      providers: [provideZonelessChangeDetection()]
     })
     .compileComponents();
 
@@ -43,19 +45,21 @@ describe('ChallengeGrid2x2', () => {
   it('should emit challengeClick event', () => {
     spyOn(component.challengeClick, 'emit');
     component.challenge = { 
-      id: 'test-challenge',
+      id: 1,
       category: 'Test',
       title: 'Test Challenge',
       description: 'Desc',
       urgency: 'High',
       participantCount: 100,
       tags: ['test'],
-      votes: 50
+      votes: 50,
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z'
     };
     
     component.onChallengeClick();
     
-    expect(component.challengeClick.emit).toHaveBeenCalledWith('test-challenge');
+    expect(component.challengeClick.emit).toHaveBeenCalledWith(1);
   });
 
   it('should format deadline correctly', () => {

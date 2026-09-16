@@ -1,5 +1,5 @@
-import { pgTable, serial, text, integer, timestamp, boolean, index, uniqueIndex, json } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, serial, text, integer, timestamp, boolean, index, uniqueIndex, json, primaryKey, check } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
 
 // Users table
 export const users = pgTable("users", {
@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   displayName: text("display_name"),
   bio: text("bio"),
   avatarUrl: text("avatar_url"), // For Google profile picture
+  location: text("location"),
+  websiteUrl: text("website_url"),
   googleId: text("google_id").unique(), // Google OAuth ID
   authProvider: text("auth_provider").default("local").notNull(), // 'local' or 'google'
   reputation: integer("reputation").default(0).notNull(),
@@ -20,6 +22,46 @@ export const users = pgTable("users", {
   usernameIdx: index("username_idx").on(table.username),
   emailIdx: index("email_idx").on(table.email),
   googleIdIdx: index("google_id_idx").on(table.googleId),
+}));
+
+// Civic reputation domains
+export const domains = pgTable("domains", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  displayOrder: integer("display_order").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  displayOrderIdx: index("domain_display_order_idx").on(table.displayOrder),
+}));
+
+// Aggregated reputation per user and civic domain
+export const userDomainReputation = pgTable("user_domain_reputation", {
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  domainId: integer("domain_id").notNull().references(() => domains.id, { onDelete: "cascade" }),
+  score: integer("score").default(0).notNull(),
+  lastActivityAt: timestamp("last_activity_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.domainId] }),
+  userIdx: index("user_domain_reputation_user_idx").on(table.userId),
+}));
+
+// Append-only explanation of every reputation change
+export const reputationAuditLogs = pgTable("reputation_audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  actorId: integer("actor_id").references(() => users.id, { onDelete: "set null" }),
+  domainId: integer("domain_id").notNull().references(() => domains.id, { onDelete: "restrict" }),
+  amount: integer("amount").notNull(),
+  actionType: text("action_type").notNull(), // IDEA_VOTE | COMMENT_VOTE | CHALLENGE_VOTE
+  contentType: text("content_type").notNull(), // idea | comment | challenge
+  contentId: integer("content_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userCreatedAtIdx: index("reputation_audit_user_created_idx").on(table.userId, table.createdAt),
+  contentIdx: index("reputation_audit_content_idx").on(table.contentType, table.contentId),
+  amountNotZero: check("reputation_audit_amount_not_zero", sql`${table.amount} <> 0`),
 }));
 
 // Ideas table
@@ -72,6 +114,7 @@ export const ideaVotes = pgTable("idea_votes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   ideaUserUnique: uniqueIndex("idea_user_vote_unique").on(table.ideaId, table.userId),
+  valueCheck: check("idea_vote_value_check", sql`${table.value} IN (-1, 1)`),
 }));
 
 // Comment votes table
@@ -83,6 +126,7 @@ export const commentVotes = pgTable("comment_votes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   commentUserUnique: uniqueIndex("comment_user_vote_unique").on(table.commentId, table.userId),
+  valueCheck: check("comment_vote_value_check", sql`${table.value} IN (-1, 1)`),
 }));
 
 // Idea revisions table
@@ -119,6 +163,8 @@ export const ideaTags = pgTable("idea_tags", {
 // Challenges table
 export const challenges = pgTable("challenges", {
   id: serial("id").primaryKey(),
+  creatorId: integer("creator_id").references(() => users.id, { onDelete: "set null" }),
+  domainId: integer("domain_id").notNull().references(() => domains.id, { onDelete: "restrict" }),
   category: text("category").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
@@ -132,6 +178,8 @@ export const challenges = pgTable("challenges", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
+  creatorIdx: index("challenge_creator_idx").on(table.creatorId),
+  domainIdx: index("challenge_domain_idx").on(table.domainId),
   categoryIdx: index("challenge_category_idx").on(table.category),
   urgencyIdx: index("challenge_urgency_idx").on(table.urgency),
   votesIdx: index("challenge_votes_idx").on(table.votes),
@@ -147,6 +195,7 @@ export const challengeVotes = pgTable("challenge_votes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   challengeUserUnique: uniqueIndex("challenge_user_vote_unique").on(table.challengeId, table.userId),
+  valueCheck: check("challenge_vote_value_check", sql`${table.value} = 1`),
 }));
 
 // Challenge drafts table
@@ -199,6 +248,44 @@ export const usersRelations = relations(users, ({ many }) => ({
   challengeDrafts: many(challengeDrafts),
   challengeDraftRevisions: many(challengeDraftRevisions),
   challengeDraftProposals: many(challengeDraftProposals),
+  createdChallenges: many(challenges),
+  domainReputation: many(userDomainReputation),
+  reputationAuditLogs: many(reputationAuditLogs, { relationName: "reputation_recipient" }),
+  reputationActions: many(reputationAuditLogs, { relationName: "reputation_actor" }),
+}));
+
+export const domainsRelations = relations(domains, ({ many }) => ({
+  challenges: many(challenges),
+  userReputation: many(userDomainReputation),
+  reputationAuditLogs: many(reputationAuditLogs),
+}));
+
+export const userDomainReputationRelations = relations(userDomainReputation, ({ one }) => ({
+  user: one(users, {
+    fields: [userDomainReputation.userId],
+    references: [users.id],
+  }),
+  domain: one(domains, {
+    fields: [userDomainReputation.domainId],
+    references: [domains.id],
+  }),
+}));
+
+export const reputationAuditLogsRelations = relations(reputationAuditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [reputationAuditLogs.userId],
+    references: [users.id],
+    relationName: "reputation_recipient",
+  }),
+  actor: one(users, {
+    fields: [reputationAuditLogs.actorId],
+    references: [users.id],
+    relationName: "reputation_actor",
+  }),
+  domain: one(domains, {
+    fields: [reputationAuditLogs.domainId],
+    references: [domains.id],
+  }),
 }));
 
 export const ideasRelations = relations(ideas, ({ one, many }) => ({
@@ -289,6 +376,14 @@ export const ideaTagsRelations = relations(ideaTags, ({ one }) => ({
 }));
 
 export const challengesRelations = relations(challenges, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [challenges.creatorId],
+    references: [users.id],
+  }),
+  domain: one(domains, {
+    fields: [challenges.domainId],
+    references: [domains.id],
+  }),
   votes: many(challengeVotes),
   ideas: many(ideas),
   draft: one(challengeDrafts, {

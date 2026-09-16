@@ -12,6 +12,7 @@ import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/v
 import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal, handleGetChallengeComments } from "./routes/challenges";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
+import { handleGetCivicProfile, handleGetDomains, handleGetUserActivity, handleGetUserReputation } from "./routes/profiles";
 
 // Log configuration on startup
 logConfig();
@@ -100,6 +101,23 @@ serve({
       }
       if (url.pathname === "/api/auth/profile" && req.method === "PUT") {
         return handleUpdateProfile(req);
+      }
+
+      // Civic profile routes
+      if (url.pathname === "/api/domains" && req.method === "GET") {
+        return handleGetDomains();
+      }
+      if (url.pathname.match(/^\/api\/users\/[^/]+\/profile$/) && req.method === "GET") {
+        const username = decodeURIComponent(url.pathname.split("/")[3]);
+        return handleGetCivicProfile(req, username);
+      }
+      if (url.pathname.match(/^\/api\/users\/[^/]+\/activity$/) && req.method === "GET") {
+        const username = decodeURIComponent(url.pathname.split("/")[3]);
+        return handleGetUserActivity(req, username);
+      }
+      if (url.pathname.match(/^\/api\/users\/[^/]+\/reputation$/) && req.method === "GET") {
+        const username = decodeURIComponent(url.pathname.split("/")[3]);
+        return handleGetUserReputation(req, username);
       }
       
       // Google OAuth routes

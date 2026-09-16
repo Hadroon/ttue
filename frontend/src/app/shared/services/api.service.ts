@@ -2,18 +2,33 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { Observable, BehaviorSubject } from 'rxjs';
+import {
+  CivicActivity,
+  CivicActivityKind,
+  CivicDomain,
+  CivicIdentity,
+  CivicProfile,
+  Page,
+  ReputationEntry,
+  UpdateCivicProfile
+} from '../models/civic-profile';
 
 // Core interfaces for forum entities
 export interface User {
   id: number;
   username: string;
-  email: string;
+  email?: string;
   displayName?: string;
   avatarUrl?: string;
+  bio?: string;
+  location?: string;
+  websiteUrl?: string;
   reputation: number;
   isAdmin?: boolean;
-  created_at: string;
-  updated_at: string;
+  createdAt?: string;
+  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Idea {
@@ -80,6 +95,10 @@ export interface Vote {
 
 export interface Challenge {
   id: number;
+  creatorId?: number | null;
+  domainId?: number;
+  domainSlug?: string;
+  domainName?: string;
   category: string;
   title: string;
   description: string;
@@ -357,6 +376,41 @@ export class ApiService {
     return request;
   }
 
+  getDomains(): Observable<{ domains: CivicDomain[] }> {
+    return this.http.get<{ domains: CivicDomain[] }>(`${this.baseUrl}/domains`);
+  }
+
+  getCivicProfile(username: string): Observable<CivicProfile> {
+    return this.http.get<CivicProfile>(`${this.baseUrl}/users/${encodeURIComponent(username)}/profile`);
+  }
+
+  getCivicActivity(
+    username: string,
+    kind: CivicActivityKind,
+    limit: number = 20,
+    offset: number = 0
+  ): Observable<Page<CivicActivity>> {
+    return this.http.get<Page<CivicActivity>>(
+      `${this.baseUrl}/users/${encodeURIComponent(username)}/activity`,
+      { params: { kind, limit: limit.toString(), offset: offset.toString() } }
+    );
+  }
+
+  getReputationHistory(
+    username: string,
+    limit: number = 20,
+    offset: number = 0
+  ): Observable<Page<ReputationEntry>> {
+    return this.http.get<Page<ReputationEntry>>(
+      `${this.baseUrl}/users/${encodeURIComponent(username)}/reputation`,
+      { params: { limit: limit.toString(), offset: offset.toString() } }
+    );
+  }
+
+  updateCivicProfile(profile: UpdateCivicProfile): Observable<{ user: CivicIdentity }> {
+    return this.http.put<{ user: CivicIdentity }>(`${this.baseUrl}/auth/profile`, profile);
+  }
+
   /**
    * Search ideas
    */
@@ -574,21 +628,22 @@ export class ApiService {
    */
   createChallenge(data: {
     category: string;
+    domainSlug: string;
     title: string;
     description: string;
     urgency: string;
     rewardPool?: string;
     deadline?: string;
     tags?: string[];
-  }) {
-    return this.http.post<ApiResponse<Challenge>>(`${this.baseUrl}/challenges`, data);
+  }): Observable<Challenge> {
+    return this.http.post<Challenge>(`${this.baseUrl}/challenges`, data);
   }
 
   /**
    * Vote on a challenge
    */
   voteChallenge(challengeId: number) {
-    return this.http.post<{ message: string; voted: boolean }>(
+    return this.http.post<{ message: string; votes: number; voted: boolean }>(
       `${this.baseUrl}/challenges/vote`,
       { challengeId }
     );

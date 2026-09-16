@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +15,7 @@ import { SigninModalComponent } from '../shared/components/signin-modal/signin-m
 import { AuthService } from '../shared/services/auth.service';
 import { ApiService } from '../shared/services/api.service';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
+import { CivicDomain } from '../shared/models/civic-profile';
 
 @Component({
   selector: 'app-add-challenge',
@@ -45,6 +46,7 @@ export class AddChallenge implements OnInit {
 
   challenge = {
     category: '',
+    domainSlug: '',
     title: '',
     description: '',
     urgency: 'Medium',
@@ -65,6 +67,8 @@ export class AddChallenge implements OnInit {
   ];
 
   urgencyLevels = ['Low', 'Medium', 'High', 'Critical'];
+  readonly domains = signal<CivicDomain[]>([]);
+  readonly domainsLoading = signal(true);
 
   tagInput = '';
   isSubmitting = false;
@@ -72,6 +76,21 @@ export class AddChallenge implements OnInit {
 
   ngOnInit() {
     this.checkAuthentication();
+    this.loadDomains();
+  }
+
+  private loadDomains() {
+    this.apiService.getDomains().subscribe({
+      next: ({ domains }) => {
+        this.domains.set(domains);
+        this.domainsLoading.set(false);
+      },
+      error: () => {
+        this.domains.set([{ id: 0, slug: 'general-civic', name: 'General Civic', description: null }]);
+        this.challenge.domainSlug = 'general-civic';
+        this.domainsLoading.set(false);
+      }
+    });
   }
 
   checkAuthentication() {
@@ -116,7 +135,7 @@ export class AddChallenge implements OnInit {
     if (!this.authGuard.requireAuth('submit a challenge')) {
       return;
     }
-    if (!this.challenge.title || !this.challenge.category || !this.challenge.description) {
+    if (!this.challenge.title || !this.challenge.category || !this.challenge.domainSlug || !this.challenge.description) {
       this.errorMessage = 'Please fill in all required fields';
       return;
     }
@@ -126,6 +145,7 @@ export class AddChallenge implements OnInit {
 
     const challengeData = {
       category: this.challenge.category,
+      domainSlug: this.challenge.domainSlug,
       title: this.challenge.title,
       description: this.challenge.description,
       urgency: this.challenge.urgency,
@@ -136,7 +156,7 @@ export class AddChallenge implements OnInit {
 
     this.apiService.createChallenge(challengeData).subscribe({
       next: (response) => {
-        console.log('Challenge created:', response.data);
+        console.log('Challenge created:', response);
         this.router.navigate(['/challenges']);
       },
       error: (error) => {

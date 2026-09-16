@@ -1,13 +1,17 @@
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { provideRouter } from '@angular/router';
 import { ChallengeCard } from './challenge-card';
 import { Challenge } from '../../models/baseModels';
+import { AuthService } from '../../services/auth.service';
 
 describe('ChallengeCard', () => {
   let component: ChallengeCard;
   let fixture: ComponentFixture<ChallengeCard>;
 
   const mockChallenge: Challenge = {
-    id: 'test-challenge',
+    id: 1,
     category: 'Environment',
     title: 'Test Challenge',
     description: 'Test description',
@@ -16,17 +20,25 @@ describe('ChallengeCard', () => {
     rewardPool: '$10,000',
     deadline: new Date('2025-12-31'),
     tags: ['test', 'example'],
-    votes: 50
+    votes: 50,
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z'
   };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ChallengeCard]
+      imports: [ChallengeCard],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        { provide: AuthService, useValue: { isLoggedIn: signal(false) } },
+        { provide: MatDialog, useValue: { open: jasmine.createSpy('open') } }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChallengeCard);
     component = fixture.componentInstance;
-    component.challenge = mockChallenge;
+    fixture.componentRef.setInput('challenge', mockChallenge);
     component.ideasCount = 5;
     fixture.detectChanges();
   });
@@ -45,7 +57,7 @@ describe('ChallengeCard', () => {
     spyOn(component.voteChallenge, 'emit');
     const voteButton = fixture.nativeElement.querySelector('.vote-btn-large');
     voteButton.click();
-    expect(component.voteChallenge.emit).toHaveBeenCalledWith('test-challenge');
+    expect(component.voteChallenge.emit).toHaveBeenCalledWith(1);
   });
 
   it('should return correct urgency class', () => {

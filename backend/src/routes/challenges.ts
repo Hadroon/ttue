@@ -1,7 +1,8 @@
 import { db } from "../db";
-import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentVotes, challengeDrafts, challengeDraftRevisions, challengeDraftProposals } from "../db/schema";
+import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentVotes, challengeDrafts, challengeDraftRevisions, challengeDraftProposals, domains } from "../db/schema";
 import { eq, desc, and, sql, or } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
+import { applyReputationChange, getVoteDelta } from "../services/reputation";
 
 // Get all challenges with top idea and comments
 export async function handleGetChallenges(req: Request): Promise<Response> {
@@ -174,12 +175,12 @@ export async function handleCreateChallenge(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const { category, title, description, urgency, rewardPool, deadline, tags: tagList } = await req.json();
+    const { category, domainSlug, title, description, urgency, rewardPool, deadline, tags: tagList } = await req.json();
 
     // Validate input
-    if (!category || !title || !description || !urgency) {
+    if (!category || !domainSlug || !title || !description || !urgency) {
       return new Response(
-        JSON.stringify({ error: "Category, title, description, and urgency are required" }),
+        JSON.stringify({ error: "Category, domain, title, description, and urgency are required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -193,10 +194,25 @@ export async function handleCreateChallenge(req: Request): Promise<Response> {
       );
     }
 
+    const [domain] = await db
+      .select({ id: domains.id, slug: domains.slug, name: domains.name })
+      .from(domains)
+      .where(eq(domains.slug, domainSlug))
+      .limit(1);
+
+    if (!domain) {
+      return new Response(
+        JSON.stringify({ error: "Invalid civic domain" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Create challenge
     const [newChallenge] = await db
       .insert(challenges)
       .values({
+        creatorId: authResult.user.userId,
+        domainId: domain.id,
         category,
         title,
         description,
@@ -210,7 +226,7 @@ export async function handleCreateChallenge(req: Request): Promise<Response> {
       .returning();
 
     return new Response(
-      JSON.stringify(newChallenge),
+      JSON.stringify({ ...newChallenge, domainSlug: domain.slug, domainName: domain.name }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -237,76 +253,79 @@ export async function handleVoteChallenge(req: Request): Promise<Response> {
       );
     }
 
-    // Check if challenge is marked
-    const [challenge] = await db
-      .select({ isMarked: challenges.isMarked })
-      .from(challenges)
-      .where(eq(challenges.id, challengeId))
-      .limit(1);
+    const result = await db.transaction(async (tx) => {
+      const [challenge] = await tx
+        .select()
+        .from(challenges)
+        .where(eq(challenges.id, challengeId))
+        .limit(1)
+        .for("update");
 
-    if (challenge?.isMarked) {
-      return new Response(
-        JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be voted on" }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
-    }
+      if (!challenge) {
+        return { status: 404, body: { error: "Challenge not found" } };
+      }
 
-    // Check if user already voted
-    const existingVote = await db
-      .select()
-      .from(challengeVotes)
-      .where(
-        and(
+      if (challenge.isMarked) {
+        return { status: 403, body: { error: "This content has been reviewed by a moderator and cannot be voted on" } };
+      }
+
+      if (challenge.creatorId === authResult.user.userId) {
+        return { status: 403, body: { error: "You cannot vote on your own content" } };
+      }
+
+      const [existingVote] = await tx
+        .select()
+        .from(challengeVotes)
+        .where(and(
           eq(challengeVotes.challengeId, challengeId),
           eq(challengeVotes.userId, authResult.user.userId)
-        )
-      )
-      .limit(1);
+        ))
+        .limit(1);
 
-    if (existingVote.length > 0) {
-      // Remove vote
-      await db
-        .delete(challengeVotes)
-        .where(
-          and(
-            eq(challengeVotes.challengeId, challengeId),
-            eq(challengeVotes.userId, authResult.user.userId)
-          )
-        );
+      const nextValue = existingVote ? null : 1;
+      const reputationDelta = getVoteDelta(existingVote?.value ?? null, nextValue);
 
-      // Decrement challenge votes counter
-      await db
+      if (existingVote) {
+        await tx.delete(challengeVotes).where(eq(challengeVotes.id, existingVote.id));
+      } else {
+        await tx.insert(challengeVotes).values({
+          challengeId,
+          userId: authResult.user.userId,
+          value: 1,
+        });
+      }
+
+      await tx
         .update(challenges)
-        .set({
-          votes: sql`${challenges.votes} - 1`,
-        })
+        .set({ votes: sql`${challenges.votes} + ${reputationDelta}` })
         .where(eq(challenges.id, challengeId));
 
-      return new Response(
-        JSON.stringify({ message: "Vote removed", voted: false }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    } else {
-      // Add vote
-      await db.insert(challengeVotes).values({
-        challengeId,
-        userId: authResult.user.userId,
-        value: 1,
-      });
+      if (challenge.creatorId != null) {
+        await applyReputationChange(tx, {
+          userId: challenge.creatorId,
+          actorId: authResult.user.userId,
+          domainId: challenge.domainId,
+          amount: reputationDelta,
+          actionType: "CHALLENGE_VOTE",
+          contentType: "challenge",
+          contentId: challengeId,
+        });
+      }
 
-      // Increment challenge votes counter
-      await db
-        .update(challenges)
-        .set({
-          votes: sql`${challenges.votes} + 1`,
-        })
-        .where(eq(challenges.id, challengeId));
+      return {
+        status: 200,
+        body: {
+          message: existingVote ? "Vote removed" : "Vote added",
+          votes: challenge.votes + reputationDelta,
+          voted: !existingVote,
+        },
+      };
+    });
 
-      return new Response(
-        JSON.stringify({ message: "Vote added", voted: true }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    return new Response(JSON.stringify(result.body), {
+      status: result.status,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error voting on challenge:", error);
     return new Response(
