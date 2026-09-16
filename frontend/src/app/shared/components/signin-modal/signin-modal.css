@@ -21,3 +21,8 @@
     line-height: 1.5;
   }
 }
+
+.app-google-signin-button-cont {
+  display: flex;
+  justify-content: center;
+}

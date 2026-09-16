@@ -4,10 +4,12 @@
   @if (data && data.message) {
     <p class="modal-message">{{ data.message }}</p>
   }
-  <app-google-signin-button
-    (loginSuccess)="onGoogleLoginSuccess($event)"
-    (loginError)="onGoogleLoginError($event)">
-  </app-google-signin-button>
+  <div class="app-google-signin-button-cont">
+    <app-google-signin-button
+      (loginSuccess)="onGoogleLoginSuccess($event)"
+      (loginError)="onGoogleLoginError($event)">
+    </app-google-signin-button>
+  </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
