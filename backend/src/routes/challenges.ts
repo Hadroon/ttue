@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentVotes, challengeDrafts, challengeDraftRevisions, challengeDraftProposals, domains } from "../db/schema";
-import { eq, desc, and, sql, or } from "drizzle-orm";
+import { eq, desc, and, sql, or, getTableColumns } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 import { applyReputationChange, getVoteDelta } from "../services/reputation";
 
@@ -19,6 +19,8 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
     const allChallenges = await db
       .select({
         id: challenges.id,
+        creatorId: challenges.creatorId,
+        creatorUsername: users.username,
         category: challenges.category,
         title: challenges.title,
         description: challenges.description,
@@ -33,6 +35,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
         updatedAt: challenges.updatedAt,
       })
       .from(challenges)
+      .leftJoin(users, eq(challenges.creatorId, users.id))
       .orderBy(desc(challenges.votes), desc(challenges.createdAt))
       .limit(limit)
       .offset(offset);
@@ -391,8 +394,12 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
   try {
     // Get the top 3 highest voted challenges with minimum 1 vote
     const topChallenges = await db
-      .select()
+      .select({
+        ...getTableColumns(challenges),
+        creatorUsername: users.username,
+      })
       .from(challenges)
+      .leftJoin(users, eq(challenges.creatorId, users.id))
       .where(sql`${challenges.votes} >= 1`)
       .orderBy(desc(challenges.votes), desc(challenges.createdAt))
       .limit(3);

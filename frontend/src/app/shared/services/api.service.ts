@@ -96,6 +96,7 @@ export interface Vote {
 export interface Challenge {
   id: number;
   creatorId?: number | null;
+  creatorUsername?: string | null;
   domainId?: number;
   domainSlug?: string;
   domainName?: string;

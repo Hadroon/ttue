@@ -1,15 +1,14 @@
 <article class="challenge-card" [class.is-marked]="challenge().isMarked">
   @if (challenge().isMarked) {
-    <div class="marked-banner">⚠ Reviewed by moderator</div>
+  <div class="marked-banner">⚠ Reviewed by moderator</div>
   }
-  <div class="challenge-vote">
+  <!-- <div class="challenge-vote">
     <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
-      [disabled]="challenge().isMarked"
-      [attr.aria-label]="'Vote for ' + challenge().title">
+      [disabled]="challenge().isMarked" [attr.aria-label]="'Vote for ' + challenge().title">
       <span class="vote-icon">▲</span>
       <span class="vote-count">{{ challenge().votes }}</span>
     </button>
-  </div>
+  </div> -->
   <div class="challenge-content">
     <div class="challenge-header">
       <!-- <div class="challenge-meta">
@@ -26,7 +25,19 @@
     </div>
 
     <div class="challenge-body">
-      <h3>{{ challenge().title }}</h3>
+        <div class="challenge-vote">
+    <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
+      [disabled]="challenge().isMarked" [attr.aria-label]="'Vote for ' + challenge().title">
+      <span class="vote-icon">▲</span>
+      <span class="vote-count">{{ challenge().votes }}</span>
+    </button>
+    <h3>
+      <a class="challenge-title-link" [routerLink]="['/article-workbench']"
+          [queryParams]="{ challengeId: challenge().id }">
+          {{ challenge().title }}
+        </a>
+      </h3>
+    </div>
       <p class="challenge-description">{{ challenge().description }}</p>
 
       <!-- <div class="challenge-stats">
@@ -52,13 +63,16 @@
       </div>
     </div>
     <div class="challenge-actions">
-      <button class="btn secondary sm" (click)="navigateToWorkbench()" [disabled]="challenge().isMarked">Explore Challenge</button>
-      <a class="btn primary sm" [href]="'#join-' + challenge().id">Join challenge</a>
-      <app-content-actions-menu
-        contentType="challenge"
-        [contentId]="challenge().id"
-        [contentLabel]="challenge().title">
-      </app-content-actions-menu>
+      <div class="challenge-actions-left">
+        <span class="challenge-proposer">Proposed by {{ challenge().creatorUsername || 'Unknown' }}</span>
+      </div>
+      <div class="challenge-actions-right">
+          <button class="btn secondary sm" (click)="navigateToWorkbench()" [disabled]="challenge().isMarked">Explore
+            Challenge</button>
+          <app-content-actions-menu contentType="challenge" [contentId]="challenge().id"
+            [contentLabel]="challenge().title">
+          </app-content-actions-menu>
+        </div>
     </div>
   </div>
 </article>

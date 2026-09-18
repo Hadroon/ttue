@@ -14,6 +14,8 @@ export interface Idea {
 
 export interface Challenge {
   id: number;
+  creatorId?: number | null;
+  creatorUsername?: string | null;
   category: string;
   title: string;
   description: string;

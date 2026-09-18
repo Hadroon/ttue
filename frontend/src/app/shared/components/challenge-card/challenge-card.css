@@ -35,8 +35,8 @@
 
 .challenge-vote {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items:first baseline;
   padding-top: 4px;
 }
 
@@ -171,6 +171,19 @@
   color: var(--text);
 }
 
+.challenge-title-link {
+  color: inherit;
+  text-decoration-color: transparent;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  padding-left: 20px;
+}
+
+.challenge-title-link:hover,
+.challenge-title-link:focus-visible {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
 .challenge-description {
   color: var(--muted);
   margin-bottom: 16px;
@@ -213,8 +226,33 @@
 
 .challenge-actions {
   display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-top: auto;
+}
+
+.challenge-actions-left,
+.challenge-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.challenge-proposer {
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .challenge-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .challenge-actions-left {
+    flex-wrap: wrap;
+  }
 }
 

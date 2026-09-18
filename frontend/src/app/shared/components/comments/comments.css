@@ -25,7 +25,9 @@
   /* background: rgba(220, 225, 210, 0.25);  */
   /* background: rgba(255, 214, 165, 0.14);  */
   /* background: rgba(230, 220, 200, 0.20);  */
-  background: rgba(110,168,255,0.10); 
+  /* background: rgba(110,168,255,0.10);  */
+  background: rgb(15, 23, 42); 
+  color: rgb(203, 213, 225);
   /* background: var(--blue-rgba);  */
 
 

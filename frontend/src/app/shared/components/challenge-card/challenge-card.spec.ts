@@ -12,6 +12,7 @@ describe('ChallengeCard', () => {
 
   const mockChallenge: Challenge = {
     id: 1,
+    creatorUsername: 'testuser',
     category: 'Environment',
     title: 'Test Challenge',
     description: 'Test description',
@@ -51,6 +52,7 @@ describe('ChallengeCard', () => {
     const compiled = fixture.nativeElement;
     expect(compiled.querySelector('h3').textContent).toContain('Test Challenge');
     expect(compiled.querySelector('.challenge-description').textContent).toContain('Test description');
+    expect(compiled.querySelector('.challenge-proposer').textContent).toContain('Proposed by testuser');
   });
 
   it('should emit voteChallenge event when vote button is clicked', () => {
