@@ -2,6 +2,12 @@
 
 /* Hero Section */
 
+.title {
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
 .welcome-form {
   position: fixed;
   top: 50%;
@@ -106,7 +112,8 @@
 .lead {
   color: var(--muted);
   font-size: 18px;
-  max-width: 60ch;
+  max-width: 85%;
+  margin-top: 1.5rem;
 }
 
 .gradient-text {
@@ -141,6 +148,172 @@
 .stat-label {
   font-size: 13px;
   color: var(--muted);
+}
+
+/* Hero engagement cards */
+.engagement-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.engagement-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  min-width: 0;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.engagement-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.1);
+}
+
+.engagement-card-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+}
+
+.engagement-card-feedback .engagement-card-accent {
+  background: linear-gradient(to right, #14b8a6, #2563eb);
+}
+
+.engagement-card-support .engagement-card-accent {
+  background: linear-gradient(to right, #2563eb, #f59e0b);
+}
+
+.engagement-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.engagement-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.engagement-card-icon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid;
+  border-radius: 12px;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.engagement-card:hover .engagement-card-icon {
+  transform: scale(1.05);
+}
+
+.engagement-card-feedback .engagement-card-icon,
+.engagement-card-feedback .engagement-card-badge {
+  color: #0f766e;
+  background: #f0fdfa;
+  border-color: #ccfbf1;
+}
+
+.engagement-card-support .engagement-card-icon,
+.engagement-card-support .engagement-card-badge {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #dbeafe;
+}
+
+.engagement-card-badge {
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.engagement-card h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.375;
+  transition: color 0.2s ease;
+}
+
+.engagement-card-feedback:hover h3 {
+  color: #0d9488;
+}
+
+.engagement-card-support:hover h3 {
+  color: #2563eb;
+}
+
+.engagement-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 16px;
+  line-height: 1.625;
+}
+
+.engagement-card-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 8px 12px;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+.engagement-card-feedback .engagement-card-button {
+  background: #0d9488;
+}
+
+.engagement-card-feedback .engagement-card-button:hover {
+  background: #0f766e;
+}
+
+.engagement-card-support .engagement-card-button {
+  background: #2563eb;
+}
+
+.engagement-card-support .engagement-card-button:hover {
+  background: #1d4ed8;
+}
+
+.engagement-card-button:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .engagement-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Demo Card */
