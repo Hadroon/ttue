@@ -64,7 +64,14 @@
     </div>
     <div class="challenge-actions">
       <div class="challenge-actions-left">
-        <span class="challenge-proposer">Proposed by {{ challenge().creatorUsername || 'Unknown' }}</span>
+        <span class="challenge-proposer">
+          Proposed by
+          @if (challenge().creatorUsername; as username) {
+            <a class="challenge-proposer-link" [routerLink]="['/profile', username]">{{ username }}</a>
+          } @else {
+            Unknown
+          }
+        </span>
       </div>
       <div class="challenge-actions-right">
           <button class="btn secondary sm" (click)="navigateToWorkbench()" [disabled]="challenge().isMarked">Explore

@@ -53,6 +53,7 @@ describe('ChallengeCard', () => {
     expect(compiled.querySelector('h3').textContent).toContain('Test Challenge');
     expect(compiled.querySelector('.challenge-description').textContent).toContain('Test description');
     expect(compiled.querySelector('.challenge-proposer').textContent).toContain('Proposed by testuser');
+    expect(compiled.querySelector('.challenge-proposer-link').getAttribute('href')).toBe('/profile/testuser');
   });
 
   it('should emit voteChallenge event when vote button is clicked', () => {

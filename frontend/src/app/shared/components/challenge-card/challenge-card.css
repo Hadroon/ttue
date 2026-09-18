@@ -245,6 +245,18 @@
   white-space: nowrap;
 }
 
+.challenge-proposer-link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration-color: transparent;
+}
+
+.challenge-proposer-link:hover,
+.challenge-proposer-link:focus-visible {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
 @media (max-width: 640px) {
   .challenge-actions {
     align-items: flex-start;
