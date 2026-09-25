@@ -481,6 +481,19 @@
   margin-top: 24px;
 }
 
+.challenges-grid ::ng-deep .ideas-grid .idea-card-mini,
+.challenges-grid ::ng-deep .ideas-grid .idea-card-mini:hover {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transform: none;
+  transition: none;
+}
+
+.challenges-grid ::ng-deep .ideas-header {
+  display: none;
+}
+
 .challenge-card {
   background: var(--card);
   border: 1px solid var(--border);

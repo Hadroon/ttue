@@ -25,6 +25,12 @@
     </div>
 
     <div class="challenge-body">
+        <div class="challenge-step-row">
+          <span class="step-badge">1. Challenge</span>
+          <app-content-actions-menu contentType="challenge" [contentId]="challenge().id"
+            [contentLabel]="challenge().title">
+          </app-content-actions-menu>
+        </div>
         <div class="challenge-vote">
     <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
       [disabled]="challenge().isMarked" [attr.aria-label]="'Vote for ' + challenge().title">
@@ -59,9 +65,6 @@
       <div class="challenge-actions-right">
           <button class="btn secondary sm" (click)="navigateToWorkbench()" [disabled]="challenge().isMarked">Explore
             Challenge</button>
-          <app-content-actions-menu contentType="challenge" [contentId]="challenge().id"
-            [contentLabel]="challenge().title">
-          </app-content-actions-menu>
         </div>
     </div>
   </div>

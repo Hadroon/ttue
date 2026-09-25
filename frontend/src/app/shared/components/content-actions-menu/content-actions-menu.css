@@ -11,14 +11,15 @@
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--muted);
+  font-weight: 700;
   letter-spacing: 1px;
   transition: background 0.15s, color 0.15s;
 }
 
 .cam-trigger:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--border);
+  color: var(--brand);
 }
 
 .cam-dropdown {

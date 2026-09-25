@@ -29,6 +29,10 @@ export class AuthService {
    */
   private initializeAuth() {
     const token = localStorage.getItem('auth_token');
+    if (token && this.isTokenExpired(token)) {
+      this.logout();
+      return;
+    }
     if (token) {
       // Token exists, could verify it here or just mark as logged in
       // For now, we'll rely on the token being valid
@@ -96,6 +100,21 @@ export class AuthService {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return this.getToken() !== null && this._currentUser() !== null;
+    const token = this.getToken();
+    if (token && this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+    return token !== null && this._currentUser() !== null;
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const { exp } = JSON.parse(atob(payload));
+      return typeof exp === 'number' && exp * 1000 <= Date.now();
+    } catch {
+      return true;
+    }
   }
 }

@@ -54,29 +54,27 @@
             <div class="marked-banner">⚠ Reviewed by moderator</div>
           }
           <div class="idea-card-header">
-            <div class="idea-meta">
-              <span class="status-badge-mini" [class]="getStatusClass(idea.status)">
-                <span class="status-icon">{{ getStatusIcon(idea.status) }}</span>
-                {{ idea.status }}
-              </span>
-            </div>
-            <div class="idea-vote-mini">
+            <span class="step-badge-solution">2. Leading Solution</span>
+            <app-content-actions-menu
+              contentType="idea"
+              [contentId]="idea.id"
+              [contentLabel]="idea.title">
+            </app-content-actions-menu>
+          </div>
+
+          <div class="idea-card-body">
+            <div class="idea-vote-row">
               <button class="vote-btn-mini" [class.voted]="idea.voted" (click)="onVoteIdea(idea.id)"
                 [disabled]="idea.isMarked"
                 [attr.aria-label]="'Vote for ' + idea.title">
                 <span class="vote-icon">▲</span>
                 <span class="vote-count">{{ idea.votes }}</span>
               </button>
-              <app-content-actions-menu
-                contentType="idea"
-                [contentId]="idea.id"
-                [contentLabel]="idea.title">
-              </app-content-actions-menu>
+              <h3 class="idea-title">
+                <a class="idea-title-link" [routerLink]="['/article-workbench']"
+                  [queryParams]="{ challengeId: challengeId, section: 'ideas' }">{{ idea.title }}</a>
+              </h3>
             </div>
-          </div>
-
-          <div class="idea-card-body">
-            <h4 class="idea-title">{{ idea.title }}</h4>
             <p class="idea-description-mini">{{ idea.description }}</p>
 
             <div class="idea-footer">

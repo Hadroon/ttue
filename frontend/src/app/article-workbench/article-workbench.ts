@@ -178,6 +178,10 @@ export class ArticleWorkbench implements AfterViewInit {
     
     // Read challengeId from query parameters and fetch challenge
     this.route.queryParams.subscribe(params => {
+      const section = params['section'];
+      if (['challenge', 'draft', 'diff', 'comments', 'ideas'].includes(section)) {
+        this.activeSection.set(section);
+      }
       const id = params['challengeId'];
       if (id) {
         const numericId = Number(id);
@@ -288,7 +292,7 @@ export class ArticleWorkbench implements AfterViewInit {
       return;
     }
 
-    setTimeout(() => this.scrollToSection('challenge'), 0);
+    setTimeout(() => this.scrollToSection(this.activeSection()), 0);
 
     if (this.editorArea) {
       this.editorArea.nativeElement.innerHTML = this.draftHtml();

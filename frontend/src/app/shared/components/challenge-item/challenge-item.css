@@ -8,12 +8,20 @@
 }
 
 :host ::ng-deep .challenge-with-ideas app-challenge-card {
+  display: block;
   border-radius: 16px 0 0 0;
 }
 
 :host ::ng-deep .challenge-with-ideas app-challenge-ideas {
+  display: block;
   min-width: 380px;
   border-radius: 0 0 0 0;
+}
+
+:host ::ng-deep .challenge-with-ideas .challenge-card,
+:host ::ng-deep .challenge-with-ideas .challenge-ideas-container {
+  height: 100%;
+  box-sizing: border-box;
 }
 
 :host ::ng-deep .challenge-with-ideas app-comments {

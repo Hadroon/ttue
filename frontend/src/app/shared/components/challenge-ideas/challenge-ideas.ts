@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Idea } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
@@ -8,7 +9,7 @@ import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu
 @Component({
   selector: 'app-challenge-ideas',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, ContentActionsMenu],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu],
   templateUrl: './challenge-ideas.html',
   styleUrl: './challenge-ideas.css'
 })
