@@ -38,24 +38,7 @@
         </a>
       </h3>
     </div>
-      <p class="challenge-description">{{ challenge().description }}</p>
-
-      <!-- <div class="challenge-stats">
-        <div class="stat-item">
-          <span class="stat-icon">👥</span>
-          <span>{{ challenge.participantCount }} participants</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-icon">💡</span>
-          <span>{{ ideasCount }} ideas</span>
-        </div>
-        @if (challenge.deadline) {
-        <div class="stat-item">
-          <span class="stat-icon">⏱️</span>
-          <span>{{ formatDeadline(challenge.deadline) }}</span>
-        </div>
-        }
-      </div> -->
+      <p class="challenge-description" [attr.title]="challenge().description">{{ challenge().description }}</p>
       <div class="challenge-tags">
         @for (tag of challenge().tags; track tag) {
         <span class="tag">#{{ tag }}</span>
