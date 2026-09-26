@@ -44,7 +44,7 @@
         </a>
       </h3>
     </div>
-      <p class="challenge-description" [attr.title]="challenge().description">{{ challenge().description }}</p>
+      <div class="challenge-description rich-text" [innerHTML]="challenge().description"></div>
       <div class="challenge-tags">
         @for (tag of challenge().tags; track tag) {
         <span class="tag">#{{ tag }}</span>

@@ -33,7 +33,7 @@
           <div class="challenge-context" style="margin-bottom: 1rem;">
             <span class="chip">Challenge: {{ challenge()!.category }}</span>
             <h1>{{ challenge()!.title }}</h1>
-            <p class="lead">{{ challenge()!.description }}</p>
+            <div class="lead rich-text" [innerHTML]="challenge()!.description"></div>
           </div>
         } @else if (loadingChallenge()) {
           <p class="lead">Loading challenge...</p>

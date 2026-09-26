@@ -321,6 +321,32 @@ a {
   border-radius: 12px;
 }
 
+/* ===== Rich text (output of app-rich-text-editor) ===== */
+.rich-text {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.rich-text p,
+.rich-text ul,
+.rich-text ol {
+  margin: 0 0 .5em;
+  white-space: normal;
+}
+
+.rich-text > :last-child {
+  margin-bottom: 0;
+}
+
+.rich-text ul,
+.rich-text ol {
+  padding-left: 1.4em;
+}
+
+.rich-text a {
+  color: var(--brand);
+}
+
 /* ===== Accessibility ===== */
 :focus-visible {
   outline: 3px solid rgba(110, 168, 255, 0.7);

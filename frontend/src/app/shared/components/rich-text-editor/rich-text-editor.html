@@ -1,0 +1,78 @@
+@if (label()) {
+  <span class="rte-label" [id]="labelId">{{ label() }}@if (required()) {<span aria-hidden="true"> *</span>}</span>
+}
+
+<div class="rte" [class.focused]="isFocused()" [class.disabled]="disabled()">
+  <div class="rte-toolbar" role="toolbar" [attr.aria-label]="(label() || 'Text') + ' formatting'">
+    @for (action of actions; track action.command) {
+      <button type="button"
+              class="rte-btn"
+              [class.active]="activeCommands().has(action.command)"
+              [attr.aria-label]="action.label"
+              [attr.aria-pressed]="activeCommands().has(action.command)"
+              [title]="action.label"
+              [disabled]="disabled()"
+              (mousedown)="$event.preventDefault()"
+              (click)="apply(action.command)">
+        <span class="material-symbols-outlined">{{ action.icon }}</span>
+      </button>
+    }
+    <span class="rte-divider" aria-hidden="true"></span>
+    <button type="button" class="rte-btn" aria-label="Insert link" title="Insert link"
+            [class.active]="linkPanelOpen()"
+            [attr.aria-expanded]="linkPanelOpen()"
+            [disabled]="disabled()"
+            (mousedown)="$event.preventDefault()" (click)="linkPanelOpen() ? cancelLink() : openLinkPanel()">
+      <span class="material-symbols-outlined">link</span>
+    </button>
+    <button type="button" class="rte-btn" aria-label="Clear formatting" title="Clear formatting"
+            [disabled]="disabled()"
+            (mousedown)="$event.preventDefault()" (click)="clearFormatting()">
+      <span class="material-symbols-outlined">format_clear</span>
+    </button>
+  </div>
+
+  @if (linkPanelOpen()) {
+    <div class="rte-link-panel" role="group" aria-label="Link">
+      <span class="material-symbols-outlined rte-link-icon" aria-hidden="true">link</span>
+      <input #linkInput
+             type="text"
+             inputmode="url"
+             class="rte-link-input"
+             placeholder="example.com"
+             aria-label="Link URL"
+             [attr.aria-invalid]="!!linkError()"
+             [value]="linkUrl()"
+             (input)="onLinkUrlInput($any($event.target).value)"
+             (keydown)="onLinkKeydown($event)">
+      <button type="button" class="btn primary sm" (click)="applyLink()">Apply</button>
+      @if (hasExistingLink()) {
+        <button type="button" class="btn secondary sm" (click)="removeLink()">Remove</button>
+      }
+      <button type="button" class="rte-btn" aria-label="Cancel" title="Cancel" (click)="cancelLink()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      @if (linkError()) {
+        <p class="rte-link-error" role="alert">{{ linkError() }}</p>
+      }
+    </div>
+  }
+
+  <div #surface
+       class="rte-surface rich-text"
+       role="textbox"
+       aria-multiline="true"
+       [attr.aria-labelledby]="label() ? labelId : null"
+       [attr.aria-required]="required()"
+       [attr.contenteditable]="!disabled()"
+       [attr.data-placeholder]="placeholder()"
+       [class.empty]="isEmpty()"
+       [style.min-height]="minHeight()"
+       spellcheck="true"
+       (input)="onInput()"
+       (focus)="onFocus()"
+       (blur)="onBlur()"
+       (paste)="onPaste($event)"
+       (keyup)="refreshActiveState()"
+       (mouseup)="refreshActiveState()"></div>
+</div>
