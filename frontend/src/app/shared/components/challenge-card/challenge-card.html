@@ -47,7 +47,7 @@
       <div class="challenge-description rich-text" [innerHTML]="challenge().description"></div>
       <div class="challenge-tags">
         @for (tag of challenge().tags; track tag) {
-        <span class="tag">#{{ tag }}</span>
+        <button type="button" class="tag" (click)="onTagClick(tag)">#{{ tag }}</button>
         }
       </div>
     </div>

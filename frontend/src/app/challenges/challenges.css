@@ -1,5 +1,32 @@
 /* ===== Home Component Styles ===== */
 
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.toolbar-search {
+  width: 280px;
+  max-width: 50%;
+  font-size: 14px;
+}
+
+.toolbar-date {
+  width: 280px;
+  margin-left: 12px;
+  font-size: 14px;
+}
+
+.toolbar-tags {
+  width: 260px;
+  margin-left: 12px;
+  font-size: 14px;
+}
+
+.selected-tags {
+  display: block;
+  margin: 8px 0;
+}
+
 /* Hero Section */
 
 .welcome-form {

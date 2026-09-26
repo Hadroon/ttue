@@ -9,10 +9,59 @@
   <!-- ===== Ideas & Challenges ===== -->
   <section class="ideas-challenges" id="ideas-challenges">
     <div class="container">
+      
       <div class="section-head">
         <h2>Challenges & Ideas</h2>
         <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
       </div>
+      <mat-toolbar class="challenges-toolbar">
+        <span>Challenges</span>
+        <span class="toolbar-spacer"></span>
+        <mat-form-field class="toolbar-search" appearance="outline" subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput type="text" placeholder="Search challenges" aria-label="Search challenges"
+            [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)">
+          @if (searchTerm()) {
+            <button matIconButton matSuffix type="button" aria-label="Clear search" (click)="searchTerm.set('')">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+        <mat-form-field class="toolbar-date" appearance="outline" subscriptSizing="dynamic">
+          <mat-date-range-input [rangePicker]="rangePicker" aria-label="Created between">
+            <input matStartDate placeholder="From" [value]="fromDate()" (dateChange)="fromDate.set($event.value)">
+            <input matEndDate placeholder="To" [value]="toDate()" (dateChange)="toDate.set($event.value)">
+          </mat-date-range-input>
+          @if (fromDate() || toDate()) {
+            <button matIconButton matSuffix type="button" aria-label="Clear dates" (click)="fromDate.set(null); toDate.set(null)">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+          <mat-datepicker-toggle matSuffix [for]="rangePicker"></mat-datepicker-toggle>
+          <mat-date-range-picker #rangePicker></mat-date-range-picker>
+        </mat-form-field>
+        <mat-form-field class="toolbar-tags" appearance="outline" subscriptSizing="dynamic">
+          <input #tagInput matInput placeholder="Tags" aria-label="Search tags"
+            [matAutocomplete]="tagAuto" (input)="tagSearch.set(tagInput.value)">
+          <mat-autocomplete #tagAuto (optionSelected)="addTag($event.option.value, tagInput)">
+            @for (tag of tagOptions(); track tag) {
+              <mat-option [value]="tag">{{ tag }}</mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+      </mat-toolbar>
+      @if (selectedTags().length) {
+        <mat-chip-set class="selected-tags" aria-label="Selected tags">
+          @for (tag of selectedTags(); track tag) {
+            <mat-chip (removed)="removeTag(tag)">
+              {{ tag }}
+              <button matChipRemove [attr.aria-label]="'Remove ' + tag">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          }
+        </mat-chip-set>
+      }
 
       <!-- Challenges Tab -->
         <div class="challenges-grid">

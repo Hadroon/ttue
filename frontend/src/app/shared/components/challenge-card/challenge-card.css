@@ -249,6 +249,12 @@
   border-radius: 6px;
   font-size: 12px;
   border: 1px solid var(--border);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tag:hover {
+  color: var(--text);
 }
 
 .challenge-actions {

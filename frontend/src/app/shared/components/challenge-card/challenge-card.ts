@@ -26,6 +26,18 @@ export class ChallengeCard implements OnInit {
     console.log('ChallengeCard challenge:', this.challenge());
   }
 
+  // On /challenges the tag is added to the current filter; elsewhere it starts a new one
+  onTagClick(tag: string) {
+    const url = this.router.parseUrl(this.router.url);
+    const onChallenges = url.root.children['primary']?.segments.map(s => s.path).join('/') === 'challenges';
+    const current = onChallenges ? url.queryParamMap.getAll('tag') : [];
+    if (current.includes(tag)) return;
+    this.router.navigate(['/challenges'], {
+      queryParams: { tag: [...current, tag] },
+      queryParamsHandling: onChallenges ? 'merge' : ''
+    });
+  }
+
   getUrgencyClass(urgency: string): string {
     switch (urgency) {
       case 'Critical': return 'urgency-critical';

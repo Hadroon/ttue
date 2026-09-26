@@ -1,4 +1,16 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
 import { Header, ChallengeItem } from '../shared/components';
 import { ApiService, FeaturedChallenge } from '../shared/services/api.service';
 import { Idea, Comment as BaseComment } from '../shared/models/baseModels';
@@ -7,7 +19,7 @@ import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-challenges',
-  imports: [Header, ChallengeItem],
+  imports: [Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })
@@ -15,6 +27,8 @@ export class Challenges implements OnInit {
   private apiService = inject(ApiService);
   private authGuard = inject(AuthGuardService);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   
   // State management with signals
   challengesData = signal<FeaturedChallenge[]>([]); // Made public for debugging
@@ -22,18 +36,69 @@ export class Challenges implements OnInit {
   isLoading = signal(false);
   hasMore = signal(true);
   loadError = signal<string | null>(null);
+  searchTerm = signal('');
+  fromDate = signal<Date | null>(null);
+  toDate = signal<Date | null>(null);
+  selectedTags = toSignal(
+    this.route.queryParamMap.pipe(map(params => params.getAll('tag'))),
+    { initialValue: [] as string[] }
+  );
+  tagSearch = signal('');
+
+  allTags = computed(() =>
+    [...new Set(this.challengesData().flatMap(item => item.challenge.tags ?? []))].sort()
+  );
+
+  tagOptions = computed(() => {
+    const term = this.tagSearch().trim().toLowerCase();
+    const selected = this.selectedTags();
+    return this.allTags().filter(tag => !selected.includes(tag) && tag.toLowerCase().includes(term));
+  });
   
   readonly pageSize = 20;
 
   // Transform API data to match component expectations
   challenges = computed(() => {
-    return this.challengesData().map(item => ({
+    const term = this.searchTerm().trim().toLowerCase();
+    const from = this.fromDate()?.getTime();
+    const to = this.toDate();
+    // Make the end date inclusive of the whole day
+    const toEnd = to ? new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1).getTime() : undefined;
+    const tags = this.selectedTags();
+    return this.challengesData()
+      .filter(item => tags.every(tag => item.challenge.tags?.includes(tag)))
+      .filter(item => {
+        const created = new Date(item.challenge.createdAt).getTime();
+        return (!from || created >= from) && (!toEnd || created < toEnd);
+      })
+      .filter(item => !term
+        || item.challenge.title.toLowerCase().includes(term)
+        || item.challenge.description.toLowerCase().includes(term))
+      .map(item => ({
       challenge: item.challenge,
       ideas: item.topIdea ? [this.apiIdeaToIdea(item.topIdea)] : [],
       ideaCount: item.ideaCount,
       comments: item.comments.map(c => this.apiCommentToBaseComment(c, item.challenge.id))
     }));
   });
+
+  addTag(tag: string, input: HTMLInputElement) {
+    this.setTags([...this.selectedTags(), tag]);
+    input.value = '';
+    this.tagSearch.set('');
+  }
+
+  removeTag(tag: string) {
+    this.setTags(this.selectedTags().filter(t => t !== tag));
+  }
+
+  private setTags(tags: string[]) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tag: tags.length ? tags : null },
+      queryParamsHandling: 'merge'
+    });
+  }
 
   private apiIdeaToIdea(idea: any): Idea {
     return {
