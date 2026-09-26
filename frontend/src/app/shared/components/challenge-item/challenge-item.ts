@@ -59,7 +59,7 @@ export class ChallengeItem implements OnInit {
     console.log('All comments:', this.allComments);
     
     // Load draft if exists
-    this.loadDraft();
+    // this.loadDraft();
   }
   
   loadDraft() {
