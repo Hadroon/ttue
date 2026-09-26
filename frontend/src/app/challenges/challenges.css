@@ -27,6 +27,14 @@
   margin: 8px 0;
 }
 
+.challenges-toolbar.mat-toolbar-single-row {
+  padding: 0;
+}
+
+mat-paginator ::ng-deep .mat-mdc-paginator-container {
+  padding: 0;
+}
+
 /* Hero Section */
 
 .welcome-form {

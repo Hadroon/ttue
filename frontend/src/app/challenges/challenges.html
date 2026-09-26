@@ -63,6 +63,19 @@
         </mat-chip-set>
       }
 
+      @if (total() > 0) {
+        <mat-paginator
+          [length]="total()"
+          [pageIndex]="pageIndex()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoading()"
+          showFirstLastButtons
+          aria-label="Select challenges page (top)"
+          (page)="onPage($event)">
+        </mat-paginator>
+      }
+
       <!-- Challenges Tab -->
         <div class="challenges-grid">
           <!-- Debug info -->
