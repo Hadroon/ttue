@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, map } from 'rxjs';
 import {
   CivicActivity,
   CivicActivityKind,
@@ -204,6 +204,15 @@ export interface FeaturedChallenge {
   topIdea: Idea | null;
   ideaCount: number;
   comments: Comment[];
+}
+
+export interface ChallengeSearch {
+  page: number;
+  limit: number;
+  q?: string;
+  from?: Date | null;
+  to?: Date | null;
+  tags?: string[];
 }
 
 export interface IdeaRevision {
@@ -615,6 +624,31 @@ export class ApiService {
         limit: limit.toString() 
       }
     });
+  }
+
+  /**
+   * Search challenges on the server; `to` is exclusive
+   */
+  searchChallenges(filter: ChallengeSearch): Observable<{ items: FeaturedChallenge[]; total: number }> {
+    const params: Record<string, string | string[]> = {
+      page: filter.page.toString(),
+      limit: filter.limit.toString()
+    };
+    if (filter.q) params['q'] = filter.q;
+    if (filter.from) params['from'] = filter.from.toISOString();
+    if (filter.to) params['to'] = filter.to.toISOString();
+    if (filter.tags?.length) params['tag'] = filter.tags;
+
+    return this.http
+      .get<FeaturedChallenge[]>(`${this.baseUrl}/challenges`, { params, observe: 'response' })
+      .pipe(map(res => ({
+        items: res.body ?? [],
+        total: Number(res.headers.get('X-Total-Count') ?? res.body?.length ?? 0)
+      })));
+  }
+
+  getChallengeTags(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/challenges/tags`);
   }
 
   /**

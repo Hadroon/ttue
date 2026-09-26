@@ -9,7 +9,7 @@ import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
 import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, handleDeleteIdea } from "./routes/ideas";
 import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
-import { handleGetChallenges, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal, handleGetChallengeComments } from "./routes/challenges";
+import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal, handleGetChallengeComments } from "./routes/challenges";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleGetCivicProfile, handleGetDomains, handleGetUserActivity, handleGetUserReputation } from "./routes/profiles";
@@ -189,6 +189,9 @@ serve({
       }
       if (url.pathname === "/api/challenges/featured" && req.method === "GET") {
         return handleGetFeaturedChallenge(req);
+      }
+      if (url.pathname === "/api/challenges/tags" && req.method === "GET") {
+        return handleGetChallengeTags();
       }
       if (url.pathname === "/api/challenges" && req.method === "POST") {
         return handleCreateChallenge(req);

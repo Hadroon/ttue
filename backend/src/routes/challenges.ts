@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentVotes, challengeDrafts, challengeDraftRevisions, challengeDraftProposals, domains } from "../db/schema";
-import { eq, desc, and, sql, or, getTableColumns } from "drizzle-orm";
+import { eq, desc, and, sql, or, getTableColumns, ilike, gte, lt, type SQL } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 import { applyReputationChange, getVoteDelta } from "../services/reputation";
 
@@ -12,9 +12,31 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
   try {
     // Parse pagination parameters from query string
     const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1') || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20') || 20));
     const offset = (page - 1) * limit;
+
+    // Optional filters: q (title/description), from/to (createdAt, to is exclusive), tag (repeatable, AND)
+    const filters: SQL[] = [];
+    const q = url.searchParams.get('q')?.trim();
+    if (q) {
+      const pattern = `%${q.replace(/[\\%_]/g, '\\$&')}%`;
+      filters.push(or(ilike(challenges.title, pattern), ilike(challenges.description, pattern))!);
+    }
+    const from = new Date(url.searchParams.get('from') ?? '');
+    if (!isNaN(from.getTime())) filters.push(gte(challenges.createdAt, from));
+    const to = new Date(url.searchParams.get('to') ?? '');
+    if (!isNaN(to.getTime())) filters.push(lt(challenges.createdAt, to));
+    const tagList = url.searchParams.getAll('tag').filter(Boolean);
+    if (tagList.length) {
+      filters.push(sql`${challenges.tags}::jsonb @> ${JSON.stringify(tagList)}::jsonb`);
+    }
+    const where = filters.length ? and(...filters) : undefined;
+
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(challenges)
+      .where(where);
 
     const allChallenges = await db
       .select({
@@ -36,6 +58,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
       })
       .from(challenges)
       .leftJoin(users, eq(challenges.creatorId, users.id))
+      .where(where)
       .orderBy(desc(challenges.votes), desc(challenges.createdAt))
       .limit(limit)
       .offset(offset);
@@ -161,12 +184,33 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
 
     return new Response(
       JSON.stringify(challengesWithData),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json", "X-Total-Count": String(total) } }
     );
   } catch (error) {
     console.error("Error fetching challenges:", error);
     return new Response(
       JSON.stringify({ error: "Failed to fetch challenges" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// Get all distinct challenge tags
+export async function handleGetChallengeTags(): Promise<Response> {
+  try {
+    const rows = await db.execute<{ tag: string }>(sql`
+      SELECT DISTINCT jsonb_array_elements_text(${challenges.tags}::jsonb) AS tag
+      FROM ${challenges}
+      ORDER BY tag
+    `);
+    return new Response(
+      JSON.stringify(rows.map(r => r.tag)),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Error fetching challenge tags:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to fetch tags" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

@@ -1,7 +1,8 @@
-import { Component, signal, inject, OnInit, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, signal, inject, OnInit, computed, linkedSignal, DestroyRef, Injector } from '@angular/core';
+import { toSignal, toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, switchMap, tap, catchError, of } from 'rxjs';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,7 +20,7 @@ import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-challenges',
-  imports: [Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule],
+  imports: [Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule, MatPaginatorModule],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })
@@ -29,51 +30,68 @@ export class Challenges implements OnInit {
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  private injector = inject(Injector);
   
   // State management with signals
   challengesData = signal<FeaturedChallenge[]>([]); // Made public for debugging
-  currentPage = signal(1);
   isLoading = signal(false);
-  hasMore = signal(true);
   loadError = signal<string | null>(null);
+  total = signal(0);
   searchTerm = signal('');
   fromDate = signal<Date | null>(null);
   toDate = signal<Date | null>(null);
   selectedTags = toSignal(
-    this.route.queryParamMap.pipe(map(params => params.getAll('tag'))),
+    this.route.queryParamMap.pipe(
+      map(params => params.getAll('tag')),
+      distinctUntilChanged((a, b) => a.join('\u0000') === b.join('\u0000'))
+    ),
     { initialValue: [] as string[] }
   );
   tagSearch = signal('');
-
-  allTags = computed(() =>
-    [...new Set(this.challengesData().flatMap(item => item.challenge.tags ?? []))].sort()
-  );
+  allTags = signal<string[]>([]);
 
   tagOptions = computed(() => {
     const term = this.tagSearch().trim().toLowerCase();
     const selected = this.selectedTags();
     return this.allTags().filter(tag => !selected.includes(tag) && tag.toLowerCase().includes(term));
   });
-  
-  readonly pageSize = 20;
+
+  readonly pageSizeOptions = [10, 20, 50, 100];
+  pageSize = signal(20);
+
+  private debouncedSearch = toSignal(
+    toObservable(this.searchTerm).pipe(debounceTime(300), map(s => s.trim()), distinctUntilChanged()),
+    { initialValue: '' }
+  );
+
+  private filters = computed(() => {
+    const to = this.toDate();
+    return {
+      q: this.debouncedSearch(),
+      from: this.fromDate(),
+      // Server treats `to` as exclusive, so send the start of the next day
+      to: to ? new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1) : null,
+      tags: this.selectedTags()
+    };
+  });
+
+  // Resets to the first page whenever filters or page size change
+  pageIndex = linkedSignal({
+    source: () => [this.filters(), this.pageSize()],
+    computation: () => 0
+  });
+
+  private reloadTick = signal(0);
+
+  private request = computed(() => {
+    this.reloadTick();
+    return { ...this.filters(), page: this.pageIndex() + 1, limit: this.pageSize() };
+  });
 
   // Transform API data to match component expectations
   challenges = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const from = this.fromDate()?.getTime();
-    const to = this.toDate();
-    // Make the end date inclusive of the whole day
-    const toEnd = to ? new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1).getTime() : undefined;
-    const tags = this.selectedTags();
     return this.challengesData()
-      .filter(item => tags.every(tag => item.challenge.tags?.includes(tag)))
-      .filter(item => {
-        const created = new Date(item.challenge.createdAt).getTime();
-        return (!from || created >= from) && (!toEnd || created < toEnd);
-      })
-      .filter(item => !term
-        || item.challenge.title.toLowerCase().includes(term)
-        || item.challenge.description.toLowerCase().includes(term))
       .map(item => ({
       challenge: item.challenge,
       ideas: item.topIdea ? [this.apiIdeaToIdea(item.topIdea)] : [],
@@ -134,68 +152,45 @@ export class Challenges implements OnInit {
   }
 
   ngOnInit() {
-    this.loadChallenges();
-    // Refetch currently loaded challenges so voted state reflects the logged-in user
-    this.authService.loginSuccess$.subscribe(() => this.refreshVotedState());
-  }
-
-  private refreshVotedState() {
-    this.apiService.getChallenges(1, this.currentPage() * this.pageSize).subscribe({
-      next: (data) => this.challengesData.set(data),
-      error: (error) => console.error('Error refreshing voted state:', error)
-    });
-  }
-
-  loadChallenges(append: boolean = false) {
-    if (this.isLoading()) {
-      return;
-    }
-    
-    // Don't reload if we already have data on initial load
-    if (!append && this.challengesData().length > 0) {
-      return;
-    }
-
-    this.isLoading.set(true);
-    this.loadError.set(null);
-    const page = append ? this.currentPage() + 1 : 1;
-
-    console.log('Loading challenges, page:', page, 'append:', append);
-
-    this.apiService.getChallenges(page, this.pageSize).subscribe({
-      next: (data) => {
-        console.log('Challenges loaded:', data);
-        if (append) {
-          // Append for infinite scroll
-          this.challengesData.set([...this.challengesData(), ...data]);
-        } else {
-          // Replace on initial load
-          this.challengesData.set(data);
-        }
-        
-        this.currentPage.set(page);
-        this.hasMore.set(data.length === this.pageSize);
-        this.isLoading.set(false);
-        console.log('Challenges state updated:', this.challengesData().length, 'challenges');
-      },
-      error: (error) => {
-        console.error('Error loading challenges:', error);
-        this.loadError.set('Failed to load challenges. Please try again.');
-        this.isLoading.set(false);
+    toObservable(this.request, { injector: this.injector }).pipe(
+      tap(() => {
+        this.isLoading.set(true);
+        this.loadError.set(null);
+      }),
+      switchMap(req => this.apiService.searchChallenges(req).pipe(
+        catchError(error => {
+          console.error('Error loading challenges:', error);
+          this.loadError.set('Failed to load challenges. Please try again.');
+          return of(null);
+        })
+      )),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(result => {
+      if (result) {
+        this.challengesData.set(result.items);
+        this.total.set(result.total);
       }
+      this.isLoading.set(false);
     });
-  }
-  
-  retry() {
-    this.challengesData.set([]);
-    this.loadError.set(null);
-    this.loadChallenges();
+
+    this.apiService.getChallengeTags().subscribe({
+      next: tags => this.allTags.set(tags),
+      error: error => console.error('Error loading tags:', error)
+    });
+
+    // Refetch current page so voted state reflects the logged-in user
+    this.authService.loginSuccess$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.retry());
   }
 
-  loadMore() {
-    if (!this.isLoading() && this.hasMore()) {
-      this.loadChallenges(true);
-    }
+  retry() {
+    this.reloadTick.update(n => n + 1);
+  }
+
+  onPage(event: PageEvent) {
+    this.pageSize.set(event.pageSize);
+    this.pageIndex.set(event.pageIndex);
   }
 
   onVoteChallenge(challengeId: number) {

@@ -104,10 +104,17 @@
           </div>
         }
         
-        @if (hasMore() && !isLoading() && challenges().length > 0) {
-          <div class="load-more-container">
-            <button class="btn secondary" (click)="loadMore()">Load More Challenges</button>
-          </div>
+        @if (total() > 0) {
+          <mat-paginator
+            [length]="total()"
+            [pageIndex]="pageIndex()"
+            [pageSize]="pageSize()"
+            [pageSizeOptions]="pageSizeOptions"
+            [disabled]="isLoading()"
+            showFirstLastButtons
+            aria-label="Select challenges page"
+            (page)="onPage($event)">
+          </mat-paginator>
         }
     </div>
   </section>
