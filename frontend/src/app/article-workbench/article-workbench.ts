@@ -112,6 +112,7 @@ export class ArticleWorkbench implements AfterViewInit {
       title: idea.title,
       description: idea.content || '',
       author: idea.authorDisplayName || idea.authorUsername || 'Anonymous',
+      authorUsername: idea.authorUsername,
       votes: idea.score,
       voted: idea.voted,
       status: 'New' as const,
@@ -601,6 +602,7 @@ export class ArticleWorkbench implements AfterViewInit {
         const mapped: BaseComment[] = res.comments.map(c => ({
           id: String(c.id),
           author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+          authorUsername: c.authorUsername,
           content: c.content,
           createdAt: new Date(c.createdAt || c.created_at || Date.now()),
           votes: c.score,

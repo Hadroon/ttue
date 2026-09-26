@@ -55,18 +55,14 @@
           @if (comment.isMarked) {
             <div class="marked-banner">⚠ Reviewed by moderator</div>
           }
-          <div class="comment-vote">
-            <button class="vote-btn-comment" [class.voted]="comment.voted" (click)="onVoteComment(comment.id)"
-              [disabled]="comment.isMarked">
-              <span class="vote-icon">▲</span>
-              <span class="vote-count">{{ comment.votes }}</span>
-            </button>
-          </div>
-
           <div class="comment-content">
             <div class="comment-header">
               <div class="comment-author">
-                <span class="author-name">{{ comment.author }}</span>
+                @if (comment.authorUsername; as username) {
+                  <a class="author-name author-link" [routerLink]="['/profile', username]">{{ comment.author }}</a>
+                } @else {
+                  <span class="author-name">{{ comment.author }}</span>
+                }
                 @if (comment.authorRole) {
                   <span class="author-role">{{ comment.authorRole }}</span>
                 }
@@ -79,17 +75,30 @@
               </app-content-actions-menu>
             </div>
 
-            <div class="comment-body">
-              <p>{{ comment.content }}</p>
+            <div class="comment-main">
+              <div class="comment-vote">
+                <button class="vote-btn-comment" [class.voted]="comment.voted" (click)="onVoteComment(comment.id)"
+                  [disabled]="comment.isMarked">
+                  <span class="vote-icon">▲</span>
+                  <span class="vote-count">{{ comment.votes }}</span>
+                </button>
+              </div>
+              <div class="comment-body">
+                <p>{{ comment.content }}</p>
+              </div>
             </div>
 
             <div class="comment-footer">
-              <button class="btn-text" (click)="startReply(comment.id)">
-                Reply
-              </button>
-              @if (comment.replies && comment.replies.length > 0) {
-                <span class="replies-count">{{ comment.replies.length }} {{ comment.replies.length === 1 ? 'reply' : 'replies' }}</span>
-              }
+              <div class="comment-footer-left">
+                @if (comment.replies && comment.replies.length > 0) {
+                  <span class="replies-count">{{ comment.replies.length }} {{ comment.replies.length === 1 ? 'reply' : 'replies' }}</span>
+                }
+              </div>
+              <div class="comment-footer-right">
+                <button class="btn-text" (click)="startReply(comment.id)">
+                  Reply
+                </button>
+              </div>
             </div>
 
             @if (replyToId() === comment.id) {
@@ -114,18 +123,14 @@
               <div class="replies-list">
                 @for (reply of comment.replies; track reply.id) {
                   <article class="reply-card">
-                    <div class="comment-vote">
-                      <button class="vote-btn-comment sm" [class.voted]="reply.voted" (click)="onVoteComment(reply.id)"
-                        [disabled]="reply.isMarked">
-                        <span class="vote-icon">▲</span>
-                        <span class="vote-count">{{ reply.votes }}</span>
-                      </button>
-                    </div>
-
                     <div class="comment-content">
                       <div class="comment-header">
                         <div class="comment-author">
-                          <span class="author-name">{{ reply.author }}</span>
+                          @if (reply.authorUsername; as username) {
+                            <a class="author-name author-link" [routerLink]="['/profile', username]">{{ reply.author }}</a>
+                          } @else {
+                            <span class="author-name">{{ reply.author }}</span>
+                          }
                           @if (reply.authorRole) {
                             <span class="author-role">{{ reply.authorRole }}</span>
                           }
@@ -133,8 +138,17 @@
                         </div>
                       </div>
 
-                      <div class="comment-body">
-                        <p>{{ reply.content }}</p>
+                      <div class="comment-main">
+                        <div class="comment-vote">
+                          <button class="vote-btn-comment sm" [class.voted]="reply.voted" (click)="onVoteComment(reply.id)"
+                            [disabled]="reply.isMarked">
+                            <span class="vote-icon">▲</span>
+                            <span class="vote-count">{{ reply.votes }}</span>
+                          </button>
+                        </div>
+                        <div class="comment-body">
+                          <p>{{ reply.content }}</p>
+                        </div>
                       </div>
                     </div>
                   </article>

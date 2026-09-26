@@ -78,7 +78,13 @@
             <p class="idea-description-mini">{{ idea.description }}</p>
 
             <div class="idea-footer">
-              <span class="idea-author-mini">by {{ idea.author }}</span>
+              <span class="idea-author-mini">by
+                @if (idea.authorUsername; as username) {
+                  <a class="idea-author-link" [routerLink]="['/profile', username]">{{ idea.author }}</a>
+                } @else {
+                  {{ idea.author }}
+                }
+              </span>
               <time class="idea-date" [dateTime]="idea.createdAt.toISOString()">
                 {{ idea.createdAt.toLocaleDateString() }}
               </time>

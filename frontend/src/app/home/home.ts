@@ -74,6 +74,7 @@ export class Home implements OnInit {
               title: featured.topIdea.title,
               description: featured.topIdea.content,
               author: featured.topIdea.authorDisplayName || featured.topIdea.authorUsername || 'Unknown',
+              authorUsername: featured.topIdea.authorUsername,
               votes: featured.topIdea.score,
               category: featured.challenge.category,
               status: 'Under Review',
@@ -92,6 +93,7 @@ export class Home implements OnInit {
           const comments: Comment[] = featured.comments.map((c: ApiComment) => ({
             id: c.id.toString(),
             author: c.authorDisplayName || c.authorUsername || 'Unknown',
+            authorUsername: c.authorUsername,
             content: c.content,
             createdAt: new Date(c.createdAt || Date.now()),
             votes: c.score,

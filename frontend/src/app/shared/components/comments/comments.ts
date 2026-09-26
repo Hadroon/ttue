@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Comment } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { AuthGuardService } from '../../services/auth-guard.service';
@@ -11,7 +12,7 @@ import { AutofocusDirective } from '../../directives/autofocus.directive';
 @Component({
   selector: 'app-comments',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, ContentActionsMenu, AutofocusDirective],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu, AutofocusDirective],
   templateUrl: './comments.html',
   styleUrl: './comments.css'
 })
@@ -130,6 +131,7 @@ export class Comments implements OnInit {
           const newComment: Comment = {
             id: String(c.id),
             author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+            authorUsername: c.authorUsername,
             content: c.content,
             createdAt: new Date(c.createdAt || Date.now()),
             votes: c.score ?? 0,
@@ -182,6 +184,7 @@ export class Comments implements OnInit {
           const newReply: Comment = {
             id: String(c.id),
             author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+            authorUsername: c.authorUsername,
             content: c.content,
             createdAt: new Date(c.createdAt || Date.now()),
             votes: c.score ?? 0,

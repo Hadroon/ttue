@@ -3,6 +3,7 @@ export interface Idea {
   title: string;
   description: string;
   author: string;
+  authorUsername?: string;
   votes: number;
   voted?: boolean;
   category: string;
@@ -64,6 +65,7 @@ export interface ChallengeDraftProposal {
 export interface Comment {
   id: string;
   author: string;
+  authorUsername?: string;
   authorRole?: string;
   content: string;
   createdAt: Date;

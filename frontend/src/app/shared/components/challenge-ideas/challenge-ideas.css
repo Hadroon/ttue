@@ -441,6 +441,18 @@
   white-space: nowrap;
 }
 
+.idea-author-link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration-color: transparent;
+}
+
+.idea-author-link:hover,
+.idea-author-link:focus-visible {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
 .idea-date {
   color: var(--muted);
   opacity: 0.7;

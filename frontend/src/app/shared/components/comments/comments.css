@@ -271,7 +271,18 @@
 }
 
 .comment-header {
-  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.comment-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
 .comment-author {
@@ -285,6 +296,16 @@
   color: var(--text);
   font-weight: 600;
   font-size: 14px;
+}
+
+.author-link {
+  text-decoration-color: transparent;
+}
+
+.author-link:hover,
+.author-link:focus-visible {
+  color: var(--primary);
+  text-decoration-color: currentColor;
 }
 
 .author-role {
@@ -304,11 +325,12 @@
 }
 
 .comment-body {
-  margin-bottom: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .comment-body p {
-  color: var(--text);
+  color: var(--comment-text);
   font-size: 14px;
   line-height: 1.6;
   margin: 0;
@@ -318,7 +340,15 @@
 .comment-footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+}
+
+.comment-footer-left,
+.comment-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-text {

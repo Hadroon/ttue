@@ -41,6 +41,7 @@ export class Challenges implements OnInit {
       title: idea.title,
       description: idea.content,
       author: idea.authorDisplayName || idea.authorUsername || 'Unknown',
+      authorUsername: idea.authorUsername,
       votes: idea.score,
       voted: idea.voted,
       category: '', // Not available in Idea
@@ -54,6 +55,7 @@ export class Challenges implements OnInit {
     return {
       id: comment.id.toString(),
       author: comment.authorDisplayName || comment.authorUsername || 'Unknown',
+      authorUsername: comment.authorUsername,
       authorRole: undefined, // Not available
       content: comment.content,
       createdAt: new Date(comment.createdAt),
