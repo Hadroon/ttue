@@ -305,6 +305,12 @@
           [entityId]="challengeId() ?? ''"
           entityType="challenge"
           [allComments]="challengeComments()"
+          [serverPaging]="true"
+          [totalCount]="commentsTotal()"
+          [hasMore]="commentsHasMore()"
+          [loadingMore]="commentsLoadingMore()"
+          (sortChange)="onCommentsSortChange($event)"
+          (loadMore)="onLoadMoreComments()"
           (voteComment)="onVoteComment($event)">
         </app-comments>
       }

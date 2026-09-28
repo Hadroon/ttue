@@ -355,8 +355,15 @@ export class ApiService {
   /**
    * Get all comments for ideas belonging to a challenge
    */
-  getChallengeComments(challengeId: number): Observable<{ comments: Comment[] }> {
-    return this.http.get<{ comments: Comment[] }>(`${this.baseUrl}/challenges/${challengeId}/comments`);
+  getChallengeComments(
+    challengeId: number,
+    options: { sort?: 'recent' | 'votes' | 'oldest' | 'replies'; page?: number; limit?: number } = {}
+  ): Observable<{ comments: Comment[]; total: number; page: number; limit: number; hasNext: boolean }> {
+    const { sort = 'recent', page = 1, limit = 20 } = options;
+    return this.http.get<{ comments: Comment[]; total: number; page: number; limit: number; hasNext: boolean }>(
+      `${this.baseUrl}/challenges/${challengeId}/comments`,
+      { params: { sort, page, limit } }
+    );
   }
 
   /**

@@ -3,7 +3,7 @@
     <div class="comments-count">
       <!-- <span class="count-icon">💬</span> -->
       <mat-icon class="material-symbols-outlined">comment</mat-icon>
-      <span class="count-text">{{ filteredComments().length }} comment{{ filteredComments().length !== 1 ? 's' : '' }}</span>
+      <span class="count-text">{{ commentCount }} comment{{ commentCount !== 1 ? 's' : '' }}</span>
     </div>
 
     <div class="comments-controls">
@@ -14,6 +14,7 @@
           <option value="recent">Most recent</option>
           <option value="votes">Most voted</option>
           <option value="oldest">Oldest first</option>
+          <option value="replies">Most replied</option>
         </select>
       </div>
     }
@@ -160,11 +161,19 @@
       }
     </div>
 
-    @if (!compact && filteredComments().length > displayedComments().length) {
+    @if (!compact && !serverPaging && filteredComments().length > displayedComments().length) {
       <div class="show-more">
         <a class="btn ghost sm" href="#view-all-comments">
           View all {{ filteredComments().length }} comments
         </a>
+      </div>
+    }
+
+    @if (serverPaging && hasMore) {
+      <div class="show-more">
+        <button class="btn ghost sm" (click)="loadMore.emit()" [disabled]="loadingMore">
+          {{ loadingMore ? 'Loading...' : 'Load more comments' }}
+        </button>
       </div>
     }
   }

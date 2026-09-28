@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentVotes, challengeDrafts, challengeDraftRevisions, challengeDraftProposals, domains } from "../db/schema";
-import { eq, desc, and, sql, or, getTableColumns, ilike, gte, lt, type SQL } from "drizzle-orm";
+import { eq, desc, asc, and, sql, or, getTableColumns, ilike, gte, lt, isNull, inArray, type SQL } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 import { applyReputationChange, getVoteDelta } from "../services/reputation";
 
@@ -1039,33 +1039,72 @@ export async function handleResolveDraftProposal(req: Request, challengeId: numb
   }
 }
 
-// Get all comments for a challenge: direct challenge comments + comments on its ideas
+// Get challenge-level comments: paginated top-level comments (sorted) plus all their replies
 export async function handleGetChallengeComments(req: Request, challengeId: number): Promise<Response> {
   try {
-    // Direct challenge-level comments
-    const directComments = await db
-      .select({
-        id: comments.id,
-        content: comments.content,
-        ideaId: comments.ideaId,
-        challengeId: comments.challengeId,
-        parentId: comments.parentId,
-        score: comments.score,
-        isAccepted: comments.isAccepted,
-        isMarked: comments.isMarked,
-        createdAt: comments.createdAt,
-        updatedAt: comments.updatedAt,
-        authorUsername: users.username,
-        authorDisplayName: users.displayName,
-        authorAvatarUrl: users.avatarUrl,
-      })
+    const url = new URL(req.url);
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1') || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20') || 20));
+    const offset = (page - 1) * limit;
+    const sort = url.searchParams.get('sort') || 'recent';
+
+    const replyCount = sql<number>`(select count(*)::int from ${comments} as r where r.parent_id = ${comments.id})`;
+    const orderBy: Record<string, SQL[]> = {
+      recent: [desc(comments.createdAt), desc(comments.id)],
+      oldest: [asc(comments.createdAt), asc(comments.id)],
+      votes: [desc(comments.score), desc(comments.createdAt), desc(comments.id)],
+      replies: [desc(replyCount), desc(comments.createdAt), desc(comments.id)],
+    };
+
+    const commentFields = {
+      id: comments.id,
+      content: comments.content,
+      ideaId: comments.ideaId,
+      challengeId: comments.challengeId,
+      parentId: comments.parentId,
+      score: comments.score,
+      isAccepted: comments.isAccepted,
+      isMarked: comments.isMarked,
+      createdAt: comments.createdAt,
+      updatedAt: comments.updatedAt,
+      authorUsername: users.username,
+      authorDisplayName: users.displayName,
+      authorAvatarUrl: users.avatarUrl,
+    };
+
+    const topLevelWhere = and(eq(comments.challengeId, challengeId), isNull(comments.parentId));
+
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(topLevelWhere);
+
+    const topLevel = await db
+      .select({ ...commentFields, replyCount })
       .from(comments)
       .leftJoin(users, eq(comments.authorId, users.id))
-      .where(eq(comments.challengeId, challengeId))
-      .orderBy(desc(comments.score), comments.createdAt);
+      .where(topLevelWhere)
+      .orderBy(...(orderBy[sort] ?? orderBy.recent))
+      .limit(limit)
+      .offset(offset);
+
+    const replies = topLevel.length
+      ? await db
+          .select(commentFields)
+          .from(comments)
+          .leftJoin(users, eq(comments.authorId, users.id))
+          .where(inArray(comments.parentId, topLevel.map(c => c.id)))
+          .orderBy(asc(comments.createdAt))
+      : [];
 
     return new Response(
-      JSON.stringify({ comments: directComments }),
+      JSON.stringify({
+        comments: [...topLevel, ...replies],
+        total,
+        page,
+        limit,
+        hasNext: offset + topLevel.length < total,
+      }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -9,6 +9,8 @@ import { ApiService } from '../../services/api.service';
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
 import { AutofocusDirective } from '../../directives/autofocus.directive';
 
+export type CommentSort = 'recent' | 'votes' | 'oldest' | 'replies';
+
 @Component({
   selector: 'app-comments',
   standalone: true,
@@ -16,14 +18,21 @@ import { AutofocusDirective } from '../../directives/autofocus.directive';
   templateUrl: './comments.html',
   styleUrl: './comments.css'
 })
-export class Comments implements OnInit {
+export class Comments implements OnInit, OnChanges {
   @Input() entityId!: string | number;
   @Input() entityType: 'challenge' | 'idea' = 'challenge';
   @Input() allComments: Comment[] = [];
   @Input() compact: boolean = false;
   @Input() parentIsMarked: boolean = false;
   @Input() hideAddCommentButton: boolean = false;
+  // When true, sorting/paging is done by the parent via the backend
+  @Input() serverPaging: boolean = false;
+  @Input() totalCount: number = 0;
+  @Input() hasMore: boolean = false;
+  @Input() loadingMore: boolean = false;
   @Output() voteComment = new EventEmitter<string>();
+  @Output() sortChange = new EventEmitter<CommentSort>();
+  @Output() loadMore = new EventEmitter<void>();
 
   private authGuard = inject(AuthGuardService);
   private apiService = inject(ApiService);
@@ -33,8 +42,14 @@ export class Comments implements OnInit {
   newCommentText = signal('');
   replyToId = signal<string | null>(null);
   replyText = signal('');
-  sortBy = signal<'recent' | 'votes' | 'oldest'>('recent');
+  sortBy = signal<CommentSort>('recent');
   showCommentBox = signal(false);
+  // Top-level comments posted locally since the last totalCount from the server
+  private addedSinceLoad = signal(0);
+
+  get commentCount(): number {
+    return this.serverPaging ? this.totalCount + this.addedSinceLoad() : this.filteredComments().length;
+  }
 
   ngOnInit() {
     console.log('Comments initialized:', {
@@ -46,7 +61,10 @@ export class Comments implements OnInit {
     this.filterAndSortComments();
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['totalCount']) {
+      this.addedSinceLoad.set(0);
+    }
     console.log('Comments changed:', {
       entityId: this.entityId,
       entityType: this.entityType,
@@ -69,7 +87,9 @@ export class Comments implements OnInit {
       comment.replies = this.allComments.filter(c => c.parentId === comment.id);
     });
 
-    this.sortComments(filtered);
+    if (!this.serverPaging) {
+      this.sortComments(filtered);
+    }
     this.filteredComments.set(filtered);
     this.updateDisplayedComments(filtered);
   }
@@ -85,6 +105,12 @@ export class Comments implements OnInit {
       case 'oldest':
         list.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
         break;
+      case 'replies':
+        list.sort((a, b) =>
+          (b.replies?.length ?? 0) - (a.replies?.length ?? 0) ||
+          b.createdAt.getTime() - a.createdAt.getTime()
+        );
+        break;
     }
   }
 
@@ -94,7 +120,11 @@ export class Comments implements OnInit {
 
   onSortChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    this.sortBy.set(select.value as 'recent' | 'votes' | 'oldest');
+    this.sortBy.set(select.value as CommentSort);
+    if (this.serverPaging) {
+      this.sortChange.emit(this.sortBy());
+      return;
+    }
     this.filterAndSortComments();
   }
 
@@ -138,7 +168,8 @@ export class Comments implements OnInit {
             ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined,
             challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
           };
-          this.allComments.push(newComment);
+          this.allComments.unshift(newComment);
+          this.addedSinceLoad.update(n => n + 1);
           this.newCommentText.set('');
           this.showCommentBox.set(false);
           this.filterAndSortComments();

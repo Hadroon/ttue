@@ -8,7 +8,7 @@ import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, Challeng
 import { AuthService } from '../shared/services/auth.service';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
-import { Comments } from '../shared/components/comments/comments';
+import { Comments, CommentSort } from '../shared/components/comments/comments';
 import { Idea as BaseIdea, Comment as BaseComment } from '../shared/models/baseModels';
 
 type DiffKind = 'added' | 'removed' | 'unchanged';
@@ -78,6 +78,11 @@ export class ArticleWorkbench implements AfterViewInit {
 
   readonly challengeComments: WritableSignal<BaseComment[]> = signal([]);
   readonly commentsLoading: WritableSignal<boolean> = signal(false);
+  readonly commentsLoadingMore: WritableSignal<boolean> = signal(false);
+  readonly commentsSort: WritableSignal<CommentSort> = signal('recent');
+  readonly commentsPage: WritableSignal<number> = signal(1);
+  readonly commentsTotal: WritableSignal<number> = signal(0);
+  readonly commentsHasMore: WritableSignal<boolean> = signal(false);
 
   readonly supportVotes: WritableSignal<number> = signal(284);
   readonly opposeVotes: WritableSignal<number> = signal(9);
@@ -595,9 +600,14 @@ export class ArticleWorkbench implements AfterViewInit {
   submitComment(): void {
   }
 
-  private loadChallengeComments(challengeId: number): void {
-    this.commentsLoading.set(true);
-    this.apiService.getChallengeComments(challengeId).subscribe({
+  private loadChallengeComments(challengeId: number, page: number = 1): void {
+    const append = page > 1;
+    if (append) {
+      this.commentsLoadingMore.set(true);
+    } else if (this.challengeComments().length === 0) {
+      this.commentsLoading.set(true);
+    }
+    this.apiService.getChallengeComments(challengeId, { sort: this.commentsSort(), page }).subscribe({
       next: (res) => {
         const mapped: BaseComment[] = res.comments.map(c => ({
           id: String(c.id),
@@ -611,13 +621,41 @@ export class ArticleWorkbench implements AfterViewInit {
           ideaId: c.ideaId != null ? String(c.ideaId) : undefined,
           challengeId: String(challengeId),
         }));
-        this.challengeComments.set(mapped);
+        if (append) {
+          // Skip items already shown (e.g. shifted into this page by newly posted comments)
+          const existing = new Set(this.challengeComments().map(c => c.id));
+          this.challengeComments.update(list => [...list, ...mapped.filter(c => !existing.has(c.id))]);
+        } else {
+          this.challengeComments.set(mapped);
+        }
+        this.commentsPage.set(res.page);
+        this.commentsTotal.set(res.total);
+        this.commentsHasMore.set(res.hasNext);
         this.commentsLoading.set(false);
+        this.commentsLoadingMore.set(false);
       },
       error: () => {
         this.commentsLoading.set(false);
+        this.commentsLoadingMore.set(false);
       }
     });
+  }
+
+  onCommentsSortChange(sort: CommentSort): void {
+    const challengeId = this.challengeId();
+    if (challengeId == null) {
+      return;
+    }
+    this.commentsSort.set(sort);
+    this.loadChallengeComments(challengeId);
+  }
+
+  onLoadMoreComments(): void {
+    const challengeId = this.challengeId();
+    if (challengeId == null || this.commentsLoadingMore()) {
+      return;
+    }
+    this.loadChallengeComments(challengeId, this.commentsPage() + 1);
   }
 
   onVoteComment(commentId: string): void {
