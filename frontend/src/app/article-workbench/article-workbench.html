@@ -1,108 +1,81 @@
 <app-header></app-header>
 
 <main class="workbench" id="main" role="main">
-  <nav mat-tab-nav-bar
-       class="page-nav"
-       [tabPanel]="pageNavPanel"
-       aria-label="In-page navigation">
-    <div class="page-nav-inner">
+  <section class="section workspace">
+  <div class="container workspace-grid">
+  <div class="content-card">
+    <div class="page-nav">
+    <nav mat-tab-nav-bar
+         class="page-nav-tabs"
+         [tabPanel]="pageNavPanel"
+         aria-label="In-page navigation">
       <a mat-tab-link
          [active]="activeSection() === 'challenge'"
          (click)="scrollToSection('challenge')">Challenge</a>
       <a mat-tab-link
          [active]="activeSection() === 'draft'"
-         (click)="scrollToSection('draft')">Draft</a>
+         (click)="scrollToSection('draft')">Draft
+        @if (revisions().length > 0) {<span class="tab-count">v{{ revisions().length }}</span>}
+      </a>
       <a mat-tab-link
          [active]="activeSection() === 'diff'"
-         (click)="scrollToSection('diff')">Diff</a>
+         (click)="scrollToSection('diff')">Diff
+        @if (pendingProposals().length > 0) {<span class="tab-count">{{ pendingProposals().length }}</span>}
+      </a>
       <a mat-tab-link
          [active]="activeSection() === 'comments'"
-         (click)="scrollToSection('comments')">Comments</a>
+         (click)="scrollToSection('comments')">Comments
+        @if (commentsTotal() > 0) {<span class="tab-count">{{ commentsTotal() }}</span>}
+      </a>
       <a mat-tab-link
          [active]="activeSection() === 'ideas'"
-         (click)="scrollToSection('ideas')">Ideas</a>
+         (click)="scrollToSection('ideas')">Ideas
+        @if (ideas().length > 0) {<span class="tab-count">{{ ideas().length }}</span>}
+      </a>
+    </nav>
     </div>
-  </nav>
   <mat-tab-nav-panel #pageNavPanel></mat-tab-nav-panel>
 
   @if (activeSection() === 'challenge') {
-  <section class="section hero compose-hero" id="challenge">
-    <div class="container compose-hero-inner">
-      <div class="compose-hero-copy">
+      <article class="card-body" id="challenge">
         @if (challenge()) {
-          <div class="challenge-context" style="margin-bottom: 1rem;">
-            <span class="chip">Challenge: {{ challenge()!.category }}</span>
-            <h1>{{ challenge()!.title }}</h1>
-            <div class="lead rich-text" [innerHTML]="challenge()!.description"></div>
-          </div>
+          <span class="category-badge">Challenge • {{ challenge()!.category }}</span>
+          <h1 class="document-title">{{ challenge()!.title }}</h1>
+          <div class="document-body rich-text" [innerHTML]="challenge()!.description"></div>
         } @else if (loadingChallenge()) {
-          <p class="lead">Loading challenge...</p>
+          <p class="document-body">Loading challenge...</p>
         } @else if (challengeError()) {
-          <p class="lead" style="color: var(--color-error, red);">{{ challengeError() }}</p>
+          <p class="document-body" style="color: var(--color-error, red);">{{ challengeError() }}</p>
         } @else {
-          <h1>Compose long-form proposals with precision.</h1>
-          <p class="lead">Use the workbench to craft evidence-rich drafts, compare revisions, and prepare your article for expert review before it reaches the community feed.</p>
+          <h1 class="document-title">Compose long-form proposals with precision.</h1>
+          <p class="document-body">Use the workbench to craft evidence-rich drafts, compare revisions, and prepare your article for expert review before it reaches the community feed.</p>
         }
-        <div class="hero-actions">
-          <button type="button" class="btn primary lg" (click)="publishDraft()" [disabled]="savingDraft()">
-            {{ savingDraft() ? 'Publishing...' : 'Publish current draft' }}
-          </button>
-          <button type="button" class="btn secondary lg" (click)="saveSnapshot()" [disabled]="savingDraft()">
-            {{ savingDraft() ? 'Saving...' : 'Save snapshot' }}
-          </button>
-        </div>
-        @if (draftError()) {
-          <p style="color: var(--color-error, red); margin-top: 0.5rem;">{{ draftError() }}</p>
-        }
-        <ul class="stat-list" aria-label="Draft metrics">
-          <li>
-            <span class="stat">{{ diffStats().added }}</span>
-            <span class="stat-label">words added vs. last snapshot</span>
-          </li>
-          <li>
-            <span class="stat">{{ diffStats().removed }}</span>
-            <span class="stat-label">words trimmed</span>
-          </li>
-          <li>
-            <span class="stat">{{ revisions().length }}</span>
-            <span class="stat-label">tracked revisions</span>
-          </li>
-        </ul>
-      </div>
 
-      <aside class="compose-vote card" aria-label="Community mood">
-        <div class="card-body">
-          <span class="chip">Community preview</span>
-          <h3>Would you support this article?</h3>
-          <p class="summary">Vote to signal readiness for public deliberation. You can change your mind anytime before publication.</p>
-          <div class="vote-actions">
-            <button type="button"
-                    class="vote-btn positive"
-                    [class.active]="userVote() === 'support'"
-                    (click)="castVote('support')">
-              <span class="vote-count">{{ supportVotes() }}</span>
-              <span>Support</span>
+        <div class="editor-controls">
+          <div class="action-buttons">
+            <button type="button" class="btn primary" (click)="publishDraft()" [disabled]="savingDraft()">
+              {{ savingDraft() ? 'Publishing...' : 'Publish current draft' }}
             </button>
-            <button type="button"
-                    class="vote-btn negative"
-                    [class.active]="userVote() === 'oppose'"
-                    (click)="castVote('oppose')">
-              <span class="vote-count">{{ opposeVotes() }}</span>
-              <span>Oppose</span>
+            <button type="button" class="btn secondary" (click)="saveSnapshot()" [disabled]="savingDraft()">
+              {{ savingDraft() ? 'Saving...' : 'Save snapshot' }}
             </button>
           </div>
-          <p class="fineprint">Voting tallies refresh in real time for collaborators with edit access.</p>
+          @if (draftError()) {
+            <p style="color: var(--color-error, red);">{{ draftError() }}</p>
+          }
+          <ul class="revision-stats" aria-label="Draft metrics">
+            <li class="stat-item"><span aria-hidden="true">📝</span> {{ diffStats().added }} words added vs last snapshot</li>
+            <li class="stat-item"><span aria-hidden="true">✂️</span> {{ diffStats().removed }} words trimmed</li>
+            <li class="stat-item"><span aria-hidden="true">🕒</span> {{ revisions().length }} tracked revisions</li>
+          </ul>
         </div>
-      </aside>
-    </div>
-  </section>
+      </article>
   }
 
   @if (activeSection() === 'draft' || activeSection() === 'diff') {
-  <section class="section compose-board" id="draft">
-    <div class="container compose-grid">
+  <div class="card-body compose-board" id="draft">
       @if (activeSection() === 'draft') {
-      <article class="card editor-panel" id="editor" aria-label="Editor panel">
+      <article class="editor-panel" id="editor" aria-label="Editor panel">
         <header class="panel-head">
           <div>
             <h2>Draft workspace</h2>
@@ -166,7 +139,7 @@
       }
 
       @if (activeSection() === 'diff') {
-      <article class="card diff-panel" id="diff" aria-label="Diff panel">
+      <article class="diff-panel" id="diff" aria-label="Diff panel">
         <header class="panel-head">
           <div>
             <h2>Live diff</h2>
@@ -284,13 +257,11 @@
         </footer>
       </article>
       }
-    </div>
-  </section>
+  </div>
   }
 
   @if (activeSection() === 'comments') {
-  <section class="section comments-section" id="comments">
-    <div class="container comments-container">
+    <div class="card-body comments-container" id="comments">
       <header class="section-head">
         <div>
           <h2>Reviewer comments</h2>
@@ -315,12 +286,10 @@
         </app-comments>
       }
     </div>
-  </section>
   }
 
   @if (activeSection() === 'ideas') {
-  <section class="section ideas-section" id="ideas">
-    <div class="container ideas-container">
+    <div class="card-body ideas-container" id="ideas">
       <header class="section-head">
         <div>
           <h2>Ideas</h2>
@@ -342,8 +311,41 @@
         </app-challenge-ideas>
       }
     </div>
-  </section>
   }
+  </div>
+
+      <aside class="sidebar-sticky" aria-label="Community mood">
+        <div class="voting-card">
+          <span class="voting-header">Community preview</span>
+          <h3 class="voting-title">Would you support this article?</h3>
+          <p class="voting-description">Vote to signal readiness for public deliberation. You can change your mind anytime before publication.</p>
+          <div class="tally-grid">
+            <div class="tally-box">
+              <div class="tally-value">{{ supportVotes() }}</div>
+              <div class="tally-label">Support</div>
+            </div>
+            <div class="tally-box">
+              <div class="tally-value">{{ opposeVotes() }}</div>
+              <div class="tally-label">Oppose</div>
+            </div>
+          </div>
+          <div class="vote-actions">
+            <button type="button"
+                    class="vote-btn positive"
+                    [class.active]="userVote() === 'support'"
+                    [attr.aria-pressed]="userVote() === 'support'"
+                    (click)="castVote('support')">✓ Support</button>
+            <button type="button"
+                    class="vote-btn negative"
+                    [class.active]="userVote() === 'oppose'"
+                    [attr.aria-pressed]="userVote() === 'oppose'"
+                    (click)="castVote('oppose')">✕ Oppose</button>
+          </div>
+          <p class="voting-footer">Voting tallies refresh in real time for collaborators with edit access.</p>
+        </div>
+      </aside>
+  </div>
+  </section>
 
   <footer class="site-footer" role="contentinfo">
     <div class="container footer-inner">

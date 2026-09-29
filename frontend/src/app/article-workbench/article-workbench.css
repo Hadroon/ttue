@@ -5,12 +5,14 @@
 }
 
 .page-nav {
-  position: sticky;
-  top: 64px;
-  z-index: 999;
-  background: var(--panel);
+  padding: 0 24px;
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --mat-tab-header-divider-height: 0;
+  --mdc-tab-indicator-active-indicator-height: 3px;
+  --mat-tab-active-indicator-height: 3px;
+  --mdc-tab-indicator-active-indicator-shape: 3px 3px 0 0;
+  --mat-tab-active-indicator-shape: 3px 3px 0 0;
   /* align the Material ink bar / label colors with the app's brand tokens */
   --mdc-tab-indicator-active-indicator-color: var(--brand);
   --mat-tab-header-active-label-text-color: var(--brand);
@@ -21,32 +23,23 @@
   --mat-tab-header-inactive-ripple-color: var(--muted);
 }
 
-.page-nav-inner {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
+/* tab list lives inside MatTabNav's own view, so needs ::ng-deep */
+:host ::ng-deep .page-nav-tabs .mat-mdc-tab-links {
+  justify-content: flex-start;
+  gap: 24px;
 }
 
-@media (min-width: 1440px) {
-  .page-nav-inner {
-    max-width: 1360px;
-    padding: 0 40px;
-  }
-}
-
-@media (min-width: 1920px) {
-  .page-nav-inner {
-    max-width: 1760px;
-    padding: 0 60px;
-  }
+:host ::ng-deep .page-nav-tabs .mdc-tab__text-label {
+  font-weight: inherit;
 }
 
 .page-nav [mat-tab-link] {
-  height: 56px;
-  padding: 0 24px;
-  font-weight: 600;
-  font-size: 15px;
+  height: 48px;
+  min-width: 0;
+  flex-grow: 0;
+  padding: 0 4px;
+  font-weight: 400;
+  font-size: 14px;
   color: var(--muted);
   opacity: 1;
 }
@@ -57,82 +50,238 @@
 
 .page-nav [mat-tab-link].mdc-tab--active {
   color: var(--brand);
+  font-weight: 600;
 }
 
-.compose-hero {
-  background: radial-gradient(1200px 600px at 70% -20%, rgba(80, 140, 255, 0.25), transparent), var(--bg);
+.tab-count {
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  background: var(--border);
+  color: var(--muted);
 }
 
-.compose-hero-inner {
+.page-nav [mat-tab-link].mdc-tab--active .tab-count {
+  background: color-mix(in srgb, var(--brand) 15%, transparent);
+  color: var(--brand);
+}
+
+/* Workspace: tabbed content card left, sticky voting panel right */
+.workspace {
+  background: var(--bg);
+  padding: 24px 0 64px;
+}
+
+.workspace-grid {
   display: grid;
-  grid-template-columns: 1.3fr 0.7fr;
-  gap: 32px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
 }
 
-.compose-hero-copy {
+.content-card,
+.voting-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.content-card {
+  overflow: hidden;
+}
+
+.card-body {
+  padding: 32px;
+}
+
+.category-badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.15);
+}
+
+.document-title {
+  margin: 0 0 20px;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.document-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.editor-controls {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
-.compose-vote {
-  align-self: center;
-}
-
-.compose-vote .summary {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.vote-actions {
+.action-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
-  margin: 20px 0 12px;
 }
 
-.vote-btn {
-  flex: 1;
-  display: grid;
-  gap: 6px;
-  justify-items: center;
-  padding: 16px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--panel);
+.revision-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
   color: var(--muted);
-  cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.1s ease;
 }
 
-.vote-btn .vote-count {
-  font-size: 24px;
+.stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.sidebar-sticky {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.voting-card {
+  padding: 24px;
+}
+
+.voting-header {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.15);
+}
+
+.voting-title {
+  margin: 0 0 8px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text);
 }
 
+.voting-description {
+  margin: 0 0 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tally-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.tally-box {
+  text-align: center;
+}
+
+.tally-box:first-child {
+  border-right: 1px solid var(--border);
+}
+
+.tally-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tally-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.vote-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.vote-btn {
+  padding: 10px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.vote-btn.positive {
+  background: #10b981;
+}
+
+.vote-btn.negative {
+  background: #ef4444;
+}
+
 .vote-btn:hover {
-  border-color: var(--brand);
+  opacity: 1;
   transform: translateY(-1px);
 }
 
 .vote-btn.active {
-  border-color: var(--brand-600);
-  background: rgba(78, 140, 255, 0.15);
-  color: var(--text);
+  opacity: 1;
+  border-color: var(--text);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.vote-btn.positive.active .vote-count {
-  color: var(--accent);
+.voting-footer {
+  margin: 12px 0 0;
+  font-size: 11px;
+  text-align: center;
+  color: var(--muted);
 }
 
-.vote-btn.negative.active .vote-count {
-  color: #ef4444;
+/* card-body already provides the outer padding */
+.compose-board .panel-head {
+  padding: 0 0 16px;
 }
 
-.compose-board {
-  background: var(--panel);
+.compose-board .panel-footer,
+.compose-board .diff-body {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .compose-grid {
@@ -552,29 +701,32 @@
 }
 
 @media (max-width: 1080px) {
-  .compose-hero-inner,
   .compose-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .compose-vote {
-    align-self: stretch;
+@media (max-width: 900px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-sticky {
+    position: static;
   }
 }
 
 @media (max-width: 768px) {
-  .page-nav-inner {
+  :host ::ng-deep .page-nav-tabs .mat-mdc-tab-links {
+    gap: 16px;
+  }
+
+  .page-nav {
     padding: 0 16px;
-    gap: 4px;
   }
 
-  .nav-link {
-    padding: 14px 20px;
-    font-size: 14px;
-  }
-
-  .vote-actions {
-    flex-direction: column;
+  .card-body {
+    padding: 20px;
   }
 
   .footer-actions {
