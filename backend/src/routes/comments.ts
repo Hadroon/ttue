@@ -1,7 +1,7 @@
 import { db } from "../db";
-import { comments, users, ideas, challenges } from "../db/schema";
-import { eq, desc, and } from "drizzle-orm";
-import { authenticate } from "../middleware/auth";
+import { comments, users, ideas, challenges, challengeDrafts, commentVotes } from "../db/schema";
+import { eq, desc, asc, and, sql, isNull, inArray, type SQL } from "drizzle-orm";
+import { authenticate, optionalAuth } from "../middleware/auth";
 
 // Create new comment
 export async function handleCreateComment(req: Request): Promise<Response> {
@@ -9,14 +9,49 @@ export async function handleCreateComment(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const { content, ideaId, challengeId, parentId } = await req.json();
+    const { content, ideaId, challengeId, draftId, parentId } = await req.json();
 
-    // Validate input — must have content and at least one of ideaId or challengeId
-    if (!content || (!ideaId && !challengeId)) {
+    // Validate input — must have content and exactly one target
+    if (!content || [ideaId, challengeId, draftId].filter(Boolean).length !== 1) {
       return new Response(
-        JSON.stringify({ error: "Content and either ideaId or challengeId are required" }),
+        JSON.stringify({ error: "Content and exactly one of ideaId, challengeId or draftId are required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
+    }
+
+    if (parentId) {
+      const [parent] = await db
+        .select({ ideaId: comments.ideaId, challengeId: comments.challengeId, draftId: comments.draftId })
+        .from(comments)
+        .where(eq(comments.id, parentId))
+        .limit(1);
+
+      if (
+        !parent ||
+        (parent.ideaId ?? null) !== (ideaId || null) ||
+        (parent.challengeId ?? null) !== (challengeId || null) ||
+        (parent.draftId ?? null) !== (draftId || null)
+      ) {
+        return new Response(
+          JSON.stringify({ error: "Parent comment not found in this thread" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    if (draftId) {
+      const [draft] = await db
+        .select({ id: challengeDrafts.id })
+        .from(challengeDrafts)
+        .where(eq(challengeDrafts.id, draftId))
+        .limit(1);
+
+      if (!draft) {
+        return new Response(
+          JSON.stringify({ error: "Draft not found" }),
+          { status: 404, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     if (ideaId) {
@@ -42,7 +77,7 @@ export async function handleCreateComment(req: Request): Promise<Response> {
       }
     }
 
-    if (challengeId && !ideaId) {
+    if (challengeId) {
       // Validate the challenge exists
       const [challenge] = await db
         .select()
@@ -56,6 +91,13 @@ export async function handleCreateComment(req: Request): Promise<Response> {
           { status: 404, headers: { "Content-Type": "application/json" } }
         );
       }
+
+      if (challenge.isMarked) {
+        return new Response(
+          JSON.stringify({ error: "This content has been reviewed by a moderator and cannot be commented on" }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Create comment
@@ -65,6 +107,7 @@ export async function handleCreateComment(req: Request): Promise<Response> {
         content,
         ideaId: ideaId || null,
         challengeId: challengeId || null,
+        draftId: draftId || null,
         authorId: authResult.user.userId,
         parentId: parentId || null,
       })
@@ -90,38 +133,96 @@ export async function handleCreateComment(req: Request): Promise<Response> {
   }
 }
 
-// Get comments for an idea
-export async function handleGetComments(req: Request, ideaId: number): Promise<Response> {
+export type CommentThread = "idea" | "challenge" | "draft";
+
+const threadColumns = {
+  idea: comments.ideaId,
+  challenge: comments.challengeId,
+  draft: comments.draftId,
+} as const;
+
+// Get a comment thread: paginated top-level comments (sorted) plus all their replies
+export async function handleGetThreadComments(req: Request, thread: CommentThread, entityId: number): Promise<Response> {
   try {
-    const allComments = await db
-      .select({
-        id: comments.id,
-        content: comments.content,
-        ideaId: comments.ideaId,
-        parentId: comments.parentId,
-        score: comments.score,
-        isAccepted: comments.isAccepted,
-        isMarked: comments.isMarked,
-        createdAt: comments.createdAt,
-        updatedAt: comments.updatedAt,
-        author: {
-          id: users.id,
-          username: users.username,
-          displayName: users.displayName,
-          reputation: users.reputation,
-        },
-      })
+    const url = new URL(req.url);
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1') || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20') || 20));
+    const offset = (page - 1) * limit;
+    const sort = url.searchParams.get('sort') || 'recent';
+    const { user } = await optionalAuth(req);
+
+    const replyCount = sql<number>`(select count(*)::int from ${comments} as r where r.parent_id = ${comments.id})`;
+    const orderBy: Record<string, SQL[]> = {
+      recent: [desc(comments.createdAt), desc(comments.id)],
+      oldest: [asc(comments.createdAt), asc(comments.id)],
+      votes: [desc(comments.score), desc(comments.createdAt), desc(comments.id)],
+      replies: [desc(replyCount), desc(comments.createdAt), desc(comments.id)],
+    };
+
+    const commentFields = {
+      id: comments.id,
+      content: comments.content,
+      ideaId: comments.ideaId,
+      challengeId: comments.challengeId,
+      draftId: comments.draftId,
+      parentId: comments.parentId,
+      score: comments.score,
+      isAccepted: comments.isAccepted,
+      isMarked: comments.isMarked,
+      createdAt: comments.createdAt,
+      updatedAt: comments.updatedAt,
+      authorUsername: users.username,
+      authorDisplayName: users.displayName,
+      authorAvatarUrl: users.avatarUrl,
+    };
+
+    const topLevelWhere = and(eq(threadColumns[thread], entityId), isNull(comments.parentId));
+
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(topLevelWhere);
+
+    const topLevel = await db
+      .select({ ...commentFields, replyCount })
       .from(comments)
       .leftJoin(users, eq(comments.authorId, users.id))
-      .where(eq(comments.ideaId, ideaId))
-      .orderBy(desc(comments.isAccepted), desc(comments.score), comments.createdAt);
+      .where(topLevelWhere)
+      .orderBy(...(orderBy[sort] ?? orderBy.recent))
+      .limit(limit)
+      .offset(offset);
+
+    const replies = topLevel.length
+      ? await db
+          .select(commentFields)
+          .from(comments)
+          .leftJoin(users, eq(comments.authorId, users.id))
+          .where(inArray(comments.parentId, topLevel.map(c => c.id)))
+          .orderBy(asc(comments.createdAt))
+      : [];
+
+    const all = [...topLevel, ...replies];
+    let votedIds = new Set<number>();
+    if (user && all.length) {
+      const votes = await db
+        .select({ commentId: commentVotes.commentId })
+        .from(commentVotes)
+        .where(and(eq(commentVotes.userId, user.userId), inArray(commentVotes.commentId, all.map(c => c.id))));
+      votedIds = new Set(votes.map(v => v.commentId));
+    }
 
     return new Response(
-      JSON.stringify({ comments: allComments }),
+      JSON.stringify({
+        comments: all.map(c => ({ ...c, voted: votedIds.has(c.id) })),
+        total,
+        page,
+        limit,
+        hasNext: offset + topLevel.length < total,
+      }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Get comments error:", error);
+    console.error(`Get ${thread} comments error:`, error);
     return new Response(
       JSON.stringify({ error: "Failed to get comments" }),
       { status: 500, headers: { "Content-Type": "application/json" } }

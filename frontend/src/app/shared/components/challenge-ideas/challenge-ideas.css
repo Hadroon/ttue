@@ -479,6 +479,18 @@
   text-decoration: underline;
 }
 
+button.btn-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.idea-card-mini app-comments {
+  display: block;
+  padding: 0 12px 12px;
+}
+
 /* Button Styles */
 /* .btn {
   display: inline-block;

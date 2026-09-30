@@ -91,6 +91,7 @@ export const comments = pgTable("comments", {
   content: text("content").notNull(),
   ideaId: integer("idea_id").references(() => ideas.id, { onDelete: "cascade" }),
   challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "cascade" }),
+  draftId: integer("draft_id").references(() => challengeDrafts.id, { onDelete: "cascade" }),
   authorId: integer("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   parentId: integer("parent_id").references(() => comments.id, { onDelete: "cascade" }),
   score: integer("score").default(0).notNull(),
@@ -101,8 +102,10 @@ export const comments = pgTable("comments", {
 }, (table) => ({
   ideaIdx: index("comment_idea_idx").on(table.ideaId),
   challengeIdx: index("comment_challenge_idx").on(table.challengeId),
+  draftIdx: index("comment_draft_idx").on(table.draftId),
   authorIdx: index("comment_author_idx").on(table.authorId),
   parentIdx: index("comment_parent_idx").on(table.parentId),
+  singleTarget: check("comment_single_target_check", sql`num_nonnulls(${table.ideaId}, ${table.challengeId}, ${table.draftId}) = 1`),
 }));
 
 // Idea votes table
@@ -312,6 +315,10 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
     fields: [comments.challengeId],
     references: [challenges.id],
   }),
+  draft: one(challengeDrafts, {
+    fields: [comments.draftId],
+    references: [challengeDrafts.id],
+  }),
   author: one(users, {
     fields: [comments.authorId],
     references: [users.id],
@@ -414,6 +421,7 @@ export const challengeDraftsRelations = relations(challengeDrafts, ({ one, many 
   }),
   revisions: many(challengeDraftRevisions),
   proposals: many(challengeDraftProposals),
+  comments: many(comments),
 }));
 
 export const challengeDraftRevisionsRelations = relations(challengeDraftRevisions, ({ one }) => ({

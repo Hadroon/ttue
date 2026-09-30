@@ -183,8 +183,10 @@ export class ArticleWorkbench implements AfterViewInit {
     
     // Read challengeId from query parameters and fetch challenge
     this.route.queryParams.subscribe(params => {
-      const section = params['section'] === 'diff' ? 'draft' : params['section'];
-      if (['challenge', 'draft', 'comments', 'ideas'].includes(section)) {
+      // Old ?section=comments links now land on the Challenge tab, which hosts its comments
+      const requested = params['section'];
+      const section = requested === 'diff' ? 'draft' : requested === 'comments' ? 'challenge' : requested;
+      if (['challenge', 'draft', 'ideas'].includes(section)) {
         this.activeSection.set(section);
       }
       const id = params['challengeId'];
@@ -621,6 +623,7 @@ export class ArticleWorkbench implements AfterViewInit {
           createdAt: new Date(c.createdAt || c.created_at || Date.now()),
           votes: c.score,
           voted: c.voted,
+          isMarked: c.isMarked,
           parentId: c.parentId != null ? String(c.parentId) : undefined,
           ideaId: c.ideaId != null ? String(c.ideaId) : undefined,
           challengeId: String(challengeId),

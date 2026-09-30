@@ -43,7 +43,9 @@
     </div>
   }
 
-  @if (filteredComments().length === 0) {
+  @if (loading()) {
+    <p class="empty-submessage">Loading comments...</p>
+  } @else if (filteredComments().length === 0) {
     <div class="empty-state">
       <!-- <div class="empty-icon">💬</div> -->
       <p class="empty-message">No comments yet</p>
@@ -161,7 +163,7 @@
       }
     </div>
 
-    @if (!compact && !serverPaging && filteredComments().length > displayedComments().length) {
+    @if (!compact && !isServerPaged && filteredComments().length > displayedComments().length) {
       <div class="show-more">
         <a class="btn ghost sm" href="#view-all-comments">
           View all {{ filteredComments().length }} comments
@@ -169,9 +171,9 @@
       </div>
     }
 
-    @if (serverPaging && hasMore) {
+    @if (isServerPaged && hasMore) {
       <div class="show-more">
-        <button class="btn ghost sm" (click)="loadMore.emit()" [disabled]="loadingMore">
+        <button class="btn ghost sm" (click)="onLoadMore()" [disabled]="loadingMore">
           {{ loadingMore ? 'Loading...' : 'Load more comments' }}
         </button>
       </div>

@@ -92,13 +92,14 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
         CASE
           WHEN idea."title" IS NOT NULL THEN 'Comment on ' || idea."title"
           WHEN direct_challenge."title" IS NOT NULL THEN 'Comment on ' || direct_challenge."title"
+          WHEN draft_challenge."title" IS NOT NULL THEN 'Comment on draft: ' || draft_challenge."title"
           ELSE 'Civic comment'
         END::text AS "title",
         comment."content" AS "summary",
         CASE WHEN comment."is_accepted" THEN 'Accepted' ELSE 'Published' END::text AS "status",
         comment."score" AS "score",
-        COALESCE(comment."challenge_id", idea."challenge_id") AS "challengeId",
-        COALESCE(direct_domain."name", idea_domain."name", 'General Civic') AS "domainName",
+        COALESCE(comment."challenge_id", idea."challenge_id", draft."challenge_id") AS "challengeId",
+        COALESCE(direct_domain."name", idea_domain."name", draft_domain."name", 'General Civic') AS "domainName",
         comment."created_at" AS "createdAt"
       FROM "comments" AS comment
       LEFT JOIN "ideas" AS idea ON idea."id" = comment."idea_id"
@@ -106,6 +107,9 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
       LEFT JOIN "domains" AS direct_domain ON direct_domain."id" = direct_challenge."domain_id"
       LEFT JOIN "challenges" AS idea_challenge ON idea_challenge."id" = idea."challenge_id"
       LEFT JOIN "domains" AS idea_domain ON idea_domain."id" = idea_challenge."domain_id"
+      LEFT JOIN "challenge_drafts" AS draft ON draft."id" = comment."draft_id"
+      LEFT JOIN "challenges" AS draft_challenge ON draft_challenge."id" = draft."challenge_id"
+      LEFT JOIN "domains" AS draft_domain ON draft_domain."id" = draft_challenge."domain_id"
       WHERE comment."author_id" = ${userId} AND comment."is_marked" = false
 
       UNION ALL

@@ -11,17 +11,14 @@
          aria-label="In-page navigation">
       <a mat-tab-link
          [active]="activeSection() === 'challenge'"
-         (click)="scrollToSection('challenge')">Challenge</a>
+         (click)="scrollToSection('challenge')">Challenge
+        @if (commentsTotal() > 0) {<span class="tab-count" [attr.aria-label]="commentsTotal() + ' comments'">{{ commentsTotal() }}</span>}
+      </a>
       <a mat-tab-link
          [active]="activeSection() === 'draft'"
          (click)="scrollToSection('draft')">Draft
         @if (revisions().length > 0) {<span class="tab-count">v{{ revisions().length }}</span>}
         @if (pendingProposals().length > 0) {<span class="tab-count" [attr.aria-label]="pendingProposals().length + ' pending proposals'">{{ pendingProposals().length }}</span>}
-      </a>
-      <a mat-tab-link
-         [active]="activeSection() === 'comments'"
-         (click)="scrollToSection('comments')">Comments
-        @if (commentsTotal() > 0) {<span class="tab-count">{{ commentsTotal() }}</span>}
       </a>
       <a mat-tab-link
          [active]="activeSection() === 'ideas'"
@@ -66,6 +63,35 @@
           </ul>
         </div>
       </article>
+
+      @if (challengeId() != null) {
+        <div class="card-body comments-container" id="comments">
+          <header class="section-head">
+            <div>
+              <h2>Challenge comments</h2>
+              <p class="section-subtitle">Discuss the problem itself: scope, evidence and priorities.</p>
+            </div>
+          </header>
+
+          @if (commentsLoading()) {
+            <p class="muted-note" style="text-align:center; padding: 2rem 0;">Loading comments...</p>
+          } @else {
+            <app-comments
+              [entityId]="challengeId()!"
+              entityType="challenge"
+              [allComments]="challengeComments()"
+              [parentIsMarked]="!!challenge()?.isMarked"
+              [serverPaging]="true"
+              [totalCount]="commentsTotal()"
+              [hasMore]="commentsHasMore()"
+              [loadingMore]="commentsLoadingMore()"
+              (sortChange)="onCommentsSortChange($event)"
+              (loadMore)="onLoadMoreComments()"
+              (voteComment)="onVoteComment($event)">
+            </app-comments>
+          }
+        </div>
+      }
   }
 
   @if (activeSection() === 'draft') {
@@ -140,6 +166,17 @@
       </article>
       }
   </div>
+  @if (backendDraft(); as draft) {
+    <div class="card-body comments-container" id="draft-comments">
+      <header class="section-head">
+        <div>
+          <h2>Draft comments</h2>
+          <p class="section-subtitle">Discuss wording and structure of the current draft.</p>
+        </div>
+      </header>
+      <app-comments [entityId]="draft.id" entityType="draft" [autoLoad]="true"></app-comments>
+    </div>
+  }
   }
 
   <!-- rendered in the aside while on the Draft tab -->
@@ -263,34 +300,6 @@
         </footer>
       </article>
   </ng-template>
-
-  @if (activeSection() === 'comments') {
-    <div class="card-body comments-container" id="comments">
-      <header class="section-head">
-        <div>
-          <h2>Reviewer comments</h2>
-          <p class="section-subtitle">Collect targeted feedback before opening the article to the public forum.</p>
-        </div>
-      </header>
-
-      @if (commentsLoading()) {
-        <p class="muted-note" style="text-align:center; padding: 2rem 0;">Loading comments...</p>
-      } @else {
-        <app-comments
-          [entityId]="challengeId() ?? ''"
-          entityType="challenge"
-          [allComments]="challengeComments()"
-          [serverPaging]="true"
-          [totalCount]="commentsTotal()"
-          [hasMore]="commentsHasMore()"
-          [loadingMore]="commentsLoadingMore()"
-          (sortChange)="onCommentsSortChange($event)"
-          (loadMore)="onLoadMoreComments()"
-          (voteComment)="onVoteComment($event)">
-        </app-comments>
-      }
-    </div>
-  }
 
   @if (activeSection() === 'ideas') {
     <div class="card-body ideas-container" id="ideas">

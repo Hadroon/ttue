@@ -98,7 +98,7 @@ export class Home implements OnInit {
             createdAt: new Date(c.createdAt || Date.now()),
             votes: c.score,
             parentId: c.parentId?.toString(),
-            challengeId: featured.challenge.id.toString(),
+            challengeId: c.challengeId?.toString(),
             voted: c.voted || false
           }));
           commentsMap.set(challenge.id, comments);

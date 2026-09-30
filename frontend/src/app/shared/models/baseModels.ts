@@ -76,4 +76,5 @@ export interface Comment {
   isMarked?: boolean;
   challengeId?: string;
   ideaId?: string;
+  draftId?: string;
 }

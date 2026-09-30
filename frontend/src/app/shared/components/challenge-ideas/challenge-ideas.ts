@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { Idea } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
+import { Comments } from '../comments/comments';
 
 @Component({
   selector: 'app-challenge-ideas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu, Comments],
   templateUrl: './challenge-ideas.html',
   styleUrl: './challenge-ideas.css'
 })
@@ -27,6 +28,13 @@ export class ChallengeIdeas implements OnInit {
   filterStatus: string = 'all';
   currentPage = 1;
   readonly pageSize = 10;
+  readonly openComments = new Set<string>();
+
+  toggleComments(ideaId: string): void {
+    if (!this.openComments.delete(ideaId)) {
+      this.openComments.add(ideaId);
+    }
+  }
 
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.filteredIdeas.length / this.pageSize));

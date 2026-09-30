@@ -147,7 +147,7 @@ export class Challenges implements OnInit {
       parentId: comment.parentId?.toString(),
       replies: [],
       ideaId: comment.ideaId?.toString(),
-      challengeId: challengeId.toString()
+      challengeId: comment.challengeId?.toString()
     };
   }
 

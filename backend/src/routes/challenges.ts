@@ -133,12 +133,10 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
           .from(ideas)
           .where(eq(ideas.challengeId, challenge.id));
 
-        // Get top 3 comments for the top idea OR directly on the challenge
+        // Get top 3 comments posted directly on the challenge
         let challengeComments: any[] = [];
         {
-          const whereClause = topIdea
-            ? or(eq(comments.ideaId, topIdea.id), eq(comments.challengeId, challenge.id))
-            : eq(comments.challengeId, challenge.id);
+          const whereClause = eq(comments.challengeId, challenge.id);
 
           const commentsData = await db
             .select({
@@ -527,12 +525,10 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
           .from(ideas)
           .where(eq(ideas.challengeId, challenge.id));
 
-        // Get comments for the top idea OR directly on the challenge
+        // Get top comments posted directly on the challenge
         let challengeComments: any[] = [];
         {
-          const whereClause = topIdea
-            ? or(eq(comments.ideaId, topIdea.id), eq(comments.challengeId, challenge.id))
-            : eq(comments.challengeId, challenge.id);
+          const whereClause = eq(comments.challengeId, challenge.id);
 
           const commentsData = await db
             .select({
@@ -1034,83 +1030,6 @@ export async function handleResolveDraftProposal(req: Request, challengeId: numb
     console.error("Error resolving draft proposal:", error);
     return new Response(
       JSON.stringify({ error: "Failed to resolve proposal" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-}
-
-// Get challenge-level comments: paginated top-level comments (sorted) plus all their replies
-export async function handleGetChallengeComments(req: Request, challengeId: number): Promise<Response> {
-  try {
-    const url = new URL(req.url);
-    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1') || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20') || 20));
-    const offset = (page - 1) * limit;
-    const sort = url.searchParams.get('sort') || 'recent';
-
-    const replyCount = sql<number>`(select count(*)::int from ${comments} as r where r.parent_id = ${comments.id})`;
-    const orderBy: Record<string, SQL[]> = {
-      recent: [desc(comments.createdAt), desc(comments.id)],
-      oldest: [asc(comments.createdAt), asc(comments.id)],
-      votes: [desc(comments.score), desc(comments.createdAt), desc(comments.id)],
-      replies: [desc(replyCount), desc(comments.createdAt), desc(comments.id)],
-    };
-
-    const commentFields = {
-      id: comments.id,
-      content: comments.content,
-      ideaId: comments.ideaId,
-      challengeId: comments.challengeId,
-      parentId: comments.parentId,
-      score: comments.score,
-      isAccepted: comments.isAccepted,
-      isMarked: comments.isMarked,
-      createdAt: comments.createdAt,
-      updatedAt: comments.updatedAt,
-      authorUsername: users.username,
-      authorDisplayName: users.displayName,
-      authorAvatarUrl: users.avatarUrl,
-    };
-
-    const topLevelWhere = and(eq(comments.challengeId, challengeId), isNull(comments.parentId));
-
-    const [{ total }] = await db
-      .select({ total: sql<number>`count(*)::int` })
-      .from(comments)
-      .where(topLevelWhere);
-
-    const topLevel = await db
-      .select({ ...commentFields, replyCount })
-      .from(comments)
-      .leftJoin(users, eq(comments.authorId, users.id))
-      .where(topLevelWhere)
-      .orderBy(...(orderBy[sort] ?? orderBy.recent))
-      .limit(limit)
-      .offset(offset);
-
-    const replies = topLevel.length
-      ? await db
-          .select(commentFields)
-          .from(comments)
-          .leftJoin(users, eq(comments.authorId, users.id))
-          .where(inArray(comments.parentId, topLevel.map(c => c.id)))
-          .orderBy(asc(comments.createdAt))
-      : [];
-
-    return new Response(
-      JSON.stringify({
-        comments: [...topLevel, ...replies],
-        total,
-        page,
-        limit,
-        hasNext: offset + topLevel.length < total,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    console.error("Get challenge comments error:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to get challenge comments" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

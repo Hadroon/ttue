@@ -7,9 +7,9 @@ import { sql } from "drizzle-orm";
 import { handleRegister, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
 import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
 import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, handleDeleteIdea } from "./routes/ideas";
-import { handleCreateComment, handleGetComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
+import { handleCreateComment, handleGetThreadComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
-import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal, handleGetChallengeComments } from "./routes/challenges";
+import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleGetCivicProfile, handleGetDomains, handleGetUserActivity, handleGetUserReputation } from "./routes/profiles";
@@ -154,7 +154,11 @@ serve({
       }
       if (url.pathname.match(/^\/api\/ideas\/\d+\/comments$/) && req.method === "GET") {
         const ideaId = parseInt(url.pathname.split("/")[3]);
-        return handleGetComments(req, ideaId);
+        return handleGetThreadComments(req, "idea", ideaId);
+      }
+      if (url.pathname.match(/^\/api\/drafts\/\d+\/comments$/) && req.method === "GET") {
+        const draftId = parseInt(url.pathname.split("/")[3]);
+        return handleGetThreadComments(req, "draft", draftId);
       }
       if (url.pathname.match(/^\/api\/comments\/\d+$/) && req.method === "PUT") {
         const commentId = parseInt(url.pathname.split("/")[3]);
@@ -202,7 +206,7 @@ serve({
       }
       if (url.pathname.match(/^\/api\/challenges\/\d+\/comments$/) && req.method === "GET") {
         const challengeId = parseInt(url.pathname.split("/")[3]);
-        return handleGetChallengeComments(req, challengeId);
+        return handleGetThreadComments(req, "challenge", challengeId);
       }
       if (url.pathname === "/api/challenges/vote" && req.method === "POST") {
         return handleVoteChallenge(req);

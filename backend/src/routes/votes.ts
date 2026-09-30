@@ -168,7 +168,7 @@ export async function handleVoteComment(req: Request, commentId: number): Promis
         .set({ score: sql`${comments.score} + ${reputationDelta}` })
         .where(eq(comments.id, commentId));
 
-      const domainId = await resolveContentDomainId(tx, comment.challengeId, comment.ideaId);
+      const domainId = await resolveContentDomainId(tx, comment.challengeId, comment.ideaId, comment.draftId);
       await applyReputationChange(tx, {
         userId: comment.authorId,
         actorId: authResult.user.userId,

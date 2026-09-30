@@ -1,11 +1,13 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, signal, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Comment } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { AuthGuardService } from '../../services/auth-guard.service';
-import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
+import { ApiService, Comment as ApiComment } from '../../services/api.service';
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
 import { AutofocusDirective } from '../../directives/autofocus.directive';
 
@@ -20,7 +22,7 @@ export type CommentSort = 'recent' | 'votes' | 'oldest' | 'replies';
 })
 export class Comments implements OnInit, OnChanges {
   @Input() entityId!: string | number;
-  @Input() entityType: 'challenge' | 'idea' = 'challenge';
+  @Input() entityType: 'challenge' | 'idea' | 'draft' = 'challenge';
   @Input() allComments: Comment[] = [];
   @Input() compact: boolean = false;
   @Input() parentIsMarked: boolean = false;
@@ -30,12 +32,27 @@ export class Comments implements OnInit, OnChanges {
   @Input() totalCount: number = 0;
   @Input() hasMore: boolean = false;
   @Input() loadingMore: boolean = false;
+  // When true, the component fetches, pages, sorts and votes on its own thread
+  @Input() autoLoad: boolean = false;
   @Output() voteComment = new EventEmitter<string>();
   @Output() sortChange = new EventEmitter<CommentSort>();
   @Output() loadMore = new EventEmitter<void>();
 
   private authGuard = inject(AuthGuardService);
   private apiService = inject(ApiService);
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+  private page = 1;
+  loading = signal(false);
+
+  constructor() {
+    // Refetch so voted state reflects the logged-in user
+    this.authService.loginSuccess$.pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe(() => {
+      if (this.autoLoad) {
+        this.fetchThread(1);
+      }
+    });
+  }
 
   filteredComments = signal<Comment[]>([]);
   displayedComments = signal<Comment[]>([]);
@@ -48,16 +65,14 @@ export class Comments implements OnInit, OnChanges {
   private addedSinceLoad = signal(0);
 
   get commentCount(): number {
-    return this.serverPaging ? this.totalCount + this.addedSinceLoad() : this.filteredComments().length;
+    return this.serverPaging || this.autoLoad ? this.totalCount + this.addedSinceLoad() : this.filteredComments().length;
+  }
+
+  get isServerPaged(): boolean {
+    return this.serverPaging || this.autoLoad;
   }
 
   ngOnInit() {
-    console.log('Comments initialized:', {
-      entityId: this.entityId,
-      entityType: this.entityType,
-      allComments: this.allComments,
-      allCommentsCount: this.allComments.length
-    });
     this.filterAndSortComments();
   }
 
@@ -65,29 +80,88 @@ export class Comments implements OnInit, OnChanges {
     if (changes['totalCount']) {
       this.addedSinceLoad.set(0);
     }
-    console.log('Comments changed:', {
-      entityId: this.entityId,
-      entityType: this.entityType,
-      allComments: this.allComments
-    });
+    if (this.autoLoad && (changes['entityId'] || changes['autoLoad'])) {
+      this.fetchThread(1);
+      return;
+    }
     this.filterAndSortComments();
+  }
+
+  private fetchThread(page: number) {
+    if (this.entityId == null || this.entityId === '') {
+      return;
+    }
+    const append = page > 1;
+    if (append) {
+      this.loadingMore = true;
+    } else if (this.allComments.length === 0) {
+      this.loading.set(true);
+    }
+    this.apiService.getCommentThread(this.entityType, Number(this.entityId), { sort: this.sortBy(), page }).subscribe({
+      next: (res) => {
+        const mapped = res.comments.map(c => this.toViewComment(c));
+        if (append) {
+          // Skip items already shown (e.g. shifted into this page by newly posted comments)
+          const existing = new Set(this.allComments.map(c => c.id));
+          this.allComments = [...this.allComments, ...mapped.filter(c => !existing.has(c.id))];
+        } else {
+          this.allComments = mapped;
+        }
+        this.page = res.page;
+        this.totalCount = res.total;
+        this.addedSinceLoad.set(0);
+        this.hasMore = res.hasNext;
+        this.loadingMore = false;
+        this.loading.set(false);
+        this.filterAndSortComments();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingMore = false;
+        this.loading.set(false);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private toViewComment(c: ApiComment): Comment {
+    return {
+      id: String(c.id),
+      author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+      authorUsername: c.authorUsername,
+      content: c.content,
+      createdAt: new Date(c.createdAt || c.created_at || Date.now()),
+      votes: c.score ?? 0,
+      voted: c.voted,
+      isMarked: c.isMarked,
+      parentId: c.parentId != null ? String(c.parentId) : undefined,
+      ideaId: c.ideaId != null ? String(c.ideaId) : undefined,
+      challengeId: c.challengeId != null ? String(c.challengeId) : undefined,
+      draftId: c.draftId != null ? String(c.draftId) : undefined,
+    };
+  }
+
+  onLoadMore() {
+    if (this.autoLoad) {
+      if (!this.loadingMore) {
+        this.fetchThread(this.page + 1);
+      }
+      return;
+    }
+    this.loadMore.emit();
   }
 
   filterAndSortComments() {
     // Filter top-level comments by entity
-    let filtered: Comment[];
-    if (this.entityType === 'challenge') {
-      filtered = this.allComments.filter(c => c.challengeId === this.entityId?.toString() && !c.parentId);
-    } else {
-      filtered = this.allComments.filter(c => c.ideaId === this.entityId?.toString() && !c.parentId);
-    }
+    const key = ({ challenge: 'challengeId', idea: 'ideaId', draft: 'draftId' } as const)[this.entityType];
+    const filtered = this.allComments.filter(c => c[key] === this.entityId?.toString() && !c.parentId);
 
     // Attach replies to each comment
     filtered.forEach(comment => {
       comment.replies = this.allComments.filter(c => c.parentId === comment.id);
     });
 
-    if (!this.serverPaging) {
+    if (!this.isServerPaged) {
       this.sortComments(filtered);
     }
     this.filteredComments.set(filtered);
@@ -121,6 +195,10 @@ export class Comments implements OnInit, OnChanges {
   onSortChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.sortBy.set(select.value as CommentSort);
+    if (this.autoLoad) {
+      this.fetchThread(1);
+      return;
+    }
     if (this.serverPaging) {
       this.sortChange.emit(this.sortBy());
       return;
@@ -148,12 +226,7 @@ export class Comments implements OnInit, OnChanges {
     }
 
     if (this.newCommentText().trim()) {
-      const data: any = { content: this.newCommentText() };
-      if (this.entityType === 'idea') {
-        data.ideaId = Number(this.entityId);
-      } else {
-        data.challengeId = Number(this.entityId);
-      }
+      const data: any = { content: this.newCommentText(), ...this.targetFields() };
 
       this.apiService.createComment(data).subscribe({
         next: (res) => {
@@ -165,8 +238,7 @@ export class Comments implements OnInit, OnChanges {
             content: c.content,
             createdAt: new Date(c.createdAt || Date.now()),
             votes: c.score ?? 0,
-            ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined,
-            challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
+            ...this.targetViewFields(),
           };
           this.allComments.unshift(newComment);
           this.addedSinceLoad.update(n => n + 1);
@@ -202,12 +274,7 @@ export class Comments implements OnInit, OnChanges {
     }
 
     if (this.replyText().trim()) {
-      const data: any = { content: this.replyText(), parentId: Number(parentId) };
-      if (this.entityType === 'idea') {
-        data.ideaId = Number(this.entityId);
-      } else {
-        data.challengeId = Number(this.entityId);
-      }
+      const data: any = { content: this.replyText(), parentId: Number(parentId), ...this.targetFields() };
 
       this.apiService.createComment(data).subscribe({
         next: (res) => {
@@ -220,8 +287,7 @@ export class Comments implements OnInit, OnChanges {
             createdAt: new Date(c.createdAt || Date.now()),
             votes: c.score ?? 0,
             parentId: String(parentId),
-            ideaId: this.entityType === 'idea' ? String(this.entityId) : undefined,
-            challengeId: this.entityType === 'challenge' ? String(this.entityId) : undefined,
+            ...this.targetViewFields(),
           };
           this.allComments.push(newReply);
           this.replyText.set('');
@@ -241,8 +307,29 @@ export class Comments implements OnInit, OnChanges {
       return;
     }
 
+    if (this.autoLoad) {
+      this.apiService.voteComment(Number(commentId)).subscribe({
+        next: (res) => {
+          this.allComments = this.allComments.map(c => c.id === commentId ? { ...c, votes: res.score, voted: res.voted } : c);
+          this.filterAndSortComments();
+        },
+        error: () => {}
+      });
+      return;
+    }
+
     // Emit event to parent component to handle the vote
     this.voteComment.emit(commentId);
+  }
+
+  private targetFields(): { ideaId?: number; challengeId?: number; draftId?: number } {
+    const id = Number(this.entityId);
+    return { idea: { ideaId: id }, challenge: { challengeId: id }, draft: { draftId: id } }[this.entityType];
+  }
+
+  private targetViewFields(): Pick<Comment, 'ideaId' | 'challengeId' | 'draftId'> {
+    const id = String(this.entityId);
+    return { idea: { ideaId: id }, challenge: { challengeId: id }, draft: { draftId: id } }[this.entityType];
   }
 
   formatTimeAgo(date: Date): string {

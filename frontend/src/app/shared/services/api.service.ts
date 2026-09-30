@@ -64,6 +64,7 @@ export interface Comment {
   ideaId?: number; // New camelCase from backend
   idea_id?: number; // Legacy support
   challengeId?: number; // For challenge-level comments
+  draftId?: number; // For draft-level comments
   authorId?: number; // New camelCase from backend
   user_id?: number; // Legacy support
   parentId?: number | null; // New camelCase from backend
@@ -241,6 +242,7 @@ export interface CreateCommentRequest {
   content: string;
   ideaId?: number;
   challengeId?: number;
+  draftId?: number;
   parentId?: number;
 }
 
@@ -346,24 +348,29 @@ export class ApiService {
   }
 
   /**
-   * Get comments for a specific idea
+   * Get a paginated comment thread for a challenge, draft or idea
    */
-  getComments(ideaId: number): Observable<Comment[]> {
-    return this.http.get<Comment[]>(`${this.baseUrl}/ideas/${ideaId}/comments`);
+  getCommentThread(
+    entityType: 'challenge' | 'draft' | 'idea',
+    entityId: number,
+    options: { sort?: 'recent' | 'votes' | 'oldest' | 'replies'; page?: number; limit?: number } = {}
+  ): Observable<{ comments: Comment[]; total: number; page: number; limit: number; hasNext: boolean }> {
+    const { sort = 'recent', page = 1, limit = 20 } = options;
+    const base = { challenge: 'challenges', draft: 'drafts', idea: 'ideas' }[entityType];
+    return this.http.get<{ comments: Comment[]; total: number; page: number; limit: number; hasNext: boolean }>(
+      `${this.baseUrl}/${base}/${entityId}/comments`,
+      { params: { sort, page, limit } }
+    );
   }
 
   /**
-   * Get all comments for ideas belonging to a challenge
+   * Get challenge-level comments
    */
   getChallengeComments(
     challengeId: number,
     options: { sort?: 'recent' | 'votes' | 'oldest' | 'replies'; page?: number; limit?: number } = {}
   ): Observable<{ comments: Comment[]; total: number; page: number; limit: number; hasNext: boolean }> {
-    const { sort = 'recent', page = 1, limit = 20 } = options;
-    return this.http.get<{ comments: Comment[]; total: number; page: number; limit: number; hasNext: boolean }>(
-      `${this.baseUrl}/challenges/${challengeId}/comments`,
-      { params: { sort, page, limit } }
-    );
+    return this.getCommentThread('challenge', challengeId, options);
   }
 
   /**

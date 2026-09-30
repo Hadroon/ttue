@@ -96,6 +96,19 @@
               <a class="btn-link" [href]="'#idea-' + idea.id">View details →</a>
             </div>
           }
+
+          @if (!compact) {
+            <div class="idea-card-actions">
+              <button type="button" class="btn-link" (click)="toggleComments(idea.id)"
+                [attr.aria-expanded]="openComments.has(idea.id)">
+                {{ openComments.has(idea.id) ? 'Hide comments' : 'Comments' }}
+              </button>
+            </div>
+            @if (openComments.has(idea.id)) {
+              <app-comments [entityId]="idea.id" entityType="idea" [autoLoad]="true"
+                [parentIsMarked]="!!idea.isMarked"></app-comments>
+            }
+          }
         </article>
       }
     </div>

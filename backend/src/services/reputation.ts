@@ -1,6 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { challenges, domains, ideas, reputationAuditLogs, userDomainReputation, users } from "../db/schema";
+import { challengeDrafts, challenges, domains, ideas, reputationAuditLogs, userDomainReputation, users } from "../db/schema";
 
 export const GENERAL_CIVIC_DOMAIN_SLUG = "general-civic";
 
@@ -65,8 +65,18 @@ export async function resolveContentDomainId(
   tx: DatabaseTransaction,
   challengeId: number | null,
   ideaId?: number | null,
+  draftId?: number | null,
 ): Promise<number> {
   let resolvedChallengeId = challengeId;
+
+  if (resolvedChallengeId == null && draftId != null) {
+    const [draft] = await tx
+      .select({ challengeId: challengeDrafts.challengeId })
+      .from(challengeDrafts)
+      .where(eq(challengeDrafts.id, draftId))
+      .limit(1);
+    resolvedChallengeId = draft?.challengeId ?? null;
+  }
 
   if (resolvedChallengeId == null && ideaId != null) {
     const [idea] = await tx
