@@ -44,8 +44,8 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly noDraft: WritableSignal<boolean> = signal(false);
 
   readonly diffSegments = computed(() => this.createDiffSegments(
-    this.stripHtml(this.previousDraft()),
-    this.stripHtml(this.draftHtml())
+    this.htmlToDiffText(this.previousDraft()),
+    this.htmlToDiffText(this.draftHtml())
   ));
 
   readonly diffStats = computed(() => {
@@ -140,6 +140,8 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly selectedProposal: WritableSignal<ChallengeDraftProposal | null> = signal(null);
   readonly editingProposal: WritableSignal<boolean> = signal(false);
   readonly editedProposalContent: WritableSignal<string> = signal('');
+  // Initial HTML for the proposal editor; not updated while typing so the caret isn't reset
+  readonly proposalEditSeed: WritableSignal<string> = signal('');
   readonly loadingProposals: WritableSignal<boolean> = signal(false);
 
   readonly isDraftCreator = computed(() => {
@@ -156,12 +158,9 @@ export class ArticleWorkbench implements AfterViewInit {
     const proposal = this.selectedProposal();
     const draft = this.backendDraft();
     if (!proposal || !draft) return [];
-    const proposalText = this.editingProposal()
-      ? this.editedProposalContent()
-      : proposal.content;
     return this.createDiffSegments(
-      this.stripHtml(draft.content),
-      this.stripHtml(proposalText)
+      this.htmlToDiffText(draft.content),
+      this.htmlToDiffText(this.editedProposalContent())
     );
   });
 
@@ -184,8 +183,8 @@ export class ArticleWorkbench implements AfterViewInit {
     
     // Read challengeId from query parameters and fetch challenge
     this.route.queryParams.subscribe(params => {
-      const section = params['section'];
-      if (['challenge', 'draft', 'diff', 'comments', 'ideas'].includes(section)) {
+      const section = params['section'] === 'diff' ? 'draft' : params['section'];
+      if (['challenge', 'draft', 'comments', 'ideas'].includes(section)) {
         this.activeSection.set(section);
       }
       const id = params['challengeId'];
@@ -407,6 +406,7 @@ export class ArticleWorkbench implements AfterViewInit {
             // Revert editor to current draft content (proposal doesn't change active draft)
             this.draftHtml.set(this.previousDraft());
             this.updateEditorContent();
+            this.isEditing.set(false);
           } else {
             // Creator: draft updated directly
             const updatedDraft = response as ChallengeDraft;
@@ -514,7 +514,7 @@ export class ArticleWorkbench implements AfterViewInit {
   selectProposal(proposal: ChallengeDraftProposal): void {
     this.selectedProposal.set(proposal);
     this.editingProposal.set(false);
-    this.editedProposalContent.set(this.stripHtml(proposal.content));
+    this.editedProposalContent.set(proposal.content);
   }
 
   clearProposalView(): void {
@@ -523,12 +523,15 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   toggleProposalEdit(): void {
+    if (!this.editingProposal()) {
+      this.proposalEditSeed.set(this.editedProposalContent());
+    }
     this.editingProposal.set(!this.editingProposal());
   }
 
   onProposalEditInput(event: Event): void {
-    const target = event.target as HTMLTextAreaElement;
-    this.editedProposalContent.set(target.value);
+    const target = event.target as HTMLElement;
+    this.editedProposalContent.set(target.innerHTML);
   }
 
   resolveProposal(action: 'accept' | 'reject'): void {
@@ -536,7 +539,8 @@ export class ArticleWorkbench implements AfterViewInit {
     const challengeId = this.challengeId();
     if (!proposal || !challengeId) return;
 
-    const editedContent = this.editingProposal() ? this.editedProposalContent() : undefined;
+    const edited = this.editedProposalContent();
+    const editedContent = edited !== proposal.content ? edited : undefined;
     this.apiService.resolveDraftProposal(challengeId, proposal.id, action, editedContent).subscribe({
       next: (resolved: ChallengeDraftProposal) => {
         console.log(`Proposal ${action}ed successfully`);
@@ -689,7 +693,30 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   stripHtml(html: string): string {
-    return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const text = html.replace(/<[^>]+>/g, ' ');
+    return this.decodeEntities(text).replace(/\s+/g, ' ').trim();
+  }
+
+  private htmlToDiffText(html: string): string {
+    const text = html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/?(p|div|h[1-6]|li|ul|ol|blockquote|pre)\b[^>]*>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ');
+    return this.decodeEntities(text)
+      .replace(/[^\S\n]+/g, ' ')
+      .replace(/\s*\n\s*/g, '\n')
+      .trim();
+  }
+
+  private decodeEntities(text: string): string {
+    const named: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+    return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code: string) => {
+      if (code[0] === '#') {
+        const num = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+        return Number.isFinite(num) && num <= 0x10ffff ? String.fromCodePoint(num) : match;
+      }
+      return named[code.toLowerCase()] ?? match;
+    });
   }
 
   private countWordsForKind(segments: DiffSegment[], kind: DiffKind): number {
@@ -707,8 +734,9 @@ export class ArticleWorkbench implements AfterViewInit {
       return [];
     }
 
-    const oldWords = previousText.split(/\s+/).filter(Boolean);
-    const newWords = currentText.split(/\s+/).filter(Boolean);
+    // Line breaks are kept as their own tokens so the diff can render them
+    const oldWords = previousText.match(/\n|\S+/g) ?? [];
+    const newWords = currentText.match(/\n|\S+/g) ?? [];
     const m = oldWords.length;
     const n = newWords.length;
 
@@ -735,7 +763,8 @@ export class ArticleWorkbench implements AfterViewInit {
 
         currentSegment = { kind, text: word };
       } else {
-        currentSegment.text += ' ' + word;
+        const joiner = word === '\n' || currentSegment.text.endsWith('\n') ? '' : ' ';
+        currentSegment.text += joiner + word;
       }
     };
 

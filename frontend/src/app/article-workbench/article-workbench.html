@@ -2,7 +2,7 @@
 
 <main class="workbench" id="main" role="main">
   <section class="section workspace">
-  <div class="container workspace-grid">
+  <div class="container workspace-grid" [class.draft-layout]="activeSection() === 'draft'">
   <div class="content-card">
     <div class="page-nav">
     <nav mat-tab-nav-bar
@@ -16,11 +16,7 @@
          [active]="activeSection() === 'draft'"
          (click)="scrollToSection('draft')">Draft
         @if (revisions().length > 0) {<span class="tab-count">v{{ revisions().length }}</span>}
-      </a>
-      <a mat-tab-link
-         [active]="activeSection() === 'diff'"
-         (click)="scrollToSection('diff')">Diff
-        @if (pendingProposals().length > 0) {<span class="tab-count">{{ pendingProposals().length }}</span>}
+        @if (pendingProposals().length > 0) {<span class="tab-count" [attr.aria-label]="pendingProposals().length + ' pending proposals'">{{ pendingProposals().length }}</span>}
       </a>
       <a mat-tab-link
          [active]="activeSection() === 'comments'"
@@ -72,7 +68,7 @@
       </article>
   }
 
-  @if (activeSection() === 'draft' || activeSection() === 'diff') {
+  @if (activeSection() === 'draft') {
   <div class="card-body compose-board" id="draft">
       @if (activeSection() === 'draft') {
       <article class="editor-panel" id="editor" aria-label="Editor panel">
@@ -129,16 +125,25 @@
         @if (isEditing()) {
         <footer class="panel-footer">
           <div class="footer-actions">
+            <button type="button" class="btn primary" (click)="saveSnapshot()" [disabled]="savingDraft()">
+              {{ savingDraft() ? 'Saving...' : (backendDraft() && !isDraftCreator() ? 'Submit as proposal' : 'Save changes') }}
+            </button>
             <button type="button" class="btn secondary" (click)="revertToSnapshot()">Revert to snapshot</button>
             <button type="button" class="btn ghost" (click)="resetDraft()">Reset to template</button>
           </div>
+          @if (draftError()) {
+            <p style="color: var(--color-error, red);">{{ draftError() }}</p>
+          }
           <small class="muted-note">Snapshots capture the exact markup for legal auditing and change logs.</small>
         </footer>
         }
       </article>
       }
+  </div>
+  }
 
-      @if (activeSection() === 'diff') {
+  <!-- rendered in the aside while on the Draft tab -->
+  <ng-template #diffPanel>
       <article class="diff-panel" id="diff" aria-label="Diff panel">
         <header class="panel-head">
           <div>
@@ -172,11 +177,12 @@
           </div>
           <div class="diff-content" aria-live="polite">
             @if (editingProposal()) {
-              <textarea class="proposal-edit-area"
-                        [value]="editedProposalContent()"
-                        (input)="onProposalEditInput($event)"
-                        rows="12"
-                        placeholder="Edit the proposed content before accepting..."></textarea>
+              <div class="proposal-edit-area"
+                   contenteditable="true"
+                   spellcheck="true"
+                   aria-label="Edit proposal before accepting"
+                   [innerHTML]="proposalEditSeed()"
+                   (input)="onProposalEditInput($event)"></div>
             } @else if (proposalDiffSegments().length === 0) {
               <p class="muted-note">No differences between proposal and current draft.</p>
             } @else {
@@ -198,7 +204,7 @@
           </div>
           }
         </section>
-        } @else {
+        } @else if (isEditing()) {
 
         <!-- Normal diff view -->
         <section class="diff-body">
@@ -256,9 +262,7 @@
           </ul>
         </footer>
       </article>
-      }
-  </div>
-  }
+  </ng-template>
 
   @if (activeSection() === 'comments') {
     <div class="card-body comments-container" id="comments">
@@ -314,7 +318,12 @@
   }
   </div>
 
-      <aside class="sidebar-sticky" aria-label="Community mood">
+      <aside class="sidebar-sticky" [attr.aria-label]="activeSection() === 'draft' ? 'Draft diff' : 'Community mood'">
+        @if (activeSection() === 'draft') {
+        <div class="voting-card diff-card">
+          <ng-container *ngTemplateOutlet="diffPanel"></ng-container>
+        </div>
+        } @else {
         <div class="voting-card">
           <span class="voting-header">Community preview</span>
           <h3 class="voting-title">Would you support this article?</h3>
@@ -343,6 +352,7 @@
           </div>
           <p class="voting-footer">Voting tallies refresh in real time for collaborators with edit access.</p>
         </div>
+        }
       </aside>
   </div>
   </section>

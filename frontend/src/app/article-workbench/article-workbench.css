@@ -284,6 +284,29 @@
   padding-right: 0;
 }
 
+.draft-layout {
+  grid-template-columns: minmax(0, 1fr) 400px;
+}
+
+/* diff can be taller than the viewport, so let it scroll with the page */
+.draft-layout .sidebar-sticky {
+  position: static;
+}
+
+.diff-card .panel-head {
+  padding: 0 0 16px;
+}
+
+.diff-card .panel-head h2 {
+  font-size: 18px;
+}
+
+.diff-card .panel-footer,
+.diff-card .diff-body {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .compose-grid {
   display: grid;
   grid-template-columns: 1.7fr 1fr;
@@ -477,15 +500,17 @@
   border-radius: 12px;
   padding: 18px;
   min-height: 180px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .diff-piece {
-  padding: 2px 6px;
+  padding: 2px 4px;
+  margin-right: 2px;
   border-radius: 6px;
-  line-height: 1.5;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .diff-piece.diff-added {
@@ -843,6 +868,8 @@
   border-radius: 8px;
   background: var(--panel, #fff);
   color: var(--text, #1a1a1a);
+  white-space: normal;
+  overflow-y: auto;
   resize: vertical;
 }
 
