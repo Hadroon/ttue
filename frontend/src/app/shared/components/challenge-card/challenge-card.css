@@ -57,11 +57,12 @@
 .challenge-vote {
   display: flex;
   flex-direction: row;
-  /* align-items:first baseline; */
+  align-items: flex-start;
   padding-top: 4px;
 }
 
 .vote-btn-large {
+  flex-shrink: 0;
   background: none;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -192,11 +193,14 @@
   color: var(--text);
 }
 
+.challenge-vote h3 {
+  padding-left: 20px;
+}
+
 .challenge-title-link {
   color: inherit;
   text-decoration-color: transparent;
   transition: color 0.2s ease, text-decoration-color 0.2s ease;
-  padding-left: 20px;
 }
 
 .challenge-title-link:hover,
