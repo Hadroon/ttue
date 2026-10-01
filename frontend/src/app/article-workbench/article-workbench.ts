@@ -190,7 +190,8 @@ export class ArticleWorkbench implements AfterViewInit {
         this.activeSection.set(section);
       }
       const id = params['challengeId'];
-      if (id) {
+      // Section-only query param changes must not refetch the challenge
+      if (id && Number(id) !== this.challengeId()) {
         const numericId = Number(id);
         this.challengeId.set(numericId);
         console.log('Article Workbench loaded with challengeId:', id);
@@ -331,6 +332,15 @@ export class ArticleWorkbench implements AfterViewInit {
 
     if (!this.isBrowser) {
       return;
+    }
+
+    if (this.route.snapshot.queryParamMap.get('section') !== sectionId) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { section: sectionId },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });

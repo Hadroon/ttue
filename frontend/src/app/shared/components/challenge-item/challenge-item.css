@@ -29,6 +29,10 @@
   border-radius: 0 0 16px 16px;
 }
 
+:host ::ng-deep .challenge-with-ideas app-comments .comments-container {
+  border-radius: 0 0 16px 16px;
+}
+
 /* Responsive Styles */
 @media (max-width: 992px) {
   .challenges-grid {

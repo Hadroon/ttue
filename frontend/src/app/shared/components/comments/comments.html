@@ -94,7 +94,11 @@
             <div class="comment-footer">
               <div class="comment-footer-left">
                 @if (comment.replies && comment.replies.length > 0) {
-                  <span class="replies-count">{{ comment.replies.length }} {{ comment.replies.length === 1 ? 'reply' : 'replies' }}</span>
+                  <button type="button" class="btn-text replies-count" (click)="toggleReplies(comment.id)"
+                    [attr.aria-expanded]="expandedReplies().has(comment.id)">
+                    {{ expandedReplies().has(comment.id) ? 'Hide' : '' }}
+                    {{ comment.replies.length }} {{ comment.replies.length === 1 ? 'reply' : 'replies' }}
+                  </button>
                 }
               </div>
               <div class="comment-footer-right">
@@ -122,7 +126,7 @@
               </div>
             }
 
-            @if (comment.replies && comment.replies.length > 0) {
+            @if (comment.replies && comment.replies.length > 0 && expandedReplies().has(comment.id)) {
               <div class="replies-list">
                 @for (reply of comment.replies; track reply.id) {
                   <article class="reply-card">

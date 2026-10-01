@@ -59,6 +59,7 @@ export class Comments implements OnInit, OnChanges {
   newCommentText = signal('');
   replyToId = signal<string | null>(null);
   replyText = signal('');
+  expandedReplies = signal<ReadonlySet<string>>(new Set());
   sortBy = signal<CommentSort>('recent');
   showCommentBox = signal(false);
   // Top-level comments posted locally since the last totalCount from the server
@@ -267,6 +268,16 @@ export class Comments implements OnInit, OnChanges {
     this.replyText.set('');
   }
 
+  toggleReplies(commentId: string) {
+    this.expandedReplies.update(set => {
+      const next = new Set(set);
+      if (!next.delete(commentId)) {
+        next.add(commentId);
+      }
+      return next;
+    });
+  }
+
   submitReply(parentId: string) {
     // Double-check auth before submitting
     if (!this.authGuard.requireAuth('reply to this comment')) {
@@ -290,6 +301,7 @@ export class Comments implements OnInit, OnChanges {
             ...this.targetViewFields(),
           };
           this.allComments.push(newReply);
+          this.expandedReplies.update(set => new Set(set).add(String(parentId)));
           this.replyText.set('');
           this.replyToId.set(null);
           this.filterAndSortComments();

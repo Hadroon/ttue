@@ -43,7 +43,7 @@
 
 
   /* border-top: 2px solid var(--accent); */
-  border-radius: 0 0 16px 16px;
+  border-radius: 16px;
 }
 
 .comments-header {
