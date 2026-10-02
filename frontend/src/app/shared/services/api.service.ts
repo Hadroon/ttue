@@ -8,6 +8,8 @@ import {
   CivicDomain,
   CivicIdentity,
   CivicProfile,
+  FollowingUpdates,
+  FollowState,
   Page,
   ReputationEntry,
   UpdateCivicProfile
@@ -433,6 +435,18 @@ export class ApiService {
 
   updateCivicProfile(profile: UpdateCivicProfile): Observable<{ user: CivicIdentity }> {
     return this.http.put<{ user: CivicIdentity }>(`${this.baseUrl}/auth/profile`, profile);
+  }
+
+  followUser(username: string): Observable<FollowState> {
+    return this.http.post<FollowState>(`${this.baseUrl}/users/${encodeURIComponent(username)}/follow`, {});
+  }
+
+  unfollowUser(username: string): Observable<FollowState> {
+    return this.http.delete<FollowState>(`${this.baseUrl}/users/${encodeURIComponent(username)}/follow`);
+  }
+
+  getFollowingUpdates(): Observable<FollowingUpdates> {
+    return this.http.get<FollowingUpdates>(`${this.baseUrl}/users/me/following-updates`);
   }
 
   /**

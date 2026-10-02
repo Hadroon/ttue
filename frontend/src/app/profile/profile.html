@@ -36,6 +36,16 @@
             <p class="bio">{{ civicProfile.identity.bio }}</p>
           }
 
+          <p class="follow-stats" aria-live="polite">
+            <strong>{{ followerCount() }}</strong> {{ followerCount() === 1 ? 'follower' : 'followers' }}
+            <span aria-hidden="true">&middot;</span>
+            <strong>{{ followingCount() }}</strong> following
+          </p>
+
+          @if (isLoggedIn() && !civicProfile.isOwner) {
+            <button class="btn follow-button" [class.primary]="!isFollowing()" [class.secondary]="isFollowing()" type="button" [disabled]="followBusy()" [attr.aria-pressed]="isFollowing()" (click)="toggleFollow()">{{ isFollowing() ? 'Following' : 'Follow' }}</button>
+          }
+
           <dl class="identity-meta">
             @if (civicProfile.identity.location) {
               <div><dt>Region</dt><dd>{{ civicProfile.identity.location }}</dd></div>
@@ -92,6 +102,9 @@
             <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'activity'" (click)="selectTab('activity')">Activity</button>
             <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'contributions'" (click)="selectTab('contributions')">Contributions</button>
             <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'reputation'" (click)="selectTab('reputation')">Reputation ledger</button>
+            @if (civicProfile.isOwner) {
+              <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'following'" (click)="selectTab('following')">Following@if (followingUpdates().length) { ({{ followingUpdates().length }})}</button>
+            }
           </nav>
 
           @switch (activeTab()) {
@@ -164,6 +177,41 @@
                   }
                 } @else {
                   <p class="empty-state">No reputation events have been recorded yet.</p>
+                }
+              </section>
+            }
+            @case ('following') {
+              <section class="tab-panel" role="tabpanel">
+                <div class="ledger-heading">
+                  <h3>New from people you follow</h3>
+                  @if (followingUpdatesSince(); as since) {
+                    <p>Contributions since your last login on {{ since | date: 'medium' }}.</p>
+                  }
+                </div>
+                @if (followingUpdates().length) {
+                  <ol class="record-list">
+                    @for (item of followingUpdates(); track item.kind + '-' + item.contentId) {
+                      <li>
+                        <div class="record-marker" aria-hidden="true"></div>
+                        <article>
+                          <div class="record-meta"><a [routerLink]="['/profile', item.authorUsername]">{{ item.authorDisplayName || item.authorUsername }}</a><span>{{ activityLabel(item.kind) }}</span><span>{{ item.domainName }}</span><time>{{ item.createdAt | date: 'medium' }}</time></div>
+                          <h4>
+                            @if (item.challengeId) {
+                              <a routerLink="/article-workbench" [queryParams]="{ challengeId: item.challengeId, section: item.section }">{{ item.title }}</a>
+                            } @else {
+                              {{ item.title }}
+                            }
+                          </h4>
+                          <div class="record-summary rich-text" [innerHTML]="item.summary"></div>
+                          <div class="record-footer"><span>{{ item.status }}</span><strong>{{ item.score }} votes</strong></div>
+                        </article>
+                      </li>
+                    }
+                  </ol>
+                } @else if (followingUpdatesLoaded()) {
+                  <p class="empty-state">Nothing new from the people you follow since your last login.</p>
+                } @else {
+                  <p class="empty-state">Loading updates...</p>
                 }
               </section>
             }

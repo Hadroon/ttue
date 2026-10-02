@@ -43,6 +43,9 @@ const publicProfile: CivicProfile = {
     drafts: 1,
     acceptedProposals: 1
   },
+  followerCount: 4,
+  followingCount: 2,
+  isFollowing: false,
   activity: {
     items: [{
       kind: 'idea',
@@ -52,6 +55,7 @@ const publicProfile: CivicProfile = {
       status: 'Open',
       score: 12,
       challengeId: 2,
+      section: 'ideas',
       domainName: 'Open Science',
       createdAt: '2026-09-01T00:00:00.000Z'
     }],
@@ -78,13 +82,17 @@ describe('Profile', () => {
       'getCivicProfile',
       'getCivicActivity',
       'getReputationHistory',
-      'updateCivicProfile'
+      'updateCivicProfile',
+      'followUser',
+      'unfollowUser',
+      'getFollowingUpdates'
     ]);
     apiService.getCivicProfile.and.returnValue(of(publicProfile));
+    apiService.followUser.and.returnValue(of({ isFollowing: true, followerCount: 5 }));
 
     const authService = {
       currentUser: signal(null),
-      isLoggedIn: signal(false),
+      isLoggedIn: signal(true),
       isAdmin: signal(false),
       logout: jasmine.createSpy('logout')
     };
@@ -113,6 +121,17 @@ describe('Profile', () => {
     expect(text).toContain('SCRIBE');
     expect(text).toContain('Open Science');
     expect(text).not.toContain('Private account detail');
+  });
+
+  it('shows follower count and follows the user', () => {
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('.follow-stats')?.textContent).toContain('4 followers');
+
+    (root.querySelector('.follow-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(root.querySelector('.follow-stats')?.textContent).toContain('5 followers');
+    expect((root.querySelector('.follow-button') as HTMLButtonElement).textContent).toContain('Following');
   });
 
   it('switches to the contribution portfolio', () => {

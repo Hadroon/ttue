@@ -12,7 +12,7 @@ import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/v
 import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
-import { handleGetCivicProfile, handleGetDomains, handleGetUserActivity, handleGetUserReputation } from "./routes/profiles";
+import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
 
 // Log configuration on startup
 logConfig();
@@ -106,6 +106,13 @@ serve({
       // Civic profile routes
       if (url.pathname === "/api/domains" && req.method === "GET") {
         return handleGetDomains();
+      }
+      if (url.pathname === "/api/users/me/following-updates" && req.method === "GET") {
+        return handleGetFollowingUpdates(req);
+      }
+      if (url.pathname.match(/^\/api\/users\/[^/]+\/follow$/) && (req.method === "POST" || req.method === "DELETE")) {
+        const username = decodeURIComponent(url.pathname.split("/")[3]);
+        return req.method === "POST" ? handleFollowUser(req, username) : handleUnfollowUser(req, username);
       }
       if (url.pathname.match(/^\/api\/users\/[^/]+\/profile$/) && req.method === "GET") {
         const username = decodeURIComponent(url.pathname.split("/")[3]);

@@ -4,6 +4,7 @@ import { users } from "../db/schema";
 import { eq, or } from "drizzle-orm";
 import { generateToken } from "../utils/auth";
 import { config } from "../config/app.config";
+import { recordLogin } from "./auth";
 
 // Initialize OAuth2Client - only needs clientId for token verification
 const client = new OAuth2Client(config.google.clientId);
@@ -212,6 +213,8 @@ export async function handleGoogleAuth(req: Request): Promise<Response> {
         .where(eq(users.id, user.id));
       user.isAdmin = true;
     }
+
+    await recordLogin(user.id);
 
     // Return user without sensitive data
     const { passwordHash, ...userWithoutPassword } = user;

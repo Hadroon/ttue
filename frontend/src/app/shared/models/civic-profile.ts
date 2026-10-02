@@ -57,6 +57,22 @@ export interface CivicActivity {
   createdAt: string;
 }
 
+export interface FollowingUpdate extends CivicActivity {
+  userId: number;
+  authorUsername: string;
+  authorDisplayName: string | null;
+}
+
+export interface FollowingUpdates {
+  since: string;
+  items: FollowingUpdate[];
+}
+
+export interface FollowState {
+  isFollowing: boolean;
+  followerCount: number;
+}
+
 export interface ReputationEntry {
   id: number;
   amount: number;
@@ -83,6 +99,9 @@ export interface CivicProfile {
   civicStatus: CivicStatus;
   reputationBreakdown: DomainReputation[];
   contributionCounts: ContributionCounts;
+  followerCount: number;
+  followingCount: number;
+  isFollowing: boolean;
   activity: Page<CivicActivity>;
   reputationHistory: Page<ReputationEntry>;
 }

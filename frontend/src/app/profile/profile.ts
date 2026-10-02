@@ -7,13 +7,14 @@ import { Header } from '../shared/components';
 import {
   CivicActivity,
   CivicProfile,
+  FollowingUpdate,
   ReputationEntry,
   UpdateCivicProfile
 } from '../shared/models/civic-profile';
 import { ApiService } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
 
-type ProfileTab = 'activity' | 'contributions' | 'reputation';
+type ProfileTab = 'activity' | 'contributions' | 'reputation' | 'following';
 
 @Component({
   selector: 'app-profile',
@@ -40,6 +41,14 @@ export class Profile {
   readonly activityHasMore = signal(false);
   readonly reputationHasMore = signal(false);
   readonly editing = signal(false);
+  readonly isLoggedIn = this.authService.isLoggedIn;
+  readonly followerCount = signal(0);
+  readonly followingCount = signal(0);
+  readonly isFollowing = signal(false);
+  readonly followBusy = signal(false);
+  readonly followingUpdates = signal<FollowingUpdate[]>([]);
+  readonly followingUpdatesSince = signal<string | null>(null);
+  readonly followingUpdatesLoaded = signal(false);
 
   editForm: UpdateCivicProfile = {
     displayName: null,
@@ -89,7 +98,15 @@ export class Profile {
         this.reputationEntries.set(profile.reputationHistory.rows ?? []);
         this.activityHasMore.set(profile.activity.hasMore);
         this.reputationHasMore.set(profile.reputationHistory.hasMore);
+        this.followerCount.set(profile.followerCount);
+        this.followingCount.set(profile.followingCount);
+        this.isFollowing.set(profile.isFollowing);
+        this.followingUpdates.set([]);
+        this.followingUpdatesLoaded.set(false);
         this.loading.set(false);
+        if (profile.isOwner) {
+          this.loadFollowingUpdates();
+        }
       },
       error: response => {
         this.notFound.set(response.status === 404);
@@ -101,6 +118,41 @@ export class Profile {
 
   selectTab(tab: ProfileTab): void {
     this.activeTab.set(tab);
+  }
+
+  loadFollowingUpdates(): void {
+    this.apiService.getFollowingUpdates().subscribe({
+      next: ({ since, items }) => {
+        this.followingUpdates.set(items);
+        this.followingUpdatesSince.set(since);
+        this.followingUpdatesLoaded.set(true);
+      },
+      error: () => {
+        this.error.set('Updates from people you follow could not be loaded.');
+        this.followingUpdatesLoaded.set(true);
+      }
+    });
+  }
+
+  toggleFollow(): void {
+    const profile = this.profile();
+    if (!profile || this.followBusy()) return;
+
+    const username = profile.identity.username;
+    const request = this.isFollowing() ? this.apiService.unfollowUser(username) : this.apiService.followUser(username);
+    this.followBusy.set(true);
+    this.error.set(null);
+    request.subscribe({
+      next: state => {
+        this.isFollowing.set(state.isFollowing);
+        this.followerCount.set(state.followerCount);
+        this.followBusy.set(false);
+      },
+      error: response => {
+        this.error.set(response.error?.error || 'Follow status could not be updated.');
+        this.followBusy.set(false);
+      }
+    });
   }
 
   domainBarWidth(score: number): number {

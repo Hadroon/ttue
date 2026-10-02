@@ -16,12 +16,25 @@ export const users = pgTable("users", {
   authProvider: text("auth_provider").default("local").notNull(), // 'local' or 'google'
   reputation: integer("reputation").default(0).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  lastLoginAt: timestamp("last_login_at"),
+  previousLoginAt: timestamp("previous_login_at"), // Login before the current one; baseline for "since last login"
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   usernameIdx: index("username_idx").on(table.username),
   emailIdx: index("email_idx").on(table.email),
   googleIdIdx: index("google_id_idx").on(table.googleId),
+}));
+
+// Follower -> followee relationships between users
+export const userFollows = pgTable("user_follows", {
+  followerId: integer("follower_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  followeeId: integer("followee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.followerId, table.followeeId] }),
+  followeeIdx: index("user_follows_followee_idx").on(table.followeeId),
+  noSelf: check("user_follows_no_self_check", sql`${table.followerId} <> ${table.followeeId}`),
 }));
 
 // Civic reputation domains

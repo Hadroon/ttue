@@ -1,9 +1,17 @@
 import { db } from "../db";
 import { users } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth";
 import { authenticate } from "../middleware/auth";
 import { config } from "../config/app.config";
+
+// Shift last login into previous_login_at so "since last login" stays stable during the session
+export async function recordLogin(userId: number): Promise<void> {
+  await db
+    .update(users)
+    .set({ previousLoginAt: users.lastLoginAt, lastLoginAt: sql`now()` })
+    .where(eq(users.id, userId));
+}
 
 // Register new user
 export async function handleRegister(req: Request): Promise<Response> {
@@ -135,6 +143,8 @@ export async function handleLogin(req: Request): Promise<Response> {
         .where(eq(users.id, user.id));
       user.isAdmin = true;
     }
+
+    await recordLogin(user.id);
 
     // Generate token
     const token = generateToken(user.id, user.username);

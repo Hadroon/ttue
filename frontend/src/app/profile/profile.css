@@ -296,6 +296,21 @@
   width: 100%;
 }
 
+.follow-stats {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+
+.follow-stats strong {
+  color: inherit;
+  font-weight: 700;
+}
+
+.follow-button {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
 .passport-content {
   min-width: 0;
 }

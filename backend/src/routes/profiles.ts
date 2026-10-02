@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import {
   challengeDraftProposals,
@@ -9,9 +9,10 @@ import {
   ideas,
   reputationAuditLogs,
   userDomainReputation,
+  userFollows,
   users,
 } from "../db/schema";
-import { optionalAuth } from "../middleware/auth";
+import { authenticate, optionalAuth } from "../middleware/auth";
 import { CIVIC_RANKS, getCivicRank, getNextCivicRank } from "../services/reputation";
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -49,12 +50,13 @@ async function findUserByUsername(username: string) {
   return user;
 }
 
-async function getActivity(userId: number, kind: string, limit: number, offset: number) {
-  const kindFilter = kind === "all" ? sql`true` : sql`activity."kind" = ${kind}`;
-  const rows = await db.execute(sql`
+// Public contribution union; `scope` restricts each branch's author column to the wanted users.
+function activityCte(scope: (authorColumn: SQL) => SQL) {
+  return sql`
     WITH activity AS (
       SELECT
         'challenge'::text AS "kind",
+        challenge."creator_id" AS "userId",
         challenge."id" AS "contentId",
         challenge."title" AS "title",
         challenge."description" AS "summary",
@@ -66,12 +68,13 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
         challenge."created_at" AS "createdAt"
       FROM "challenges" AS challenge
       JOIN "domains" AS domain ON domain."id" = challenge."domain_id"
-      WHERE challenge."creator_id" = ${userId} AND challenge."is_marked" = false
+      WHERE ${scope(sql`challenge."creator_id"`)} AND challenge."is_marked" = false
 
       UNION ALL
 
       SELECT
         'idea'::text AS "kind",
+        idea."author_id" AS "userId",
         idea."id" AS "contentId",
         idea."title" AS "title",
         idea."content" AS "summary",
@@ -84,12 +87,13 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
       FROM "ideas" AS idea
       LEFT JOIN "challenges" AS challenge ON challenge."id" = idea."challenge_id"
       LEFT JOIN "domains" AS domain ON domain."id" = challenge."domain_id"
-      WHERE idea."author_id" = ${userId} AND idea."is_marked" = false
+      WHERE ${scope(sql`idea."author_id"`)} AND idea."is_marked" = false
 
       UNION ALL
 
       SELECT
         'comment'::text AS "kind",
+        comment."author_id" AS "userId",
         comment."id" AS "contentId",
         CASE
           WHEN idea."title" IS NOT NULL THEN 'Comment on ' || idea."title"
@@ -117,12 +121,13 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
       LEFT JOIN "challenge_drafts" AS draft ON draft."id" = comment."draft_id"
       LEFT JOIN "challenges" AS draft_challenge ON draft_challenge."id" = draft."challenge_id"
       LEFT JOIN "domains" AS draft_domain ON draft_domain."id" = draft_challenge."domain_id"
-      WHERE comment."author_id" = ${userId} AND comment."is_marked" = false
+      WHERE ${scope(sql`comment."author_id"`)} AND comment."is_marked" = false
 
       UNION ALL
 
       SELECT
         'proposal'::text AS "kind",
+        proposal."proposer_id" AS "userId",
         proposal."id" AS "contentId",
         'Accepted draft contribution'::text AS "title",
         proposal."content" AS "summary",
@@ -136,8 +141,15 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
       JOIN "challenge_drafts" AS draft ON draft."id" = proposal."draft_id"
       JOIN "challenges" AS challenge ON challenge."id" = draft."challenge_id"
       JOIN "domains" AS domain ON domain."id" = challenge."domain_id"
-      WHERE proposal."proposer_id" = ${userId} AND proposal."status" = 'accepted'
+      WHERE ${scope(sql`proposal."proposer_id"`)} AND proposal."status" = 'accepted'
     )
+  `;
+}
+
+async function getActivity(userId: number, kind: string, limit: number, offset: number) {
+  const kindFilter = kind === "all" ? sql`true` : sql`activity."kind" = ${kind}`;
+  const rows = await db.execute(sql`
+    ${activityCte((column) => sql`${column} = ${userId}`)}
     SELECT activity.*, count(*) OVER()::integer AS "total"
     FROM activity
     WHERE ${kindFilter}
@@ -242,6 +254,20 @@ export async function handleGetCivicProfile(req: Request, username: string): Pro
 
     const activity = await getActivity(user.id, "all", 10, 0);
     const reputationHistory = await getReputationHistory(user.id, 10, 0);
+    const [followStats] = await db.execute(sql`
+      SELECT
+        (SELECT count(*)::integer FROM "user_follows" WHERE "followee_id" = ${user.id}) AS "followers",
+        (SELECT count(*)::integer FROM "user_follows" WHERE "follower_id" = ${user.id}) AS "following"
+    `);
+    let isFollowing = false;
+    if (auth.user && !isOwner) {
+      const [follow] = await db
+        .select({ followerId: userFollows.followerId })
+        .from(userFollows)
+        .where(and(eq(userFollows.followerId, auth.user.userId), eq(userFollows.followeeId, user.id)))
+        .limit(1);
+      isFollowing = !!follow;
+    }
     const rank = getCivicRank(user.reputation);
     const nextRank = getNextCivicRank(user.reputation);
     const currentMinimum = CIVIC_RANKS.find((candidate) => candidate.title === rank)?.minimumReputation ?? 0;
@@ -270,6 +296,9 @@ export async function handleGetCivicProfile(req: Request, username: string): Pro
       },
       reputationBreakdown,
       contributionCounts: counts,
+      followerCount: followStats.followers,
+      followingCount: followStats.following,
+      isFollowing,
       activity,
       reputationHistory,
     });
@@ -313,5 +342,87 @@ export async function handleGetUserReputation(req: Request, username: string): P
   } catch (error) {
     console.error("Get user reputation error:", error);
     return Response.json({ error: "Failed to get reputation history" }, { status: 500 });
+  }
+}
+
+async function getFollowerCount(userId: number): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(userFollows)
+    .where(eq(userFollows.followeeId, userId));
+  return row.total;
+}
+
+async function changeFollow(req: Request, username: string, follow: boolean): Promise<Response> {
+  const authResult = await authenticate(req);
+  if (authResult instanceof Response) return authResult;
+
+  try {
+    const target = await findUserByUsername(username);
+    if (!target) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const followerId = authResult.user.userId;
+    if (target.id === followerId) {
+      return Response.json({ error: "You cannot follow yourself" }, { status: 400 });
+    }
+
+    if (follow) {
+      await db.insert(userFollows).values({ followerId, followeeId: target.id }).onConflictDoNothing();
+    } else {
+      await db
+        .delete(userFollows)
+        .where(and(eq(userFollows.followerId, followerId), eq(userFollows.followeeId, target.id)));
+    }
+
+    return Response.json({ isFollowing: follow, followerCount: await getFollowerCount(target.id) });
+  } catch (error) {
+    console.error("Change follow error:", error);
+    return Response.json({ error: "Failed to update follow" }, { status: 500 });
+  }
+}
+
+export function handleFollowUser(req: Request, username: string): Promise<Response> {
+  return changeFollow(req, username, true);
+}
+
+export function handleUnfollowUser(req: Request, username: string): Promise<Response> {
+  return changeFollow(req, username, false);
+}
+
+// Contributions by followed users since the viewer's previous login
+export async function handleGetFollowingUpdates(req: Request): Promise<Response> {
+  const authResult = await authenticate(req);
+  if (authResult instanceof Response) return authResult;
+
+  try {
+    const viewerId = authResult.user.userId;
+    const [viewer] = await db
+      .select({ previousLoginAt: users.previousLoginAt, createdAt: users.createdAt })
+      .from(users)
+      .where(eq(users.id, viewerId))
+      .limit(1);
+    if (!viewer) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const rows = await db.execute(sql`
+      ${activityCte((column) => sql`${column} IN (SELECT "followee_id" FROM "user_follows" WHERE "follower_id" = ${viewerId})`)}
+      SELECT
+        activity.*,
+        author."username" AS "authorUsername",
+        author."display_name" AS "authorDisplayName"
+      FROM activity
+      JOIN "users" AS author ON author."id" = activity."userId"
+      WHERE activity."createdAt" > (SELECT coalesce("previous_login_at", "created_at") FROM "users" WHERE "id" = ${viewerId})
+      ORDER BY activity."createdAt" DESC
+      LIMIT 50
+    `);
+
+    return Response.json({ since: viewer.previousLoginAt ?? viewer.createdAt, items: Array.from(rows) });
+  } catch (error) {
+    console.error("Get following updates error:", error);
+    return Response.json({ error: "Failed to get updates from followed users" }, { status: 500 });
   }
 }
