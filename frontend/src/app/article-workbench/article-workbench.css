@@ -284,8 +284,19 @@
   padding-right: 0;
 }
 
+/* draft spans the full width; comments and diff share the row below */
 .draft-layout {
-  grid-template-columns: minmax(0, 1fr) 400px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.draft-layout > .content-card {
+  grid-column: 1 / -1;
+}
+
+.draft-comments-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
 }
 
 /* diff can be taller than the viewport, so let it scroll with the page */
@@ -339,6 +350,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  margin-left: auto;
 }
 
 .link-btn {
@@ -418,6 +430,16 @@
   cursor: default;
 }
 
+/* 20 lines of text plus vertical padding */
+.editor-view.collapsed {
+  max-height: calc(20 * 1.7em + 48px);
+  overflow: hidden;
+}
+
+.draft-toggle {
+  margin: 0 16px 16px;
+}
+
 .editor-view :deep(h2) {
   font-size: 1.5em;
   font-weight: 700;
@@ -444,7 +466,6 @@
 
 .panel-footer {
   padding: 18px 24px;
-  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -519,8 +540,8 @@
 }
 
 .diff-piece.diff-removed {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fecaca;
+  background: rgba(205, 34, 34, 0.2);
+  color: #f7ebeb;
 }
 
 .snapshot-title {
@@ -810,7 +831,7 @@
 }
 
 .proposal-list .proposal-item {
-  border-left: 3px solid transparent;
+  /* border-left: 3px solid transparent; */
   padding-left: 0.75rem;
 }
 

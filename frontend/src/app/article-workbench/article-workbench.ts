@@ -1,5 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, WritableSignal, signal, computed } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, WritableSignal, signal, computed, effect, viewChild } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -42,6 +42,10 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly previousDraft: WritableSignal<string> = signal('');
   readonly draftHtml: WritableSignal<string> = signal('');
   readonly noDraft: WritableSignal<boolean> = signal(false);
+
+  private readonly draftView = viewChild<ElementRef<HTMLDivElement>>('draftView');
+  readonly draftExpanded: WritableSignal<boolean> = signal(false);
+  readonly draftOverflows: WritableSignal<boolean> = signal(false);
 
   readonly diffSegments = computed(() => this.createDiffSegments(
     this.htmlToDiffText(this.previousDraft()),
@@ -144,6 +148,18 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly proposalEditSeed: WritableSignal<string> = signal('');
   readonly loadingProposals: WritableSignal<boolean> = signal(false);
 
+  readonly listPreviewLimit = 5;
+  readonly showAllProposals: WritableSignal<boolean> = signal(false);
+  readonly showAllSnapshots: WritableSignal<boolean> = signal(false);
+
+  readonly visibleProposals = computed(() =>
+    this.showAllProposals() ? this.proposals() : this.proposals().slice(0, this.listPreviewLimit)
+  );
+
+  readonly visibleRevisions = computed(() =>
+    this.showAllSnapshots() ? this.revisions() : this.revisions().slice(0, this.listPreviewLimit)
+  );
+
   readonly isDraftCreator = computed(() => {
     const draft = this.backendDraft();
     const user = this.authService.currentUser();
@@ -180,6 +196,14 @@ export class ArticleWorkbench implements AfterViewInit {
     private authGuard: AuthGuardService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+
+    // Measure after the [innerHTML] binding has rendered
+    effect(() => {
+      const el = this.draftView()?.nativeElement;
+      this.draftHtml();
+      if (!el || !this.isBrowser || this.draftExpanded()) return;
+      requestAnimationFrame(() => this.draftOverflows.set(el.scrollHeight > el.clientHeight + 1));
+    });
     
     // Read challengeId from query parameters and fetch challenge
     this.route.queryParams.subscribe(params => {
