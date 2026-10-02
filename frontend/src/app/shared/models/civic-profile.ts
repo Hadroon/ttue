@@ -52,6 +52,7 @@ export interface CivicActivity {
   status: string;
   score: number;
   challengeId: number | null;
+  section: 'challenge' | 'draft' | 'ideas';
   domainName: string;
   createdAt: string;
 }

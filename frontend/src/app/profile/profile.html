@@ -105,8 +105,14 @@
                         <div class="record-marker" aria-hidden="true"></div>
                         <article>
                           <div class="record-meta"><span>{{ activityLabel(item.kind) }}</span><span>{{ item.domainName }}</span><time>{{ item.createdAt | date: 'mediumDate' }}</time></div>
-                          <h4>{{ item.title }}</h4>
-                          <p>{{ item.summary }}</p>
+                          <h4>
+                            @if (item.challengeId) {
+                              <a routerLink="/article-workbench" [queryParams]="{ challengeId: item.challengeId, section: item.section }">{{ item.title }}</a>
+                            } @else {
+                              {{ item.title }}
+                            }
+                          </h4>
+                          <div class="record-summary rich-text" [innerHTML]="item.summary"></div>
                           <div class="record-footer"><span>{{ item.status }}</span><strong>{{ item.score }} votes</strong></div>
                         </article>
                       </li>
@@ -133,7 +139,7 @@
                 @if (activityItems().length) {
                   <div class="portfolio-list">
                     @for (item of activityItems(); track item.kind + '-' + item.contentId) {
-                      <article><span>{{ activityLabel(item.kind) }} &middot; {{ item.domainName }}</span><h4>{{ item.title }}</h4><p>{{ item.summary }}</p></article>
+                      <article><span>{{ activityLabel(item.kind) }} &middot; {{ item.domainName }}</span><h4>{{ item.title }}</h4><div class="record-summary rich-text" [innerHTML]="item.summary"></div></article>
                     }
                   </div>
                 } @else {

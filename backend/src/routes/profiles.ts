@@ -61,6 +61,7 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
         CASE WHEN challenge."is_marked" THEN 'Marked' ELSE 'Open' END::text AS "status",
         challenge."votes" AS "score",
         challenge."id" AS "challengeId",
+        'challenge'::text AS "section",
         domain."name" AS "domainName",
         challenge."created_at" AS "createdAt"
       FROM "challenges" AS challenge
@@ -77,6 +78,7 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
         CASE WHEN idea."is_closed" THEN 'Closed' ELSE 'Open' END::text AS "status",
         idea."score" AS "score",
         idea."challenge_id" AS "challengeId",
+        'ideas'::text AS "section",
         COALESCE(domain."name", 'General Civic') AS "domainName",
         idea."created_at" AS "createdAt"
       FROM "ideas" AS idea
@@ -99,6 +101,11 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
         CASE WHEN comment."is_accepted" THEN 'Accepted' ELSE 'Published' END::text AS "status",
         comment."score" AS "score",
         COALESCE(comment."challenge_id", idea."challenge_id", draft."challenge_id") AS "challengeId",
+        CASE
+          WHEN comment."idea_id" IS NOT NULL THEN 'ideas'
+          WHEN comment."draft_id" IS NOT NULL THEN 'draft'
+          ELSE 'challenge'
+        END::text AS "section",
         COALESCE(direct_domain."name", idea_domain."name", draft_domain."name", 'General Civic') AS "domainName",
         comment."created_at" AS "createdAt"
       FROM "comments" AS comment
@@ -122,6 +129,7 @@ async function getActivity(userId: number, kind: string, limit: number, offset: 
         'Accepted'::text AS "status",
         0::integer AS "score",
         draft."challenge_id" AS "challengeId",
+        'draft'::text AS "section",
         domain."name" AS "domainName",
         proposal."created_at" AS "createdAt"
       FROM "challenge_draft_proposals" AS proposal
