@@ -18,6 +18,17 @@ interface DiffSegment {
   text: string;
 }
 
+interface ActionItem {
+  title: string;
+  description: string;
+}
+
+interface ActionCategory {
+  title: string;
+  intro: string;
+  items: ActionItem[];
+}
+
 interface RevisionSnapshot {
   id: number;
   label: string;
@@ -93,6 +104,61 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly userVote: WritableSignal<'support' | 'oppose' | null> = signal(null);
 
 
+
+  readonly actionCategories: ActionCategory[] = [
+    {
+      title: 'Legal Action & Strategic Litigation',
+      intro: 'When institutions ignore community demands, legal frameworks often force them to comply.',
+      items: [
+        { title: 'Crowdfunded Class-Action / Injunctions', description: 'Pool funds for legal retainers to file injunctions against corporate polluters or government overreach.' },
+        { title: 'Legal Standing Coalitions', description: 'Connect citizens with pro-bono lawyers and non-profits to challenge unconstitutional or illegal activities in court.' },
+        { title: 'Open-Source Evidence Vaults', description: 'Aggregate community evidence (sensor logs, photo/video proof with timestamp metadata) that meets legal chain-of-custody standards for courtroom admissibility.' }
+      ]
+    },
+    {
+      title: 'Economic & Market Pressure',
+      intro: 'Organizing economic leverage forces immediate corporate or governmental response.',
+      items: [
+        { title: 'Boycott', description: 'Organized refusal to buy from or work for entities violating community standards.' },
+        { title: 'Buycott', description: 'Coordinated shift of community purchasing power toward ethical alternatives or local cooperatives.' },
+        { title: 'Divestment Campaigns', description: 'Pressure public funds, university endowments, or local banks to withdraw capital from harmful industries.' },
+        { title: 'Workforce & Union Strikes', description: 'Enable workers in specific sectors to coordinate unionization drives or work-to-rule actions.' }
+      ]
+    },
+    {
+      title: 'Direct Action & Alternative Infrastructure',
+      intro: 'Instead of asking permission to fix a problem, build parallel, self-governing solutions directly.',
+      items: [
+        { title: 'Crowdfunded Civic Bounties', description: 'Raise community funds to directly fix local issues, e.g. buying land for a public park, installing open-source water filtration, or setting up community mesh networks.' },
+        { title: 'Participatory Budgeting', description: 'Partner with municipalities or community treasuries to give citizens direct voting power over how tax dollars or platform grant pools are spent.' },
+        { title: 'Mutual Aid Networks', description: 'Coordinate emergency responses, food distribution, or local tool-sharing libraries without relying on corporate or government bureaucracies.' }
+      ]
+    },
+    {
+      title: 'Direct Lobbying & Whistleblower Protection',
+      intro: 'Shape policy directly through institutional access and truth-telling.',
+      items: [
+        { title: 'Policy Draft Injection', description: 'Domain experts draft production-ready legislation or municipal ordinances that friendly lawmakers can introduce to city councils or parliaments.' },
+        { title: 'Targeted Contact Campaigns', description: 'Tools that route structured, personalized calls, physical letters, and emails directly to key political decision-makers.' },
+        { title: 'Encrypted Whistleblower Dropboxes', description: 'Secure, anonymous submission channels for insiders to leak evidence of corporate corruption or regulatory failure to community auditors.' }
+      ]
+    },
+    {
+      title: 'Media & Information Campaigns',
+      intro: 'Controlling the narrative forces institutions to respond to public pressure.',
+      items: [
+        { title: 'Meme & Content Labs', description: 'Organize creators to build educational graphics, short-form video breakdowns, and investigative reports that counter corporate PR campaigns.' },
+        { title: 'Shareholder Activism', description: 'Coordinate small investors to buy fractional shares in targeted corporations, attend annual general meetings (AGMs), submit shareholder resolutions, and confront executives on video.' }
+      ]
+    },
+    {
+      title: 'Organize Protests',
+      intro: 'Mobilize people in public space to make demands visible.',
+      items: [
+        { title: 'Protests & Demonstrations', description: 'Plan, schedule, and coordinate protests, marches, and rallies around this challenge.' }
+      ]
+    }
+  ];
 
   readonly formattingActions = [
     { icon: 'B', label: 'Bold', command: 'bold' },
@@ -210,7 +276,7 @@ export class ArticleWorkbench implements AfterViewInit {
       // Old ?section=comments links now land on the Challenge tab, which hosts its comments
       const requested = params['section'];
       const section = requested === 'diff' ? 'draft' : requested === 'comments' ? 'challenge' : requested;
-      if (['challenge', 'draft', 'ideas'].includes(section)) {
+      if (['challenge', 'draft', 'ideas', 'actions'].includes(section)) {
         this.activeSection.set(section);
       }
       const id = params['challengeId'];
