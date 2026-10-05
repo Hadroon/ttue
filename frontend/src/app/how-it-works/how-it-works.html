@@ -7,10 +7,16 @@
         <div class="kicker">How it works</div>
         <h1>From challenge to collective action, <span class="gradient-text">in seven steps</span></h1>
         <p class="lead">Start with a real-world problem. Move through fact-finding, collaborative drafting, expert review, and civic refinement — until a blueprint is ready for the world to adopt.</p>
+        <div class="hero-actions">
+          <a class="btn primary lg" routerLink="/challenges">Join challenges</a>
+          <a class="btn secondary lg" routerLink="/proposals">Explore proposals</a>
+        </div>
       </div>
-      <nav class="step-index" aria-label="Steps">
+      <nav class="step-index card" aria-label="Steps">
+        <div class="card-accent" aria-hidden="true"></div>
+        <div class="index-title">Jump to a step</div>
         @for (s of steps; track s.id; let i = $index) {
-          <a [href]="'#' + s.id" (click)="jumpTo($event, s.id)"><span>{{ i + 1 }}</span>{{ s.title }}</a>
+          <a [href]="'#' + s.id" (click)="jumpTo($event, s.id)"><span class="idx">{{ i + 1 }}</span>{{ s.title }}<i aria-hidden="true">{{ s.icon }}</i></a>
         }
       </nav>
     </div>
@@ -20,36 +26,34 @@
     <div class="container main-grid">
       <div class="timeline">
         @for (s of steps; track s.id; let i = $index) {
-          <article class="step" [id]="s.id">
-            <div class="step-side">
-              <div class="num" aria-hidden="true">{{ i + 1 }}</div>
-              <div class="glyph" aria-hidden="true">{{ s.glyph }}</div>
+          <article class="step card" [id]="s.id">
+            <div class="card-accent" aria-hidden="true"></div>
+            <div class="step-top">
+              <div class="icon-box" aria-hidden="true">{{ s.icon }}</div>
+              <span class="badge">Step {{ i + 1 }}</span>
+              @if (s.duration) { <span class="chip">{{ s.duration }}</span> }
             </div>
-            <div>
-              <div class="step-head">
-                <h2>{{ s.title }}</h2>
-                @if (s.duration) { <span class="chip">{{ s.duration }}</span> }
-              </div>
-              <p class="step-desc">{{ s.desc }}</p>
-              <div class="card details">
-                @for (r of s.rows; track r.k) {
-                  <div class="kv"><strong>{{ r.k }}</strong><div>{{ r.v }}</div></div>
-                }
-              </div>
-            </div>
+            <h2>{{ s.title }}</h2>
+            <p class="step-desc">{{ s.desc }}</p>
+            <dl class="facts">
+              @for (r of s.rows; track r.k) {
+                <div class="fact"><dt>{{ r.k }}</dt><dd>{{ r.v }}</dd></div>
+              }
+            </dl>
           </article>
         }
       </div>
 
-      <aside class="rail" aria-label="Eligibility and safeguards">
+      <aside class="rail card" aria-label="Eligibility and safeguards">
+        <div class="card-accent" aria-hidden="true"></div>
         <h3>Eligibility</h3>
-        <ul class="list muted">
+        <ul class="list">
           <li>Verified citizen account</li>
           <li>Evidence links for factual claims</li>
           <li>Disclosure for affiliations</li>
         </ul>
         <h3>Safeguards</h3>
-        <ul class="list muted">
+        <ul class="list">
           <li>AI-assisted moderation</li>
           <li>Conflict-of-interest flags</li>
           <li>Public changelog</li>

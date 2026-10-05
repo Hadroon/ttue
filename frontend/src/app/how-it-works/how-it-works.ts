@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Header } from '../shared/components';
 
-interface Step { id: string; title: string; glyph: string; duration: string; desc: string; rows: { k: string; v: string }[]; }
+interface Step { id: string; icon: string; title: string; duration: string; desc: string; rows: { k: string; v: string }[]; }
 
 @Component({
   selector: 'app-how-it-works',
@@ -12,30 +12,30 @@ interface Step { id: string; title: string; glyph: string; duration: string; des
 })
 export class HowItWorks {
   steps: Step[] = [
-    { id: 'challenges-ideas', title: 'Challenges & Ideas', glyph: '💡', duration: '', desc: 'Join policy challenges, share innovative ideas, and collaborate on solutions to pressing problems.', rows: [
+    { id: 'challenges-ideas', icon: '💡', title: 'Challenges & Ideas', duration: '', desc: 'Join policy challenges, share innovative ideas, and collaborate on solutions to pressing problems.', rows: [
       { k: 'Inputs', v: 'A real-world problem, a civic concern, or a fresh idea for change' },
       { k: 'Platform checks', v: 'Community moderation, duplicate detection, scope validation' },
       { k: 'Outputs', v: 'A challenge or idea posted to the platform, open for collaboration' }] },
-    { id: 'fact-finding', title: 'Fact-Finding', glyph: '🔍', duration: '', desc: 'Identify the Truth. Before we solve, we must understand. The community gathers verified data, research, and lived experiences to define the true root of a problem.', rows: [
+    { id: 'fact-finding', icon: '🔍', title: 'Fact-Finding', duration: '', desc: 'Identify the Truth. Before we solve, we must understand. The community gathers verified data, research, and lived experiences to define the true root of a problem.', rows: [
       { k: 'Inputs', v: 'Community knowledge, research papers, lived experiences' },
       { k: 'Platform checks', v: 'Source verification, evidence quality ratings' },
       { k: 'Outputs', v: 'Verified data set and root cause analysis' }] },
-    { id: 'collaborative-drafting', title: 'Collaborative Drafting', glyph: '📝', duration: '1–7 days', desc: 'Build the Blueprint. Start with a guided template or import a draft. Cite evidence and refine the logic in a transparent, open-source space.', rows: [
+    { id: 'collaborative-drafting', icon: '📝', title: 'Collaborative Drafting', duration: '1–7 days', desc: 'Build the Blueprint. Start with a guided template or import a draft. Cite evidence and refine the logic in a transparent, open-source space.', rows: [
       { k: 'Inputs', v: 'Fact-finding results, guided templates, imported drafts' },
       { k: 'Platform checks', v: 'Evidence citations, duplicate detection, legality scope' },
       { k: 'Outputs', v: 'Shareable draft with inline citations and impact checklist' }] },
-    { id: 'wisdom-check', title: 'Wisdom Check', glyph: '🧠', duration: '3–10 days', desc: 'Verify the Path. Trusted Builders and Caretakers annotate drafts for feasibility, risks, and social impact, ensuring our solutions are grounded in reality.', rows: [
+    { id: 'wisdom-check', icon: '🧠', title: 'Wisdom Check', duration: '3–10 days', desc: 'Verify the Path. Trusted Builders and Caretakers annotate drafts for feasibility, risks, and social impact, ensuring our solutions are grounded in reality.', rows: [
       { k: 'Who', v: 'Rotating pool of domain experts with public disclosures; randomized assignment' },
       { k: 'Checks', v: 'Evidence validation, conflict-of-interest flags, credential verification' },
       { k: 'Outputs', v: 'Feasibility report, risk register, social impact assessment, budget estimate' }] },
-    { id: 'civic-refinement', title: 'Civic Refinement', glyph: '🗳️', duration: '5–14 days', desc: 'Unite through Logic. Our reputation system and civility tools help the most effective ideas rise, filtering out the noise of old political friction.', rows: [
+    { id: 'civic-refinement', icon: '🗳️', title: 'Civic Refinement', duration: '5–14 days', desc: 'Unite through Logic. Our reputation system and civility tools help the most effective ideas rise, filtering out the noise of old political friction.', rows: [
       { k: 'Signals', v: 'Reputation weighting, rate-limits for noise, down-ranking of uncivil posts' },
       { k: 'Outputs', v: 'Consolidated draft + set of vetted alternatives' }] },
-    { id: 'formulate-action', title: 'Formulate Action', glyph: '📜', duration: '', desc: 'Finalize the Plan. Once consensus is reached, proposals crystallize into actionable blueprints — high-quality solutions ready for our civilization to adopt.', rows: [
+    { id: 'formulate-action', icon: '📜', title: 'Formulate Action', duration: '', desc: 'Finalize the Plan. Once consensus is reached, proposals crystallize into actionable blueprints — high-quality solutions ready for our civilization to adopt.', rows: [
       { k: 'Gate', v: 'Support + review thresholds achieved' },
       { k: 'Outputs', v: 'Actionable blueprint, voting brief, implementation tracker' },
       { k: 'Aftercare', v: 'Post-adoption audit and metrics reporting' }] },
-    { id: 'collective-resonance', title: 'Collective Resonance', glyph: '📣', duration: '', desc: 'Drive the Change. We move beyond the platform. Using the weight of our community, users leverage social media and direct outreach to deliver blueprints to leaders, ensuring they are implemented.', rows: [
+    { id: 'collective-resonance', icon: '📣', title: 'Collective Resonance', duration: '', desc: 'Drive the Change. We move beyond the platform. Using the weight of our community, users leverage social media and direct outreach to deliver blueprints to leaders, ensuring they are implemented.', rows: [
       { k: 'Inputs', v: 'Finalized blueprint, community weight and momentum' },
       { k: 'Outputs', v: 'Blueprint delivered to decision-makers, tracked for real-world implementation' }] },
   ];
