@@ -3,17 +3,24 @@
 
 <main id="main" role="main">
   @if (isAuthenticated) {
-    <section class="challenge-form-section">
-      <div class="container">
-        <div class="page-head">
-          <span class="eyebrow">New challenge</span>
-          <h1>Create a Challenge</h1>
-          <p class="page-subtitle">Describe a pressing problem so the community can collaborate on ideas to solve it</p>
-        </div>
+    <section class="hero">
+      <div class="container page-head">
+        <div class="kicker">New challenge</div>
+        <h1>Name a problem. <span class="gradient-text">Let everyone solve it.</span></h1>
+        <p class="lead">
+          Every blueprint starts with a clearly described problem. Tell the community what is going wrong, who it affects and why it matters &mdash; then open it up for <strong>ideas, evidence and expert review</strong>.
+        </p>
+      </div>
+    </section>
 
+    <section class="challenge-form-section">
+      <div class="container form-layout">
         <form class="form-card" (ngSubmit)="onSubmit()">
+          <div class="card-accent" aria-hidden="true"></div>
+
           <fieldset class="form-group">
-            <legend class="group-title">Basics</legend>
+            <legend class="group-title"><span class="group-icon" aria-hidden="true">📝</span>Basics</legend>
+            <p class="group-hint">The essentials people see first in the challenge list.</p>
 
             <div class="field-row two">
               <mat-form-field appearance="outline">
@@ -38,6 +45,7 @@
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Title</mat-label>
               <input matInput [(ngModel)]="challenge.title" name="title" required placeholder="A clear, concise problem statement">
+              <mat-hint>Describe the problem, not the solution &mdash; e.g. &ldquo;Rural areas lack reliable public transport&rdquo;.</mat-hint>
             </mat-form-field>
 
             <app-rich-text-editor
@@ -50,7 +58,8 @@
           </fieldset>
 
           <fieldset class="form-group">
-            <legend class="group-title">Details <span class="optional">optional</span></legend>
+            <legend class="group-title"><span class="group-icon alt" aria-hidden="true">⚙️</span>Details <span class="optional">optional</span></legend>
+            <p class="group-hint">Help contributors prioritise: how pressing is it, and by when do you need answers?</p>
 
             <div class="field-row three">
               <mat-form-field appearance="outline">
@@ -81,6 +90,7 @@
                 <input matInput [(ngModel)]="tagInput" name="tagInput"
                        (keydown.enter)="$event.preventDefault(); addTag()"
                        placeholder="Type a tag and press Enter">
+                <mat-hint>Tags make your challenge easier to find.</mat-hint>
               </mat-form-field>
               <button type="button" class="btn secondary add-tag-btn" (click)="addTag()">Add</button>
             </div>
@@ -108,6 +118,29 @@
             </button>
           </div>
         </form>
+
+        <aside class="side" aria-label="Guidance">
+          <section class="side-card">
+            <div class="card-accent" aria-hidden="true"></div>
+            <h2><span aria-hidden="true">💡</span> What makes a strong challenge</h2>
+            <ul class="check-list">
+              <li><strong>Be specific.</strong> Name the place, group or system affected.</li>
+              <li><strong>Stick to facts.</strong> Link data, reports or lived experience where you can.</li>
+              <li><strong>Stay neutral.</strong> Frame the problem so people of any view can contribute.</li>
+              <li><strong>One problem at a time.</strong> Split big topics into separate challenges.</li>
+            </ul>
+          </section>
+
+          <section class="side-card alt">
+            <div class="card-accent" aria-hidden="true"></div>
+            <h2><span aria-hidden="true">🧭</span> What happens next</h2>
+            <ol class="next-list">
+              <li><span>1</span>Your challenge goes live and is open for community ideas.</li>
+              <li><span>2</span>Contributors add facts, evidence and draft solutions.</li>
+              <li><span>3</span>Experts review the strongest proposals before they refine into a blueprint.</li>
+            </ol>
+          </section>
+        </aside>
       </div>
     </section>
   } @else {
