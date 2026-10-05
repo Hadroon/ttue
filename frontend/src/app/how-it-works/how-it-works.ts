@@ -16,12 +16,8 @@ export class HowItWorks {
       { k: 'Inputs', v: 'A real-world problem, a civic concern, or a fresh idea for change' },
       { k: 'Platform checks', v: 'Community moderation, duplicate detection, scope validation' },
       { k: 'Outputs', v: 'A challenge or idea posted to the platform, open for collaboration' }] },
-    { id: 'fact-finding', icon: '🔍', title: 'Fact-Finding', duration: '', desc: 'Identify the Truth. Before we solve, we must understand. The community gathers verified data, research, and lived experiences to define the true root of a problem.', rows: [
-      { k: 'Inputs', v: 'Community knowledge, research papers, lived experiences' },
-      { k: 'Platform checks', v: 'Source verification, evidence quality ratings' },
-      { k: 'Outputs', v: 'Verified data set and root cause analysis' }] },
     { id: 'collaborative-drafting', icon: '📝', title: 'Collaborative Drafting', duration: '1–7 days', desc: 'Build the Blueprint. Start with a guided template or import a draft. Cite evidence and refine the logic in a transparent, open-source space.', rows: [
-      { k: 'Inputs', v: 'Fact-finding results, guided templates, imported drafts' },
+      { k: 'Inputs', v: 'Community research, guided templates, imported drafts' },
       { k: 'Platform checks', v: 'Evidence citations, duplicate detection, legality scope' },
       { k: 'Outputs', v: 'Shareable draft with inline citations and impact checklist' }] },
     { id: 'wisdom-check', icon: '🧠', title: 'Wisdom Check', duration: '3–10 days', desc: 'Verify the Path. Trusted Builders and Caretakers annotate drafts for feasibility, risks, and social impact, ensuring our solutions are grounded in reality.', rows: [
