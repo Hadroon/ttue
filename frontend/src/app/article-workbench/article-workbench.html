@@ -331,25 +331,7 @@
 
   @if (activeSection() === 'actions') {
     <div class="card-body actions-container" id="actions">
-      <header class="section-head">
-        <h2>Actions</h2>
-        <p class="section-subtitle">Ways the community can turn this challenge into real-world pressure and change.</p>
-      </header>
-
-      @for (category of actionCategories; track category.title; let i = $index) {
-        <section class="action-category" [attr.aria-labelledby]="'action-cat-' + i">
-          <h3 [id]="'action-cat-' + i">{{ i + 1 }}. {{ category.title }}</h3>
-          <p class="action-intro">{{ category.intro }}</p>
-          <ul class="action-list">
-            @for (item of category.items; track item.title) {
-              <li class="action-item">
-                <strong>{{ item.title }}</strong>
-                <span>{{ item.description }}</span>
-              </li>
-            }
-          </ul>
-        </section>
-      }
+      <app-actions [challengeId]="challengeId()" [challengeTitle]="challenge()?.title ?? ''" [creatorId]="challenge()?.creatorId ?? null" (openDraft)="openDraftTab()"></app-actions>
     </div>
   }
   </div>

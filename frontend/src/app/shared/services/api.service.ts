@@ -118,6 +118,16 @@ export interface Challenge {
   updatedAt: string;
 }
 
+export type ChallengeActionKey = 'legal' | 'economic' | 'direct' | 'policy' | 'info';
+
+export interface ChallengeActionState {
+  key: ChallengeActionKey;
+  votes: number;
+  voted: boolean;
+  activated: boolean;
+  activatedAt: string | null;
+}
+
 export interface ChallengeDraft {
   id: number;
   challengeId: number;
@@ -710,6 +720,23 @@ export class ApiService {
       `${this.baseUrl}/challenges/vote`,
       { challengeId }
     );
+  }
+
+  /** Recommendation counts and activation state of every community action for a challenge */
+  getChallengeActions(challengeId: number) {
+    return this.http.get<{ actions: ChallengeActionState[] }>(`${this.baseUrl}/challenges/${challengeId}/actions`);
+  }
+
+  /** Toggle the caller's recommendation for an action */
+  voteChallengeAction(challengeId: number, key: ChallengeActionKey) {
+    return this.http.post<{ message: string; action: ChallengeActionState }>(
+      `${this.baseUrl}/challenges/${challengeId}/actions/${key}/vote`, {});
+  }
+
+  /** Switch an action on or off. Allowed for the challenge creator and admins. */
+  setChallengeActionActive(challengeId: number, key: ChallengeActionKey, active: boolean) {
+    return this.http.put<{ message: string; action: ChallengeActionState }>(
+      `${this.baseUrl}/challenges/${challengeId}/actions/${key}/activation`, { active });
   }
 
   /**

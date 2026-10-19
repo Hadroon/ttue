@@ -214,6 +214,27 @@ export const challengeVotes = pgTable("challenge_votes", {
   valueCheck: check("challenge_vote_value_check", sql`${table.value} = 1`),
 }));
 
+// Which community actions people recommend for a challenge (one vote per user per action)
+export const challengeActionVotes = pgTable("challenge_action_votes", {
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+  actionKey: text("action_key").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.challengeId, table.actionKey, table.userId] }),
+  actionIdx: index("challenge_action_votes_action_idx").on(table.challengeId, table.actionKey),
+}));
+
+// Actions that have been switched on for a challenge. Until a row exists, an action only collects votes.
+export const challengeActions = pgTable("challenge_actions", {
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+  actionKey: text("action_key").notNull(),
+  activatedBy: integer("activated_by").references(() => users.id, { onDelete: "set null" }),
+  activatedAt: timestamp("activated_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.challengeId, table.actionKey] }),
+}));
+
 // Challenge drafts table
 export const challengeDrafts = pgTable("challenge_drafts", {
   id: serial("id").primaryKey(),

@@ -694,8 +694,181 @@
   line-height: 1.55;
 }
 
-.action-item span {
+.action-item > span {
   color: var(--muted);
+}
+
+.action-item.is-active {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg));
+}
+
+.action-banner {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.action-banner strong {
+  color: var(--text);
+}
+
+.action-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.action-controls.column {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-btn,
+.act-btn,
+.vote-chip {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+
+.chip-btn:hover,
+.act-btn:hover,
+.vote-chip:hover {
+  border-color: var(--brand);
+}
+
+.act-btn.primary {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+  color: #fff;
+}
+
+.act-btn.link {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  padding-inline: 6px;
+  text-decoration: underline;
+}
+
+.status-pill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inline-form,
+.entry-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.inline-form input,
+.entry-form input,
+.message-box {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+}
+
+.entry-form input[type="text"] {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.inline-form input {
+  width: 160px;
+}
+
+.message-box {
+  width: 100%;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.action-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.entry-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.entry-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  overflow-wrap: anywhere;
+}
+
+.entry-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.vote-chip {
+  padding: 4px 10px;
+}
+
+.vote-chip.voted {
+  background: color-mix(in srgb, var(--brand) 15%, var(--card));
+  border-color: var(--brand);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 /* Ideas section */

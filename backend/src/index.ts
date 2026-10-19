@@ -10,6 +10,7 @@ import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, hand
 import { handleCreateComment, handleGetThreadComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
 import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
+import { handleGetChallengeActions, handleVoteChallengeAction, handleSetChallengeActionActivation } from "./routes/challenge-actions";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
@@ -219,6 +220,20 @@ serve({
         return handleVoteChallenge(req);
       }
       
+      // Challenge action routes (recommend + activate)
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/actions$/) && req.method === "GET") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleGetChallengeActions(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/actions\/[a-z]+\/vote$/) && req.method === "POST") {
+        const [, , , id, , key] = url.pathname.split("/");
+        return handleVoteChallengeAction(req, parseInt(id), key);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/actions\/[a-z]+\/activation$/) && req.method === "PUT") {
+        const [, , , id, , key] = url.pathname.split("/");
+        return handleSetChallengeActionActivation(req, parseInt(id), key);
+      }
+
       // Challenge draft routes
       if (url.pathname.match(/^\/api\/challenges\/\d+\/draft$/) && req.method === "POST") {
         const challengeId = parseInt(url.pathname.split("/")[3]);
