@@ -336,16 +336,8 @@
   }
   </div>
 
-      @if (activeSection() === 'draft' && backendDraft(); as draft) {
-          <app-comments [entityId]="draft.id" entityType="draft" [autoLoad]="true"></app-comments>
-      }
-
-      <aside class="sidebar-sticky" [attr.aria-label]="activeSection() === 'draft' ? 'Draft diff' : 'Community mood'">
-        @if (activeSection() === 'draft') {
-        <div class="voting-card diff-card">
-          <ng-container *ngTemplateOutlet="diffPanel"></ng-container>
-        </div>
-        } @else {
+      @if (activeSection() === 'draft') {
+      <aside class="sidebar-sticky draft-vote" aria-label="Community mood">
         <div class="voting-card">
           <span class="voting-header">Community preview</span>
           <h3 class="voting-title">Would you support this article?</h3>
@@ -373,9 +365,24 @@
                     (click)="castVote('oppose')">✕ Oppose</button>
           </div>
           <p class="voting-footer">Voting tallies refresh in real time for collaborators with edit access.</p>
+          @if (voteError()) {
+            <p class="voting-footer" style="color: var(--color-error, red);">{{ voteError() }}</p>
+          }
         </div>
-        }
       </aside>
+      }
+
+      @if (activeSection() === 'draft' && backendDraft(); as draft) {
+          <app-comments [entityId]="draft.id" entityType="draft" [autoLoad]="true"></app-comments>
+      }
+
+      @if (activeSection() === 'draft') {
+      <aside class="sidebar-sticky" aria-label="Draft diff">
+        <div class="voting-card diff-card">
+          <ng-container *ngTemplateOutlet="diffPanel"></ng-container>
+        </div>
+      </aside>
+      }
   </div>
   </section>
 

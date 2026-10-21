@@ -10,6 +10,7 @@ import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, hand
 import { handleCreateComment, handleGetThreadComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
 import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
+import { handleGetDraftVotes, handleVoteDraft } from "./routes/draft-votes";
 import { handleGetChallengeActions, handleVoteChallengeAction, handleSetChallengeActionActivation } from "./routes/challenge-actions";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
@@ -246,6 +247,14 @@ serve({
       if (url.pathname.match(/^\/api\/challenges\/\d+\/draft$/) && req.method === "PUT") {
         const challengeId = parseInt(url.pathname.split("/")[3]);
         return handleUpdateChallengeDraft(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft\/votes$/) && req.method === "GET") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleGetDraftVotes(req, challengeId);
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/draft\/votes$/) && req.method === "POST") {
+        const challengeId = parseInt(url.pathname.split("/")[3]);
+        return handleVoteDraft(req, challengeId);
       }
       if (url.pathname.match(/^\/api\/challenges\/\d+\/draft\/revisions$/) && req.method === "GET") {
         const challengeId = parseInt(url.pathname.split("/")[3]);

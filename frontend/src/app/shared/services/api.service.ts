@@ -128,6 +128,12 @@ export interface ChallengeActionState {
   activatedAt: string | null;
 }
 
+export interface DraftVoteSummary {
+  support: number;
+  oppose: number;
+  myVote: 'support' | 'oppose' | null;
+}
+
 export interface ChallengeDraft {
   id: number;
   challengeId: number;
@@ -737,6 +743,17 @@ export class ApiService {
   setChallengeActionActive(challengeId: number, key: ChallengeActionKey, active: boolean) {
     return this.http.put<{ message: string; action: ChallengeActionState }>(
       `${this.baseUrl}/challenges/${challengeId}/actions/${key}/activation`, { active });
+  }
+
+  /** Support/oppose tallies and the caller's own choice for a challenge's draft */
+  getDraftVotes(challengeId: number) {
+    return this.http.get<DraftVoteSummary>(`${this.baseUrl}/challenges/${challengeId}/draft/votes`);
+  }
+
+  /** Cast, switch or remove (by repeating the choice) the caller's draft vote */
+  voteDraft(challengeId: number, choice: 'support' | 'oppose') {
+    return this.http.post<DraftVoteSummary & { message: string }>(
+      `${this.baseUrl}/challenges/${challengeId}/draft/votes`, { choice });
   }
 
   /**

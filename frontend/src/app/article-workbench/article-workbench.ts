@@ -4,7 +4,7 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Header } from '../shared/components';
-import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, Idea } from '../shared/services/api.service';
+import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, DraftVoteSummary, Idea } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
@@ -89,9 +89,11 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly commentsTotal: WritableSignal<number> = signal(0);
   readonly commentsHasMore: WritableSignal<boolean> = signal(false);
 
-  readonly supportVotes: WritableSignal<number> = signal(284);
-  readonly opposeVotes: WritableSignal<number> = signal(9);
+  readonly supportVotes: WritableSignal<number> = signal(0);
+  readonly opposeVotes: WritableSignal<number> = signal(0);
   readonly userVote: WritableSignal<'support' | 'oppose' | null> = signal(null);
+  readonly voteBusy: WritableSignal<boolean> = signal(false);
+  readonly voteError: WritableSignal<string | null> = signal(null);
 
 
 
@@ -232,6 +234,7 @@ export class ArticleWorkbench implements AfterViewInit {
       }
       this.loadIdeas();
       this.loadChallengeComments(challengeId);
+      this.loadDraftVotes(challengeId);
     });
   }
 
@@ -250,6 +253,7 @@ export class ArticleWorkbench implements AfterViewInit {
         this.loadIdeas();
         // Load comments for this challenge
         this.loadChallengeComments(id);
+        this.loadDraftVotes(id);
       },
       error: (error) => {
         console.error('Error loading challenge:', error);
@@ -617,29 +621,39 @@ export class ArticleWorkbench implements AfterViewInit {
   }
 
   castVote(choice: 'support' | 'oppose'): void {
-    if (!this.authGuard.requireAuth('vote on this challenge')) {
+    const challengeId = this.challengeId();
+    if (challengeId == null || this.voteBusy()) {
       return;
     }
-    const current = this.userVote();
-    if (current === choice) {
+    if (!this.authGuard.requireAuth('vote on this draft')) {
       return;
     }
 
-    if (current === 'support') {
-      this.supportVotes.update((value) => Math.max(0, value - 1));
-    }
+    this.voteBusy.set(true);
+    this.voteError.set(null);
+    this.apiService.voteDraft(challengeId, choice).subscribe({
+      next: (summary) => {
+        this.applyDraftVotes(summary);
+        this.voteBusy.set(false);
+      },
+      error: (error: any) => {
+        this.voteError.set(error?.error?.error ?? 'Could not save your vote.');
+        this.voteBusy.set(false);
+      }
+    });
+  }
 
-    if (current === 'oppose') {
-      this.opposeVotes.update((value) => Math.max(0, value - 1));
-    }
+  private loadDraftVotes(challengeId: number): void {
+    this.apiService.getDraftVotes(challengeId).subscribe({
+      next: (summary) => this.applyDraftVotes(summary),
+      error: (error: any) => console.error('Error loading draft votes:', error)
+    });
+  }
 
-    if (choice === 'support') {
-      this.supportVotes.update((value) => value + 1);
-    } else {
-      this.opposeVotes.update((value) => value + 1);
-    }
-
-    this.userVote.set(choice);
+  private applyDraftVotes(summary: DraftVoteSummary): void {
+    this.supportVotes.set(summary.support);
+    this.opposeVotes.set(summary.oppose);
+    this.userVote.set(summary.myVote);
   }
 
   submitComment(): void {

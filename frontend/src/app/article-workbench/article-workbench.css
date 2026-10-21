@@ -284,15 +284,7 @@
   padding-right: 0;
 }
 
-/* draft spans the full width; comments and diff share the row below */
-.draft-layout {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.draft-layout > .content-card {
-  grid-column: 1 / -1;
-}
-
+/* draft | vote card on the first row; comments | diff on the row below */
 .draft-comments-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -302,6 +294,10 @@
 /* diff can be taller than the viewport, so let it scroll with the page */
 .draft-layout .sidebar-sticky {
   position: static;
+}
+
+.draft-layout .draft-vote {
+  position: sticky;
 }
 
 .diff-card .panel-head {
@@ -978,7 +974,8 @@
     grid-template-columns: 1fr;
   }
 
-  .sidebar-sticky {
+  .sidebar-sticky,
+  .draft-layout .draft-vote {
     position: static;
   }
 }

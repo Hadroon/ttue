@@ -248,6 +248,17 @@ export const challengeDrafts = pgTable("challenge_drafts", {
   creatorIdx: index("draft_creator_idx").on(table.creatorId),
 }));
 
+// Support (1) / oppose (-1) votes on a challenge's draft bill, one per user
+export const challengeDraftVotes = pgTable("challenge_draft_votes", {
+  draftId: integer("draft_id").notNull().references(() => challengeDrafts.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  value: integer("value").notNull(), // 1 support, -1 oppose
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.draftId, table.userId] }),
+  valueCheck: check("challenge_draft_vote_value_check", sql`${table.value} IN (-1, 1)`),
+}));
+
 // Challenge draft revisions table
 export const challengeDraftRevisions = pgTable("challenge_draft_revisions", {
   id: serial("id").primaryKey(),
