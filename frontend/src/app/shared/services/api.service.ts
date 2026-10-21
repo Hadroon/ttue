@@ -128,6 +128,18 @@ export interface ChallengeActionState {
   activatedAt: string | null;
 }
 
+export interface ChallengeLink {
+  id: number;
+  challengeId: number;
+  userId: number;
+  url: string;
+  title: string;
+  description: string | null;
+  createdAt: string;
+  authorUsername: string;
+  authorDisplayName: string | null;
+}
+
 export interface DraftVoteSummary {
   support: number;
   oppose: number;
@@ -743,6 +755,20 @@ export class ApiService {
   setChallengeActionActive(challengeId: number, key: ChallengeActionKey, active: boolean) {
     return this.http.put<{ message: string; action: ChallengeActionState }>(
       `${this.baseUrl}/challenges/${challengeId}/actions/${key}/activation`, { active });
+  }
+
+  /** Links users have attached to a challenge, newest first */
+  getChallengeLinks(challengeId: number) {
+    return this.http.get<ChallengeLink[]>(`${this.baseUrl}/challenges/${challengeId}/links`);
+  }
+
+  addChallengeLink(challengeId: number, link: { url: string; title?: string; description?: string }) {
+    return this.http.post<ChallengeLink>(`${this.baseUrl}/challenges/${challengeId}/links`, link);
+  }
+
+  /** Allowed for the link's author and admins */
+  deleteChallengeLink(challengeId: number, linkId: number) {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/challenges/${challengeId}/links/${linkId}`);
   }
 
   /** Support/oppose tallies and the caller's own choice for a challenge's draft */

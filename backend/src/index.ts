@@ -11,6 +11,7 @@ import { handleCreateComment, handleGetThreadComments, handleUpdateComment, hand
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
 import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, handleVoteChallenge, handleGetChallenge, handleGetFeaturedChallenge, handleCreateChallengeDraft, handleGetChallengeDraft, handleUpdateChallengeDraft, handleGetChallengeDraftRevisions, handleGetDraftProposals, handleResolveDraftProposal } from "./routes/challenges";
 import { handleGetDraftVotes, handleVoteDraft } from "./routes/draft-votes";
+import { handleGetChallengeLinks, handleCreateChallengeLink, handleDeleteChallengeLink } from "./routes/challenge-links";
 import { handleGetChallengeActions, handleVoteChallengeAction, handleSetChallengeActionActivation } from "./routes/challenge-actions";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
@@ -233,6 +234,18 @@ serve({
       if (url.pathname.match(/^\/api\/challenges\/\d+\/actions\/[a-z]+\/activation$/) && req.method === "PUT") {
         const [, , , id, , key] = url.pathname.split("/");
         return handleSetChallengeActionActivation(req, parseInt(id), key);
+      }
+
+      // Challenge link routes
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/links$/) && req.method === "GET") {
+        return handleGetChallengeLinks(req, parseInt(url.pathname.split("/")[3]));
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/links$/) && req.method === "POST") {
+        return handleCreateChallengeLink(req, parseInt(url.pathname.split("/")[3]));
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/links\/\d+$/) && req.method === "DELETE") {
+        const [, , , id, , linkId] = url.pathname.split("/");
+        return handleDeleteChallengeLink(req, parseInt(id), parseInt(linkId));
       }
 
       // Challenge draft routes

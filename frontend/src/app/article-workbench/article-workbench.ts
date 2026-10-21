@@ -4,12 +4,13 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Header } from '../shared/components';
-import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, DraftVoteSummary, Idea } from '../shared/services/api.service';
+import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, ChallengeLink, DraftVoteSummary, Idea } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
 import { Comments, CommentSort } from '../shared/components/comments/comments';
 import { Actions } from './actions/actions';
+import { ChallengeLinks } from './links/challenge-links';
 import { Idea as BaseIdea, Comment as BaseComment } from '../shared/models/baseModels';
 
 type DiffKind = 'added' | 'removed' | 'unchanged';
@@ -29,7 +30,7 @@ interface RevisionSnapshot {
 @Component({
   selector: 'app-article-workbench',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatTabsModule, Header, ChallengeIdeas, Comments, Actions],
+  imports: [CommonModule, FormsModule, RouterLink, MatTabsModule, Header, ChallengeIdeas, Comments, Actions, ChallengeLinks],
   templateUrl: './article-workbench.html',
   styleUrl: './article-workbench.css'
 })
@@ -117,6 +118,11 @@ export class ArticleWorkbench implements AfterViewInit {
   readonly ideasPage: WritableSignal<number> = signal(1);
   readonly ideasHasMore: WritableSignal<boolean> = signal(false);
   readonly ideasLimit = 50;
+
+  // Links state
+  readonly links: WritableSignal<ChallengeLink[]> = signal([]);
+  readonly linksLoading: WritableSignal<boolean> = signal(false);
+  readonly linksError: WritableSignal<string | null> = signal(null);
 
   readonly mappedIdeas = computed<BaseIdea[]>(() =>
     this.ideas().map(idea => ({
@@ -213,7 +219,7 @@ export class ArticleWorkbench implements AfterViewInit {
       // Old ?section=comments links now land on the Challenge tab, which hosts its comments
       const requested = params['section'];
       const section = requested === 'diff' ? 'draft' : requested === 'comments' ? 'challenge' : requested;
-      if (['challenge', 'draft', 'ideas', 'actions'].includes(section)) {
+      if (['challenge', 'draft', 'ideas', 'links', 'actions'].includes(section)) {
         this.activeSection.set(section);
       }
       const id = params['challengeId'];
@@ -251,6 +257,8 @@ export class ArticleWorkbench implements AfterViewInit {
         this.loadDraft(id);
         // Load ideas after challenge is loaded
         this.loadIdeas();
+        // Load links for this challenge
+        this.loadLinks(id);
         // Load comments for this challenge
         this.loadChallengeComments(id);
         this.loadDraftVotes(id);
@@ -519,6 +527,21 @@ export class ArticleWorkbench implements AfterViewInit {
       error: () => {
         this.ideasError.set('Failed to load ideas');
         this.ideasLoading.set(false);
+      }
+    });
+  }
+
+  private loadLinks(challengeId: number): void {
+    this.linksLoading.set(true);
+    this.linksError.set(null);
+    this.apiService.getChallengeLinks(challengeId).subscribe({
+      next: (links) => {
+        this.links.set(links);
+        this.linksLoading.set(false);
+      },
+      error: () => {
+        this.linksError.set('Failed to load links');
+        this.linksLoading.set(false);
       }
     });
   }

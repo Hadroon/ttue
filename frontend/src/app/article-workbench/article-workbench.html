@@ -26,6 +26,11 @@
         @if (ideas().length > 0) {<span class="tab-count">{{ ideas().length }}</span>}
       </a>
       <a mat-tab-link
+         [active]="activeSection() === 'links'"
+         (click)="scrollToSection('links')">Links
+        @if (links().length > 0) {<span class="tab-count">{{ links().length }}</span>}
+      </a>
+      <a mat-tab-link
          [active]="activeSection() === 'actions'"
          (click)="scrollToSection('actions')">Actions</a>
     </nav>
@@ -326,6 +331,12 @@
           (voteIdea)="onVoteIdea($event)">
         </app-challenge-ideas>
       }
+    </div>
+  }
+
+  @if (activeSection() === 'links') {
+    <div class="card-body links-container" id="links">
+      <app-challenge-links [challengeId]="challengeId()" [(links)]="links" [loading]="linksLoading()" [loadError]="linksError()"></app-challenge-links>
     </div>
   }
 

@@ -235,8 +235,22 @@ export const challengeActions = pgTable("challenge_actions", {
   pk: primaryKey({ columns: [table.challengeId, table.actionKey] }),
 }));
 
+// Reference links users attach to a challenge
+export const challengeLinks = pgTable("challenge_links", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  challengeIdx: index("challenge_links_challenge_idx").on(table.challengeId, table.createdAt),
+  challengeUrlUnique: uniqueIndex("challenge_links_challenge_url_unique").on(table.challengeId, table.url),
+}));
+
 // Challenge drafts table
-export const challengeDrafts = pgTable("challenge_drafts", {
+export const challengeDrafts =  pgTable("challenge_drafts", {
   id: serial("id").primaryKey(),
   challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }).unique(),
   creatorId: integer("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
