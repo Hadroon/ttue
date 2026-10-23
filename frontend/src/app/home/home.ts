@@ -11,6 +11,7 @@ import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { AddChallengeModalComponent } from '../shared/components/add-challenge-modal/add-challenge-modal';
+import { DonationModalComponent } from '../shared/components/donation-modal/donation-modal';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { AuthService } from '../shared/services/auth.service';
 
@@ -285,6 +286,13 @@ export class Home implements OnInit {
         console.error('Error checking welcome:', error);
         // Optionally show error message to user
       }
+    });
+  }
+
+  openDonationModal() {
+    this.dialog.open(DonationModalComponent, {
+      width: '520px',
+      maxWidth: '90vw'
     });
   }
 

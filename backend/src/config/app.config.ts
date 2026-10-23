@@ -24,6 +24,12 @@ export interface AppConfig {
     clientId?: string;
     clientSecret?: string;
   };
+  stripe: {
+    secretKey?: string;
+    publishableKey?: string;
+    currency: string;
+    domain?: string;
+  };
   features: {
     registration: boolean;
     passwordReset: boolean;
@@ -61,6 +67,12 @@ function getConfig(): AppConfig {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
+    stripe: {
+      secretKey: process.env.STRIPE_SECRET_KEY,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      currency: (process.env.STRIPE_CURRENCY || 'usd').toLowerCase(),
+      domain: process.env.DOMAIN,
+    },
     features: {
       registration: process.env.FEATURE_REGISTRATION !== 'false',
       passwordReset: process.env.FEATURE_PASSWORD_RESET !== 'false',
@@ -95,6 +107,10 @@ export function logConfig() {
     security: {
       ...config.security,
       jwtSecret: config.security.jwtSecret ? '[REDACTED]' : undefined,
+    },
+    stripe: {
+      ...config.stripe,
+      secretKey: config.stripe.secretKey ? '[REDACTED]' : undefined,
     },
     database: {
       ...config.database,

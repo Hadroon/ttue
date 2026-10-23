@@ -6,6 +6,7 @@ import { db, testConnection } from "./db";
 import { sql } from "drizzle-orm";
 import { handleRegister, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
 import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
+import { handleGetDonationConfig, handleCreateDonationSession } from "./routes/donations";
 import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, handleDeleteIdea } from "./routes/ideas";
 import { handleCreateComment, handleGetThreadComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
@@ -138,6 +139,14 @@ serve({
         return handleGetGoogleConfig(req);
       }
       
+      // Donation routes
+      if (url.pathname === "/api/donations/config" && req.method === "GET") {
+        return handleGetDonationConfig(req);
+      }
+      if (url.pathname === "/api/donations/checkout-session" && req.method === "POST") {
+        return handleCreateDonationSession(req);
+      }
+
       // Ideas routes
       if (url.pathname === "/api/ideas" && req.method === "GET") {
         return handleGetIdeas(req);

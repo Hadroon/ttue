@@ -602,6 +602,22 @@ export class ApiService {
   }
 
   /**
+   * Get donation (Stripe) configuration
+   */
+  getDonationConfig() {
+    return this.http.get<{ publishableKey: string | null; currency: string; minAmount: number; maxAmount: number; enabled: boolean }>(
+      `${this.baseUrl}/donations/config`
+    );
+  }
+
+  /**
+   * Create a one-time donation Checkout Session; amount is in the smallest currency unit
+   */
+  createDonationSession(amount: number) {
+    return this.http.post<{ client_secret: string }>(`${this.baseUrl}/donations/checkout-session`, { amount });
+  }
+
+  /**
    * Logout user
    */
   logout() {
