@@ -6,7 +6,7 @@ import { db, testConnection } from "./db";
 import { sql } from "drizzle-orm";
 import { handleRegister, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
 import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
-import { handleGetDonationConfig, handleCreateDonationSession } from "./routes/donations";
+import { handleGetDonationConfig, handleCreateDonationSession, handleConfirmDonation, handleStripeWebhook } from "./routes/donations";
 import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, handleDeleteIdea } from "./routes/ideas";
 import { handleCreateComment, handleGetThreadComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
 import { handleVoteIdea, handleVoteComment, handleGetIdeaVote } from "./routes/votes";
@@ -14,7 +14,7 @@ import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, han
 import { handleGetDraftVotes, handleVoteDraft } from "./routes/draft-votes";
 import { handleGetChallengeLinks, handleCreateChallengeLink, handleDeleteChallengeLink } from "./routes/challenge-links";
 import { handleGetChallengeActions, handleVoteChallengeAction, handleSetChallengeActionActivation } from "./routes/challenge-actions";
-import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent } from "./routes/admin";
+import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
 
@@ -145,6 +145,12 @@ serve({
       }
       if (url.pathname === "/api/donations/checkout-session" && req.method === "POST") {
         return handleCreateDonationSession(req);
+      }
+      if (url.pathname === "/api/donations/confirm" && req.method === "POST") {
+        return handleConfirmDonation(req);
+      }
+      if (url.pathname === "/api/stripe/webhook" && req.method === "POST") {
+        return handleStripeWebhook(req);
       }
 
       // Ideas routes
@@ -327,6 +333,9 @@ serve({
       }
       if (url.pathname === "/api/admin/flags" && req.method === "GET") {
         return handleAdminGetFlags(req);
+      }
+      if (url.pathname === "/api/admin/donations" && req.method === "GET") {
+        return handleAdminGetDonations(req);
       }
       if (url.pathname.match(/^\/api\/admin\/flags\/\d+\/mark$/) && req.method === "PATCH") {
         const flagId = parseInt(url.pathname.split("/")[4]);

@@ -149,7 +149,7 @@ export class ActionsStore {
   readonly data = signal<ActionsData>(emptyData());
 
   load(challengeId: number | null): void {
-    this.key = `ef-actions-v2-${challengeId ?? 'unknown'}`;
+    this.key = this.keyFor(challengeId);
     let next = emptyData();
     if (this.isBrowser) {
       try {
@@ -158,6 +158,35 @@ export class ActionsStore {
       } catch { /* corrupt or blocked storage: start empty */ }
     }
     this.data.set(next);
+  }
+
+  /**
+   * Add a paid amount to a bounty-board task. Works whether or not that challenge is the one
+   * currently loaded, e.g. when a donor comes back from a payment redirect.
+   */
+  addFunding(challengeId: number | null, taskId: number, amount: number): void {
+    const fund = (d: ActionsData): ActionsData => ({
+      ...d,
+      tasks: d.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        const funded = t.funded + amount;
+        return { ...t, funded, status: t.status === 'Open' && funded >= t.cost ? 'Funded' : t.status };
+      })
+    });
+    const key = this.keyFor(challengeId);
+    if (key === this.key) {
+      this.update(fund);
+      return;
+    }
+    if (!this.isBrowser) return;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) localStorage.setItem(key, JSON.stringify(fund({ ...emptyData(), ...JSON.parse(raw) })));
+    } catch { /* storage unavailable: nothing to update */ }
+  }
+
+  private keyFor(challengeId: number | null): string {
+    return `ef-actions-v2-${challengeId ?? 'unknown'}`;
   }
 
   update(change: (data: ActionsData) => ActionsData): void {

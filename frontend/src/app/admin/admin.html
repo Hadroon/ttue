@@ -33,6 +33,12 @@
       (click)="setTab('flags')">
       Flags
     </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'donations'"
+      (click)="setTab('donations')">
+      Donations
+    </button>
   </nav>
 
   <div class="admin-body">
@@ -318,6 +324,84 @@
               </tr>
             } @empty {
               <tr><td colspan="8" class="empty-row">No flags found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Donations Tab -->
+    @if (activeTab() === 'donations') {
+      @if (loading()) {
+        <div class="loading">Loading donations…</div>
+      } @else {
+        <p class="donation-summary">
+          {{ donations().length }} paid donation{{ donations().length === 1 ? '' : 's' }}, confirmed by Stripe
+          @for (t of donationTotals(); track t.currency) {
+            <span class="badge badge-admin">{{ t.total | currency: t.currency }}</span>
+          }
+        </p>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Paid</th>
+              <th>Amount</th>
+              <th>Donor</th>
+              <th>Challenge</th>
+              <th>Action</th>
+              <th>Task</th>
+              <th>Stripe</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of donations(); track d.id) {
+              <tr>
+                <td>{{ d.paidAt | date:'medium' }}</td>
+                <td>
+                  <strong>{{ d.amount / 100 | currency: d.currency.toUpperCase() }}</strong>
+                  @if (!d.livemode) { <span class="badge badge-user">test</span> }
+                </td>
+                <td>
+                  @if (d.donorUsername) {
+                    <a [routerLink]="['/profile', d.donorUsername]" class="content-link">{{ d.donorUsername }}</a>
+                  }
+                  @if (d.donorName || d.donorEmail) {
+                    <div class="content-id">{{ d.donorName }} {{ d.donorEmail }}</div>
+                  }
+                </td>
+                <td class="content-cell">
+                  @if (d.challengeId) {
+                    <a [routerLink]="['/article-workbench']"
+                       [queryParams]="{ challengeId: d.challengeId, section: 'actions' }"
+                       class="content-link"
+                       target="_blank">
+                      {{ truncate(d.challengeTitle ?? '(untitled)', 60) }}
+                      <span class="content-id">#{{ d.challengeId }}</span>
+                    </a>
+                  } @else if (d.challengeTitle) {
+                    {{ truncate(d.challengeTitle, 60) }} <span class="content-id">(deleted)</span>
+                  } @else {
+                    <span class="content-id">—</span>
+                  }
+                </td>
+                <td>{{ actionLabel(d.actionKey) }}</td>
+                <td>
+                  @if (d.targetTitle || d.targetId) {
+                    {{ truncate(d.targetTitle ?? '(untitled)', 60) }}
+                    @if (d.targetLocation) { <div class="content-id">📍 {{ d.targetLocation }}</div> }
+                    @if (d.targetId) { <div class="content-id">task id {{ d.targetId }}</div> }
+                  } @else {
+                    <span class="content-id">—</span>
+                  }
+                </td>
+                <td>
+                  @if (stripeUrl(d); as url) {
+                    <a [href]="url" target="_blank" rel="noopener" class="content-link">View</a>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-row">No donations yet.</td></tr>
             }
           </tbody>
         </table>

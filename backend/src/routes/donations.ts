@@ -1,8 +1,21 @@
 import Stripe from "stripe";
+import { eq } from "drizzle-orm";
 import { config } from "../config/app.config";
+import { db } from "../db";
+import { challenges, donations, users } from "../db/schema";
+import { optionalAuth } from "../middleware/auth";
 
 const MIN_AMOUNT = 100; // smallest unit (e.g. cents)
 const MAX_AMOUNT = 100_000;
+
+const ACTION_KEYS = new Set(["legal", "economic", "direct", "policy", "info"]);
+const ACTION_LABELS: Record<string, string> = {
+  legal: "Legal action",
+  economic: "Economic pressure",
+  direct: "Direct action",
+  policy: "Policy & lobbying",
+  info: "Information campaigns",
+};
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 10;
@@ -25,6 +38,9 @@ function json(body: unknown, status = 200): Response {
 function isRateLimited(req: Request): boolean {
   const key = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
   const now = Date.now();
+  if (hits.size > 10_000) {
+    for (const [k, v] of hits) if (v.resetAt <= now) hits.delete(k);
+  }
   const entry = hits.get(key);
   if (!entry || entry.resetAt <= now) {
     hits.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
@@ -32,6 +48,53 @@ function isRateLimited(req: Request): boolean {
   }
   entry.count++;
   return entry.count > RATE_LIMIT_MAX;
+}
+
+/** Trimmed string capped to Stripe's 500-char metadata value limit, or undefined if empty */
+function clean(value: unknown, max = 200): string | undefined {
+  if (typeof value !== "string" && typeof value !== "number") return undefined;
+  const text = String(value).trim().slice(0, max);
+  return text || undefined;
+}
+
+/** Store a paid donation from a Checkout Session. Safe to call more than once for the same session. */
+async function recordPaidSession(session: Stripe.Checkout.Session): Promise<boolean> {
+  const meta = session.metadata ?? {};
+  if (meta.kind !== "donation" || session.payment_status !== "paid") return false;
+
+  const toId = (v?: string) => (v && /^\d+$/.test(v) ? Number(v) : null);
+  let userId = toId(meta.user_id);
+  let challengeId = toId(meta.challenge_id);
+  // Rows may have been deleted between checkout and payment; keep the snapshot, drop the reference
+  if (userId !== null) {
+    const [u] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!u) userId = null;
+  }
+  if (challengeId !== null) {
+    const [c] = await db.select({ id: challenges.id }).from(challenges).where(eq(challenges.id, challengeId)).limit(1);
+    if (!c) challengeId = null;
+  }
+
+  await db
+    .insert(donations)
+    .values({
+      stripeSessionId: session.id,
+      stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
+      livemode: session.livemode,
+      amount: session.amount_total ?? 0,
+      currency: session.currency ?? config.stripe.currency,
+      donorEmail: session.customer_details?.email ?? null,
+      donorName: session.customer_details?.name ?? null,
+      userId,
+      challengeId,
+      challengeTitle: meta.challenge_title || null,
+      actionKey: meta.action_key || null,
+      targetId: meta.target_id || null,
+      targetTitle: meta.target_title || null,
+      targetLocation: meta.target_location || null,
+    })
+    .onConflictDoNothing({ target: donations.stripeSessionId });
+  return true;
 }
 
 export async function handleGetDonationConfig(_req: Request): Promise<Response> {
@@ -44,6 +107,7 @@ export async function handleGetDonationConfig(_req: Request): Promise<Response> 
   });
 }
 
+// POST /api/donations/checkout-session  { amount, context? }
 export async function handleCreateDonationSession(req: Request): Promise<Response> {
   if (!stripe) {
     return json({ error: "Donations are not configured" }, 503);
@@ -52,19 +116,73 @@ export async function handleCreateDonationSession(req: Request): Promise<Respons
     return json({ error: "Too many requests" }, 429);
   }
 
-  let amount: unknown;
+  let body: { amount?: unknown; context?: Record<string, unknown> };
   try {
-    ({ amount } = await req.json());
+    body = await req.json();
   } catch {
     return json({ error: "Invalid request format" }, 400);
   }
 
-  if (!Number.isInteger(amount) || (amount as number) < MIN_AMOUNT || (amount as number) > MAX_AMOUNT) {
+  const amount = body.amount;
+  if (typeof amount !== "number" || !Number.isInteger(amount) || amount < MIN_AMOUNT || amount > MAX_AMOUNT) {
     return json({ error: `Amount must be a whole number between ${MIN_AMOUNT} and ${MAX_AMOUNT}` }, 400);
   }
 
+  const ctx = body.context && typeof body.context === "object" ? body.context : {};
+  const metadata: Record<string, string> = { kind: "donation" };
+
+  const { user } = await optionalAuth(req);
+  if (user) metadata.user_id = String(user.userId);
+
+  let challengeId: number | null = null;
+  if (ctx.challengeId !== undefined && ctx.challengeId !== null) {
+    challengeId = Number(ctx.challengeId);
+    if (!Number.isInteger(challengeId) || challengeId <= 0) {
+      return json({ error: "Invalid challenge" }, 400);
+    }
+    const [challenge] = await db
+      .select({ id: challenges.id, title: challenges.title })
+      .from(challenges)
+      .where(eq(challenges.id, challengeId))
+      .limit(1);
+    if (!challenge) {
+      return json({ error: "Challenge not found" }, 400);
+    }
+    metadata.challenge_id = String(challenge.id);
+    metadata.challenge_title = challenge.title.slice(0, 200);
+  }
+
+  const actionKey = clean(ctx.actionKey, 20);
+  if (actionKey) {
+    if (!ACTION_KEYS.has(actionKey) || challengeId === null) {
+      return json({ error: "Invalid action" }, 400);
+    }
+    metadata.action_key = actionKey;
+  }
+  // Targets (e.g. bounty-board tasks) live in the donor's browser, so these are snapshots
+  const targetId = clean(ctx.targetId, 40);
+  const targetTitle = clean(ctx.targetTitle);
+  const targetLocation = clean(ctx.targetLocation);
+  if ((targetId || targetTitle || targetLocation) && !actionKey) {
+    return json({ error: "A target needs an action" }, 400);
+  }
+  if (targetId) metadata.target_id = targetId;
+  if (targetTitle) metadata.target_title = targetTitle;
+  if (targetLocation) metadata.target_location = targetLocation;
+
+  const description = [
+    "Donation",
+    metadata.challenge_title && `Challenge #${metadata.challenge_id}: ${metadata.challenge_title}`,
+    actionKey && ACTION_LABELS[actionKey],
+    targetTitle && `Task: ${targetTitle}`,
+  ].filter(Boolean).join(" · ").slice(0, 500);
+
   try {
     const domain = config.stripe.domain || req.headers.get("origin") || new URL(req.url).origin;
+    const returnPath = challengeId !== null
+      ? `/article-workbench?challengeId=${challengeId}&section=actions&donation=success&session_id={CHECKOUT_SESSION_ID}`
+      : `/?donation=success&session_id={CHECKOUT_SESSION_ID}`;
+
     const session = await stripe.checkout.sessions.create({
       ui_mode: "form",
       mode: "payment",
@@ -73,22 +191,109 @@ export async function handleCreateDonationSession(req: Request): Promise<Respons
       automatic_tax: { enabled: false },
       submit_type: "auto",
       integration_identifier: "custom_embedded_web_0001",
-      return_url: `${domain}/?donation=success&session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${domain}${returnPath}`,
+      metadata,
+      payment_intent_data: { metadata, description },
       line_items: [
         {
           price_data: {
             currency: config.stripe.currency,
-            unit_amount: amount as number,
-            product_data: { name: "Support Earth Forum" },
+            unit_amount: amount,
+            product_data: {
+              name: targetTitle ? `Earth Forum donation – ${targetTitle}`.slice(0, 250) : "Support Earth Forum",
+            },
           },
           quantity: 1,
         },
       ],
     });
 
-    return json({ client_secret: session.client_secret });
+    return json({ client_secret: session.client_secret, session_id: session.id });
   } catch (error) {
     console.error("Stripe checkout session error:", error);
     return json({ error: "Could not start the payment" }, 502);
   }
+}
+
+// POST /api/donations/confirm  { sessionId }
+// Called by the browser after paying. The status is read from Stripe, never taken from the client.
+export async function handleConfirmDonation(req: Request): Promise<Response> {
+  if (!stripe) {
+    return json({ error: "Donations are not configured" }, 503);
+  }
+  if (isRateLimited(req)) {
+    return json({ error: "Too many requests" }, 429);
+  }
+
+  let sessionId: unknown;
+  try {
+    ({ sessionId } = await req.json());
+  } catch {
+    return json({ error: "Invalid request format" }, 400);
+  }
+  if (typeof sessionId !== "string" || !/^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(sessionId)) {
+    return json({ error: "Invalid session" }, 400);
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.metadata?.kind !== "donation") {
+      return json({ error: "Invalid session" }, 400);
+    }
+    const paid = await recordPaidSession(session);
+    const meta = session.metadata ?? {};
+    return json({
+      paid,
+      status: session.status,
+      paymentStatus: session.payment_status,
+      amount: session.amount_total ?? 0,
+      currency: session.currency,
+      challengeId: meta.challenge_id ? Number(meta.challenge_id) : null,
+      actionKey: meta.action_key ?? null,
+      targetId: meta.target_id ?? null,
+    });
+  } catch (error) {
+    console.error("Donation confirm error:", error);
+    return json({ error: "Could not confirm the payment" }, 502);
+  }
+}
+
+// POST /api/stripe/webhook  (configure in the Stripe Dashboard → Developers → Webhooks)
+export async function handleStripeWebhook(req: Request): Promise<Response> {
+  const secret = config.stripe.webhookSecret;
+  if (!stripe || !secret) {
+    console.error("Stripe webhook called but STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET is not configured");
+    return json({ error: "Webhook not configured" }, 503);
+  }
+
+  const signature = req.headers.get("stripe-signature");
+  if (!signature) {
+    return json({ error: "Missing signature" }, 400);
+  }
+
+  let event: Stripe.Event;
+  try {
+    event = await stripe.webhooks.constructEventAsync(await req.text(), signature, secret);
+  } catch (error) {
+    console.warn("Stripe webhook signature verification failed:", (error as Error).message);
+    return json({ error: "Invalid signature" }, 400);
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded":
+        await recordPaidSession(event.data.object as Stripe.Checkout.Session);
+        break;
+      case "checkout.session.async_payment_failed":
+        console.warn("Donation payment failed:", (event.data.object as Stripe.Checkout.Session).id);
+        break;
+    }
+  } catch (error) {
+    // A non-2xx response makes Stripe retry the event later
+    console.error("Stripe webhook handling error:", error);
+    return json({ error: "Webhook handling failed" }, 500);
+  }
+
+  return json({ received: true });
 }

@@ -9,6 +9,9 @@
       <p>Donations are not available right now. Please try again later.</p>
     }
     @case ('amount') {
+      @if (data.label) {
+        <p class="target">You are supporting: <strong>{{ data.label }}</strong></p>
+      }
       <p>Choose any amount for a one-time donation. Thank you for keeping this platform independent!</p>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Amount ({{ currencyLabel }})</mat-label>
@@ -20,7 +23,11 @@
       <div id="checkout-form"></div>
     }
     @case ('done') {
-      <p>Thank you for your support! ❤️</p>
+      @if (paid()) {
+        <p>Thank you for your support! ❤️</p>
+      } @else {
+        <p>Thank you! Your payment is being processed. It will be recorded as soon as Stripe confirms it.</p>
+      }
     }
   }
   @if (error()) {

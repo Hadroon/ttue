@@ -230,6 +230,45 @@ export interface Flag {
   contentTitle?: string | null;
 }
 
+/** Where a donation is given; omit for a general donation */
+export interface DonationContext {
+  challengeId: number;
+  actionKey: ChallengeActionKey;
+  targetId?: string;
+  targetTitle?: string;
+  targetLocation?: string;
+}
+
+export interface DonationConfirmation {
+  paid: boolean;
+  status: string | null;
+  paymentStatus: string;
+  amount: number; // smallest currency unit
+  currency: string | null;
+  challengeId: number | null;
+  actionKey: ChallengeActionKey | null;
+  targetId: string | null;
+}
+
+export interface AdminDonation {
+  id: number;
+  amount: number; // smallest currency unit
+  currency: string;
+  livemode: boolean;
+  stripeSessionId: string;
+  stripePaymentIntentId: string | null;
+  donorEmail: string | null;
+  donorName: string | null;
+  donorUsername: string | null;
+  challengeId: number | null;
+  challengeTitle: string | null;
+  actionKey: ChallengeActionKey | null;
+  targetId: string | null;
+  targetTitle: string | null;
+  targetLocation: string | null;
+  paidAt: string;
+}
+
 export interface FeaturedChallenge {
   challenge: Challenge;
   topIdea: Idea | null;
@@ -613,8 +652,15 @@ export class ApiService {
   /**
    * Create a one-time donation Checkout Session; amount is in the smallest currency unit
    */
-  createDonationSession(amount: number) {
-    return this.http.post<{ client_secret: string }>(`${this.baseUrl}/donations/checkout-session`, { amount });
+  createDonationSession(amount: number, context?: DonationContext) {
+    return this.http.post<{ client_secret: string; session_id: string }>(`${this.baseUrl}/donations/checkout-session`, { amount, context });
+  }
+
+  /**
+   * Ask the backend to check a finished Checkout Session with Stripe and record it if paid
+   */
+  confirmDonation(sessionId: string) {
+    return this.http.post<DonationConfirmation>(`${this.baseUrl}/donations/confirm`, { sessionId });
   }
 
   /**
@@ -943,6 +989,10 @@ export class ApiService {
 
   getAdminFlags(status: 'pending' | 'marked' | 'all' = 'pending'): Observable<Flag[]> {
     return this.http.get<Flag[]>(`${this.baseUrl}/admin/flags`, { params: { status } });
+  }
+
+  getAdminDonations(): Observable<AdminDonation[]> {
+    return this.http.get<AdminDonation[]>(`${this.baseUrl}/admin/donations`);
   }
 
   resolveAdminFlag(flagId: number, status: 'reviewed' | 'dismissed'): Observable<{ id: number; status: string }> {

@@ -1,6 +1,6 @@
 import { db } from "../db";
-import { users, ideas, comments, challenges, flags } from "../db/schema";
-import { eq, sql, or } from "drizzle-orm";
+import { users, ideas, comments, challenges, flags, donations } from "../db/schema";
+import { eq, sql, or, desc } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 
 /**
@@ -453,6 +453,50 @@ export async function handleAdminResolveFlag(req: Request, flagId: number): Prom
     console.error("Admin resolve flag error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to resolve flag" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// GET /api/admin/donations
+export async function handleAdminGetDonations(req: Request): Promise<Response> {
+  const auth = await adminAuth(req);
+  if (auth instanceof Response) return auth;
+
+  try {
+    const rows = await db
+      .select({
+        id: donations.id,
+        amount: donations.amount,
+        currency: donations.currency,
+        livemode: donations.livemode,
+        stripeSessionId: donations.stripeSessionId,
+        stripePaymentIntentId: donations.stripePaymentIntentId,
+        donorEmail: donations.donorEmail,
+        donorName: donations.donorName,
+        donorUsername: users.username,
+        challengeId: donations.challengeId,
+        challengeTitle: sql<string | null>`COALESCE(${challenges.title}, ${donations.challengeTitle})`,
+        actionKey: donations.actionKey,
+        targetId: donations.targetId,
+        targetTitle: donations.targetTitle,
+        targetLocation: donations.targetLocation,
+        paidAt: donations.paidAt,
+      })
+      .from(donations)
+      .leftJoin(users, eq(donations.userId, users.id))
+      .leftJoin(challenges, eq(donations.challengeId, challenges.id))
+      .orderBy(desc(donations.paidAt))
+      .limit(500);
+
+    return new Response(
+      JSON.stringify(rows),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Admin get donations error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to load donations" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

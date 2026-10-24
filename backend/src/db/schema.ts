@@ -522,6 +522,30 @@ export const flags = pgTable("flags", {
   statusIdx: index("flag_status_idx").on(table.status),
 }));
 
+// Donations confirmed as paid by Stripe. Where it was given is snapshotted from the Checkout Session
+// metadata, because some targets (e.g. bounty-board tasks) only exist in the donor's browser.
+export const donations = pgTable("donations", {
+  id: serial("id").primaryKey(),
+  stripeSessionId: text("stripe_session_id").notNull().unique(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  livemode: boolean("livemode").default(false).notNull(),
+  amount: integer("amount").notNull(), // smallest currency unit
+  currency: text("currency").notNull(),
+  donorEmail: text("donor_email"),
+  donorName: text("donor_name"),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "set null" }),
+  challengeTitle: text("challenge_title"),
+  actionKey: text("action_key"), // 'legal' | 'economic' | 'direct' | 'policy' | 'info'; null = general donation
+  targetId: text("target_id"),
+  targetTitle: text("target_title"),
+  targetLocation: text("target_location"),
+  paidAt: timestamp("paid_at").defaultNow().notNull(),
+}, (table) => ({
+  challengeIdx: index("donations_challenge_idx").on(table.challengeId),
+  paidAtIdx: index("donations_paid_at_idx").on(table.paidAt),
+}));
+
 export const flagsRelations = relations(flags, ({ one }) => ({
   reporter: one(users, {
     fields: [flags.userId],

@@ -1,6 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthGuardService } from '../../shared/services/auth-guard.service';
+import { DonationModalComponent, DonationModalData, DonationModalResult } from '../../shared/components/donation-modal/donation-modal';
 import { ActionsStore, CivicTask, TaskStatus, VOICE_CREDITS } from './actions.store';
 
 const SKILLS = ['Electrician', 'Software Engineer', 'Heavy Equipment Operator', 'Legal Advisor', 'Builder', 'Environmental Scientist', 'Organiser'];
@@ -56,7 +58,7 @@ function safeUrl(value: string): string | null {
     <section class="feature" aria-labelledby="da-board">
       <header>
         <h4 id="da-board">Civic bounty board</h4>
-        <p class="muted">Funding is recorded as intent only. No money is held or paid out yet, and the auditor review that releases funds needs the shared backend.</p>
+        <p class="muted">Funding a task is a real donation through Stripe, earmarked for that task. Paying it out to the people doing the work, and the auditor review that releases it, are not automated yet.</p>
       </header>
       <div class="tags" role="group" aria-label="Filter by skill">
         <span class="muted" style="align-self:center">Skill matcher:</span>
@@ -180,8 +182,11 @@ function safeUrl(value: string): string | null {
   `
 })
 export class DirectAction {
+  readonly challengeId = input<number | null>(null);
+
   private readonly store = inject(ActionsStore);
   private readonly guard = inject(AuthGuardService);
+  private readonly dialog = inject(MatDialog);
 
   readonly skills = SKILLS;
   readonly columns = COLUMNS;
@@ -267,10 +272,24 @@ export class DirectAction {
 
   fund(t: CivicTask, amount: number): void {
     if (!this.guard.requireAuth('fund this task')) return;
-    this.patch(t, x => {
-      const funded = x.funded + amount;
-      return { ...x, funded, status: x.status === 'Open' && funded >= x.cost ? 'Funded' : x.status };
-    });
+    const challengeId = this.challengeId();
+    const data: DonationModalData = {
+      amount,
+      label: t.location ? `${t.title} (${t.location})` : t.title,
+      context: challengeId === null ? undefined : {
+        challengeId,
+        actionKey: 'direct',
+        targetId: String(t.id),
+        targetTitle: t.title,
+        targetLocation: t.location || undefined
+      }
+    };
+    this.dialog
+      .open<DonationModalComponent, DonationModalData, DonationModalResult>(DonationModalComponent, { data, width: '520px', maxWidth: '90vw' })
+      .afterClosed()
+      .subscribe(result => {
+        if (result?.paid) this.store.addFunding(challengeId, t.id, result.amount);
+      });
   }
 
   apply(event: Event, t: CivicTask): void {

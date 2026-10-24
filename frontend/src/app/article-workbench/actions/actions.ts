@@ -131,8 +131,9 @@ const ACTIONS: ActionInfo[] = [
         <section aria-label="Active actions">
           <h3>Active actions</h3>
           <p class="banner" role="note">
-            The tools below are an early version: what you add is saved in this browser only, and payments, escrow,
-            verification and secure drops are not live yet. Each section says what is and isn't working.
+            The tools below are an early version: what you add is saved in this browser only, and escrow,
+            verification and secure drops are not live yet. Funding a bounty-board task takes a real donation through Stripe.
+            Each section says what is and isn't working.
           </p>
           <div class="tabs" role="tablist" aria-label="Active actions" style="margin-top:12px">
             @for (info of activeInfos(); track info.key) {
@@ -145,7 +146,7 @@ const ACTIONS: ActionInfo[] = [
             @switch (shown()) {
               @case ('legal') { <app-legal-action /> }
               @case ('economic') { <app-economic-pressure [challengeTitle]="challengeTitle()" /> }
-              @case ('direct') { <app-direct-action /> }
+              @case ('direct') { <app-direct-action [challengeId]="challengeId()" /> }
               @case ('policy') { <app-policy-lobbying [challengeTitle]="challengeTitle()" (openDraft)="openDraft.emit()" /> }
               @case ('info') { <app-info-campaigns /> }
             }

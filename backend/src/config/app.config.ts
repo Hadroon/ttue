@@ -27,6 +27,7 @@ export interface AppConfig {
   stripe: {
     secretKey?: string;
     publishableKey?: string;
+    webhookSecret?: string;
     currency: string;
     domain?: string;
   };
@@ -70,6 +71,7 @@ function getConfig(): AppConfig {
     stripe: {
       secretKey: process.env.STRIPE_SECRET_KEY,
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
       currency: (process.env.STRIPE_CURRENCY || 'usd').toLowerCase(),
       domain: process.env.DOMAIN,
     },
@@ -111,6 +113,7 @@ export function logConfig() {
     stripe: {
       ...config.stripe,
       secretKey: config.stripe.secretKey ? '[REDACTED]' : undefined,
+      webhookSecret: config.stripe.webhookSecret ? '[REDACTED]' : undefined,
     },
     database: {
       ...config.database,

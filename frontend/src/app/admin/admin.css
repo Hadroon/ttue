@@ -281,3 +281,11 @@
   font-size: 0.75rem;
   margin-left: 0.25rem;
 }
+
+.donation-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}

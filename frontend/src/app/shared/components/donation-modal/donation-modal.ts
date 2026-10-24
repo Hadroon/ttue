@@ -1,11 +1,11 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { ApiService } from '../../services/api.service';
+import { ApiService, DonationContext } from '../../services/api.service';
 
 const STRIPE_JS_URL = 'https://js.stripe.com/dahlia/stripe.js';
 
@@ -42,6 +42,21 @@ function loadStripeJs(): Promise<void> {
   });
 }
 
+export interface DonationModalData {
+  /** Preset amount in major units, e.g. 10 for $10 */
+  amount?: number;
+  /** Where the donation goes; omit for a general donation */
+  context?: DonationContext;
+  /** Shown to the donor, e.g. the task title */
+  label?: string;
+}
+
+export interface DonationModalResult {
+  paid: boolean;
+  /** Amount paid in major units */
+  amount: number;
+}
+
 @Component({
   selector: 'app-donation-modal',
   standalone: true,
@@ -51,17 +66,22 @@ function loadStripeJs(): Promise<void> {
 })
 export class DonationModalComponent implements OnInit {
   private readonly api = inject(ApiService);
-  private readonly dialogRef = inject(MatDialogRef<DonationModalComponent>);
+  private readonly dialogRef = inject<MatDialogRef<DonationModalComponent, DonationModalResult>>(MatDialogRef);
+  readonly data = inject<DonationModalData | null>(MAT_DIALOG_DATA, { optional: true }) ?? {};
 
   readonly step = signal<'loading' | 'amount' | 'paying' | 'done' | 'unavailable'>('loading');
   readonly busy = signal(false);
   readonly error = signal('');
+  /** false while the bank or payment method is still processing */
+  readonly paid = signal(true);
 
-  amount: number | null = 10;
+  amount: number | null = this.data.amount ?? 10;
   currency = 'usd';
   minAmount = 100;
   maxAmount = 100000;
   private publishableKey = '';
+  private sessionId = '';
+  private paidCents = 0;
   private form: any;
 
   constructor() {
@@ -109,7 +129,10 @@ export class DonationModalComponent implements OnInit {
     try {
       await loadStripeJs();
       const stripe = (window as any).Stripe(this.publishableKey);
-      const clientSecret = firstValueFrom(this.api.createDonationSession(cents)).then((res) => res.client_secret);
+      const clientSecret = firstValueFrom(this.api.createDonationSession(cents, this.data.context)).then((res) => {
+        this.sessionId = res.session_id;
+        return res.client_secret;
+      });
 
       const checkout = stripe.initCheckoutFormSdk({ clientSecret, appearance: APPEARANCE });
       this.step.set('paying');
@@ -123,13 +146,17 @@ export class DonationModalComponent implements OnInit {
       if (loaded.type === 'success') {
         this.form.on('confirm', async (event: unknown) => {
           try {
-            await loaded.actions.confirm({ formConfirmEvent: event });
-            this.step.set('done');
+            const result = await loaded.actions.confirm({ formConfirmEvent: event, redirect: 'if_required' });
+            // Payment errors are shown inside the Stripe form; the donor can retry there
+            if (result?.type === 'error') return;
+            await this.finish(cents);
           } catch (err) {
             console.error('Payment confirmation error:', err);
             this.error.set('The payment could not be confirmed. Please try again.');
           }
         });
+      } else {
+        throw loaded.error ?? new Error('Could not load the payment form');
       }
     } catch (err) {
       console.error('Donation checkout error:', err);
@@ -142,7 +169,26 @@ export class DonationModalComponent implements OnInit {
     }
   }
 
+  /** Let the backend check the session with Stripe; it records the donation once it is paid */
+  private async finish(cents: number) {
+    let paid = false;
+    try {
+      paid = (await firstValueFrom(this.api.confirmDonation(this.sessionId))).paid;
+    } catch (err) {
+      // The Stripe webhook still records it; only the immediate feedback is affected
+      console.error('Donation confirm error:', err);
+    }
+    this.paidCents = paid ? cents : 0;
+    this.paid.set(paid);
+    this.form?.destroy?.();
+    this.form = null;
+    this.error.set('');
+    // Only the Close button reports the result back to the opener
+    this.dialogRef.disableClose = true;
+    this.step.set('done');
+  }
+
   close() {
-    this.dialogRef.close();
+    this.dialogRef.close({ paid: this.paidCents > 0, amount: this.paidCents / 100 });
   }
 }
