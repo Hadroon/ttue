@@ -128,6 +128,20 @@ export interface ChallengeActionState {
   activatedAt: string | null;
 }
 
+export interface AdminApproval {
+  id: number;
+  kind: string;
+  actionKey: ChallengeActionKey;
+  challengeId: number;
+  challengeTitle: string;
+  data: Record<string, any>;
+  status: 'Pending' | 'Approved';
+  authorUsername: string | null;
+  createdAt: string;
+  /** donated so far, in the smallest currency unit */
+  donated: number;
+}
+
 export interface AdminActionRecommendation {
   challengeId: number;
   challengeTitle: string;
@@ -841,6 +855,15 @@ export class ApiService {
   voteChallengeAction(challengeId: number, key: ChallengeActionKey) {
     return this.http.post<{ message: string; action: ChallengeActionState }>(
       `${this.baseUrl}/challenges/${challengeId}/actions/${key}/vote`, {});
+  }
+
+  /** Entries waiting for admin approval, such as legal cases (admin only) */
+  getAdminApprovals(): Observable<AdminApproval[]> {
+    return this.http.get<AdminApproval[]>(`${this.baseUrl}/admin/approvals`);
+  }
+
+  setAdminApproval(itemId: number, approved: boolean): Observable<{ id: number; status: 'Pending' | 'Approved' }> {
+    return this.http.put<{ id: number; status: 'Pending' | 'Approved' }>(`${this.baseUrl}/admin/approvals/${itemId}`, { approved });
   }
 
   /** Recommendation counts per challenge and action (admin only) */

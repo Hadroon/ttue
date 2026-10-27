@@ -127,18 +127,23 @@ async function loadAggregates(challengeId: number, actionKey: string | null) {
         isNotNull(challengeActionItems.parentId),
       ))
       .groupBy(challengeActionItems.kind, challengeActionItems.parentId),
-    actionKey && actionKey !== "direct"
+    // Paid donations to cases and bounty-board tasks, in the smallest currency unit
+    actionKey && actionKey !== "direct" && actionKey !== "legal"
       ? Promise.resolve([] as { targetId: string | null; count: number; total: number }[])
       : db
           .select({ targetId: donations.targetId, count: sql<number>`count(*)::int`, total: sql<number>`sum(${donations.amount})::float8` })
           .from(donations)
-          .where(and(eq(donations.challengeId, challengeId), eq(donations.actionKey, "direct"), isNotNull(donations.targetId)))
+          .where(and(
+            eq(donations.challengeId, challengeId),
+            inArray(donations.actionKey, ["direct", "legal"]),
+            isNotNull(donations.targetId),
+          ))
           .groupBy(donations.targetId),
   ]);
 
   return [
     ...entries.map(e => ({ kind: e.kind, parentId: e.parentId, count: e.count, total: e.total })),
-    // Paid donations to bounty-board tasks, in the smallest currency unit
+    // Paid donations to cases and bounty-board tasks, in the smallest currency unit (item ids are unique, so targetId is enough)
     ...paid
       .filter(p => p.targetId && /^\d+$/.test(p.targetId))
       .map(p => ({ kind: "donation", parentId: Number(p.targetId), count: p.count, total: p.total })),
@@ -223,6 +228,7 @@ export async function handleCreateActionItem(req: Request, challengeId: number):
 
     const data = parseItemData(def, body.data);
     if (kind === "task") data.status = "Open";
+    if (def.approval) data.approval = "Pending";
 
     // Work moves a task along: applying starts it, proof sends it to verification
     const taskStatus = parent?.data.status;
@@ -288,19 +294,29 @@ export async function handleUpdateActionItem(req: Request, challengeId: number, 
     if (!body) return json({ error: "Invalid request body" }, 400);
 
     const [item] = await db
-      .select({ id: challengeActionItems.id, kind: challengeActionItems.kind, userId: challengeActionItems.userId, parentId: challengeActionItems.parentId })
+      .select({
+        id: challengeActionItems.id, kind: challengeActionItems.kind, userId: challengeActionItems.userId,
+        parentId: challengeActionItems.parentId, data: challengeActionItems.data,
+      })
       .from(challengeActionItems)
       .where(and(eq(challengeActionItems.id, itemId), eq(challengeActionItems.challengeId, challengeId)))
       .limit(1);
     const def = item ? getKind(item.kind) : null;
     if (!item || !def) return json({ error: "Entry not found" }, 404);
 
-    if (item.userId !== userId && !(await isAdmin(userId))) {
+    const admin = await isAdmin(userId);
+    if (item.userId !== userId && !admin) {
       return json({ error: "Only the author or an admin can change this entry" }, 403);
     }
     if (!(await isApproved(challengeId, def.actionKey))) return json({ error: "This action is not approved yet" }, 403);
 
     const data = parseItemData(def, body.data);
+    // Approval is only ever granted by an admin; an author's edit sends the entry back for review
+    if (def.approval) data.approval = admin ? item.data.approval ?? "Pending" : "Pending";
+    // A task's progress is moved by the server (funding, applications, proof), not by edits
+    if (item.kind === "task" && (!admin || (body.data as Record<string, unknown> | undefined)?.status === undefined)) {
+      data.status = item.data.status ?? "Open";
+    }
     const relationError = await checkRelations(def, item.kind, data, { challengeId, userId, parent: null });
     if (relationError) return json({ error: relationError }, 400);
 

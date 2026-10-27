@@ -4,6 +4,7 @@ import { config } from "../config/app.config";
 import { db } from "../db";
 import { challengeActionItems, challengeActions, challenges, donations, users } from "../db/schema";
 import { optionalAuth } from "../middleware/auth";
+import { getKind } from "../services/action-items";
 
 const MIN_AMOUNT = 100; // smallest unit (e.g. cents)
 const MAX_AMOUNT = 100_000;
@@ -16,6 +17,9 @@ const ACTION_LABELS: Record<string, string> = {
   policy: "Policy & lobbying",
   info: "Information campaigns",
 };
+
+// The kind of action-form entry a donation can be earmarked for, per action
+const TARGET_KINDS: Record<string, string> = { direct: "task", legal: "case" };
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 10;
@@ -58,7 +62,7 @@ function clean(value: unknown, max = 200): string | undefined {
 }
 
 /** Store a paid donation from a Checkout Session. Safe to call more than once for the same session. */
-async function recordPaidSession(session: Stripe.Checkout.Session): Promise<boolean> {
+export async function recordPaidSession(session: Stripe.Checkout.Session): Promise<boolean> {
   const meta = session.metadata ?? {};
   if (meta.kind !== "donation" || session.payment_status !== "paid") return false;
 
@@ -208,23 +212,28 @@ export async function handleCreateDonationSession(req: Request): Promise<Respons
     return json({ error: "A target needs an action" }, 400);
   }
   if (targetId) {
-    // A bounty-board target must be a real task of this challenge; its stored details replace the client's
-    const [task] = actionKey === "direct" && challengeId !== null && /^\d+$/.test(targetId)
+    // A target must be a real entry of this challenge (a task for direct action, a case for legal action);
+    // its stored details replace what the browser sent
+    const targetKind = actionKey ? TARGET_KINDS[actionKey] : undefined;
+    const [target] = targetKind && challengeId !== null && /^\d+$/.test(targetId)
       ? await db
           .select({ data: challengeActionItems.data })
           .from(challengeActionItems)
           .where(and(
             eq(challengeActionItems.id, Number(targetId)),
             eq(challengeActionItems.challengeId, challengeId),
-            eq(challengeActionItems.kind, "task"),
+            eq(challengeActionItems.kind, targetKind),
           ))
           .limit(1)
       : [];
-    if (!task) {
-      return json({ error: "Task not found" }, 400);
+    if (!target) {
+      return json({ error: "Donation target not found" }, 400);
     }
-    targetTitle = clean(task.data.title);
-    targetLocation = clean(task.data.location);
+    if (targetKind && getKind(targetKind)?.approval && target.data.approval !== "Approved") {
+      return json({ error: "This entry is waiting for admin approval" }, 403);
+    }
+    targetTitle = clean(actionKey === "legal" ? target.data.target : target.data.title);
+    targetLocation = clean(actionKey === "legal" ? target.data.jurisdiction : target.data.location);
   }
   if (targetId) metadata.target_id = targetId;
   if (targetTitle) metadata.target_title = targetTitle;
@@ -234,7 +243,7 @@ export async function handleCreateDonationSession(req: Request): Promise<Respons
     "Donation",
     metadata.challenge_title && `Challenge #${metadata.challenge_id}: ${metadata.challenge_title}`,
     actionKey && ACTION_LABELS[actionKey],
-    targetTitle && `Task: ${targetTitle}`,
+    targetTitle && `For: ${targetTitle}`,
   ].filter(Boolean).join(" · ").slice(0, 500);
 
   try {

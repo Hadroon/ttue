@@ -58,7 +58,7 @@ function safeUrl(value: string): string | null {
     <section class="feature" aria-labelledby="da-board">
       <header>
         <h4 id="da-board">Civic bounty board</h4>
-        <p class="muted">Funding a task is a real donation through Stripe, earmarked for that task. Paying it out to the people doing the work, and the auditor review that releases it, are not automated yet.</p>
+        <p class="muted">Funding a task is a real donation through Stripe, earmarked for that task. A new task is reviewed by an admin first, and funding opens once it is approved. Paying it out to the people doing the work, and the auditor review that releases it, are not automated yet.</p>
       </header>
       <div class="tags" role="group" aria-label="Filter by skill">
         <span class="muted" style="align-self:center">Skill matcher:</span>
@@ -77,6 +77,7 @@ function safeUrl(value: string): string | null {
               @for (t of inColumn(col); track t.id) {
                 <div class="item">
                   <span class="item-title">{{ t.title }}</span>
+                  @if (t.approval === 'Pending') { <span class="tag warn">Under approval</span> }
                   @if (t.location) { <span class="muted">📍 {{ t.location }}</span> }
                   <div class="tags">@for (s of t.skills; track s) { <span class="tag">{{ s }}</span> }</div>
                   <div class="progress" role="progressbar" [attr.aria-valuenow]="pct(t)" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="pct(t)"></span></div>
@@ -84,8 +85,15 @@ function safeUrl(value: string): string | null {
 
                   @if (t.status === 'Open' || t.status === 'Funded') {
                     <div class="btn-row">
-                      @for (a of [10, 50, 100]; track a) { <button class="abtn sm" type="button" (click)="fund(t, a)">+ {{ a }}</button> }
+                      @for (a of [10, 50, 100]; track a) {
+                        <button class="abtn sm" type="button" [disabled]="t.approval !== 'Approved'"
+                                [attr.title]="t.approval === 'Approved' ? null : 'Funding opens once an admin approves this task'"
+                                (click)="fund(t, a)">+ {{ a }}</button>
+                      }
                     </div>
+                    @if (t.approval === 'Pending') {
+                      <span class="muted">Funding is disabled until an admin approves this task.</span>
+                    }
                   }
                   @if (t.status === 'Funded' || (t.status === 'In Progress' && !t.applied)) {
                     <details>
@@ -195,7 +203,7 @@ export class DirectAction {
 
   readonly tasks = computed(() => this.store.data().tasks);
   readonly proofs = computed(() => this.tasks().filter(t => t.proof !== null));
-  readonly votable = computed(() => this.tasks().filter(t => t.status === 'Open' || t.status === 'Funded'));
+  readonly votable = computed(() => this.tasks().filter(t => t.approval === 'Approved' && (t.status === 'Open' || t.status === 'Funded')));
   readonly creditsUsed = computed(() => {
     const allocation = this.store.data().allocation;
     return this.tasks().reduce((sum, t) => sum + (allocation[t.id] ?? 0) ** 2, 0);
@@ -268,6 +276,7 @@ export class DirectAction {
   }
 
   fund(t: CivicTask, amount: number): void {
+    if (t.approval !== 'Approved') return;
     if (!this.guard.requireAuth('fund this task')) return;
     const challengeId = this.challengeId();
     const data: DonationModalData = {

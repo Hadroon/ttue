@@ -15,7 +15,7 @@ import { handleGetDraftVotes, handleVoteDraft } from "./routes/draft-votes";
 import { handleGetChallengeLinks, handleCreateChallengeLink, handleDeleteChallengeLink } from "./routes/challenge-links";
 import { handleGetChallengeActions, handleVoteChallengeAction, handleSetChallengeActionActivation } from "./routes/challenge-actions";
 import { handleGetActionItems, handleCreateActionItem, handleUpdateActionItem, handleDeleteActionItem } from "./routes/challenge-action-items";
-import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations, handleAdminGetActionRecommendations } from "./routes/admin";
+import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations, handleAdminGetActionRecommendations, handleAdminGetApprovals, handleAdminSetApproval } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
 
@@ -350,6 +350,12 @@ serve({
       }
       if (url.pathname === "/api/admin/flags" && req.method === "GET") {
         return handleAdminGetFlags(req);
+      }
+      if (url.pathname === "/api/admin/approvals" && req.method === "GET") {
+        return handleAdminGetApprovals(req);
+      }
+      if (url.pathname.match(/^\/api\/admin\/approvals\/\d+$/) && req.method === "PUT") {
+        return handleAdminSetApproval(req, parseInt(url.pathname.split("/")[4]));
       }
       if (url.pathname === "/api/admin/action-recommendations" && req.method === "GET") {
         return handleAdminGetActionRecommendations(req);

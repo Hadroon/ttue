@@ -45,6 +45,13 @@ describe("action item registry", () => {
     expect(() => parse("evidence", { name: "a", size: 1, sha256: hash, confidentiality: "Public", capturedAt: "not a date" })).toThrow(ValidationError);
   });
 
+  test("legal cases and bounty tasks need admin approval before they can be funded", () => {
+    expect(KINDS.case.approval).toBe(true);
+    expect(KINDS.task.approval).toBe(true);
+    expect(KINDS.media.approval).toBeUndefined();
+    expect(getKind("case_pledge")).toBeNull();
+  });
+
   test("validates targets and their mapped sub-brands", () => {
     const data = parse("target", { brand: "Brand", alternative: null, extra: 1 });
     expect(data).toEqual({ brand: "Brand", parent: "", alternative: null });

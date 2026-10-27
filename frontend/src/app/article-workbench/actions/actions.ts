@@ -175,7 +175,7 @@ const ACTIONS: ActionInfo[] = [
 
     <ng-template #tools let-key>
       @switch (key) {
-        @case ('legal') { <app-legal-action /> }
+        @case ('legal') { <app-legal-action [challengeId]="challengeId()" /> }
         @case ('economic') { <app-economic-pressure [challengeTitle]="challengeTitle()" /> }
         @case ('direct') { <app-direct-action [challengeId]="challengeId()" /> }
         @case ('policy') { <app-policy-lobbying [challengeTitle]="challengeTitle()" (openDraft)="openDraft.emit()" /> }

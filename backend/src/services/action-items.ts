@@ -110,13 +110,15 @@ export interface KindDef {
   sumField?: string;
   /** only rows where this boolean field is true count towards the sum */
   sumWhen?: string;
+  /** the server marks new entries `approval: "Pending"`; an admin approves them before they can receive donations */
+  approval?: boolean;
   shape: Shape;
 }
 
 export const KINDS: Record<string, KindDef> = {
   // Legal action
   case: {
-    actionKey: "legal", scope: "shared", maxPerUser: 10,
+    actionKey: "legal", scope: "shared", maxPerUser: 10, approval: true,
     shape: {
       target: text("Target entity", 200),
       jurisdiction: text("Jurisdiction", 200),
@@ -145,11 +147,7 @@ export const KINDS: Record<string, KindDef> = {
     actionKey: "legal", scope: "personal", unique: true, maxPerUser: 1,
     shape: { name: text("Name", 200), jurisdiction: text("Jurisdiction", 200) },
   },
-  // Intent only: nothing is charged
-  case_pledge: {
-    actionKey: "legal", scope: "personal", parent: { kind: "case", required: true }, maxPerUser: 100, sumField: "amount",
-    shape: { amount: int("Pledge", 1, 1_000_000) },
-  },
+  // Donations to a case go through Stripe and are recorded in the donations table, not here
 
   // Economic pressure
   target: {
@@ -177,7 +175,7 @@ export const KINDS: Record<string, KindDef> = {
 
   // Direct action
   task: {
-    actionKey: "direct", scope: "shared", maxPerUser: 20,
+    actionKey: "direct", scope: "shared", maxPerUser: 20, approval: true,
     shape: {
       title: text("Task title", 200),
       skills: list("Skills", 10, text("Skill", 50)),

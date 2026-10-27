@@ -37,7 +37,7 @@ export class DonationReturnService {
     this.api.confirmDonation(sessionId).subscribe({
       next: (res) => {
         const taskId = Number(res.targetId);
-        if (res.paid && res.actionKey === 'direct' && Number.isFinite(taskId)) {
+        if (res.paid && res.actionKey && Number.isFinite(taskId)) {
           void this.store.reload(res.challengeId);
         }
         this.snackBar.open(

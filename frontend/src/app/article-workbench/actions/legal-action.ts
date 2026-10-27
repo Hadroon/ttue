@@ -1,6 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthGuardService } from '../../shared/services/auth-guard.service';
+import { DonationModalComponent, DonationModalData, DonationModalResult } from '../../shared/components/donation-modal/donation-modal';
 import { ActionsStore, Confidentiality, Evidence, LegalCase } from './actions.store';
 
 async function sha256Hex(file: File): Promise<string> {
@@ -41,7 +43,7 @@ async function sha256Hex(file: File): Promise<string> {
     <section class="feature" aria-labelledby="legal-cases">
       <header>
         <h4 id="legal-cases">Case files</h4>
-        <p class="muted">Inspect filings, targets and linked evidence. Pledges are intent only; nothing is charged and no money is held in escrow yet.</p>
+        <p class="muted">Inspect filings, targets and linked evidence. A new case is reviewed by an admin first; once approved, you can support it with a donation through Stripe. Paying a retainer out to lawyers is not automated yet.</p>
       </header>
       @if (cases().length === 0) {
         <div class="empty">No cases yet. Create the first one above.</div>
@@ -52,16 +54,22 @@ async function sha256Hex(file: File): Promise<string> {
               <div class="item-head">
                 <span class="item-title">{{ c.target }}</span>
                 <span class="tag">{{ c.basis }}</span>
+                @if (c.approval === 'Pending') { <span class="tag warn">Under approval</span> }
               </div>
               <span class="muted">{{ c.jurisdiction }} · Lead: {{ c.lead || 'not assigned' }}</span>
-              <div class="progress" role="progressbar" aria-label="Retainer pledged"
+              <div class="progress" role="progressbar" aria-label="Retainer donated"
                    [attr.aria-valuenow]="percent(c)" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="percent(c)"></span></div>
-              <span class="muted">{{ c.pledged | number }} pledged of {{ c.budget | number }} target ({{ percent(c) }}%)</span>
+              <span class="muted">{{ c.donated | number }} donated of {{ c.budget | number }} target ({{ percent(c) }}%)</span>
               <div class="btn-row">
                 @for (amount of [10, 25, 50, 100]; track amount) {
-                  <button class="abtn sm" type="button" (click)="pledge(c, amount)">+ {{ amount }}</button>
+                  <button class="abtn sm" type="button" [disabled]="c.approval !== 'Approved'"
+                          [attr.title]="c.approval === 'Approved' ? null : 'Donations open once an admin approves this case'"
+                          (click)="donate(c, amount)">+ {{ amount }}</button>
                 }
               </div>
+              @if (c.approval === 'Pending') {
+                <span class="muted">Donations are disabled until an admin approves this case.</span>
+              }
               <details>
                 <summary>Case file ({{ c.filings.length }} filings, {{ evidenceFor(c).length }} evidence items)</summary>
                 <div class="list" style="margin-top:10px">
@@ -143,8 +151,11 @@ async function sha256Hex(file: File): Promise<string> {
   `
 })
 export class LegalAction {
+  readonly challengeId = input<number | null>(null);
+
   private readonly store = inject(ActionsStore);
   private readonly guard = inject(AuthGuardService);
+  private readonly dialog = inject(MatDialog);
 
   readonly cases = computed(() => this.store.data().cases);
   readonly evidence = computed(() => this.store.data().evidence);
@@ -152,7 +163,7 @@ export class LegalAction {
   readonly hashing = signal(false);
 
   percent(c: LegalCase): number {
-    return c.budget > 0 ? Math.min(100, Math.round((c.pledged / c.budget) * 100)) : 0;
+    return c.budget > 0 ? Math.min(100, Math.round((c.donated / c.budget) * 100)) : 0;
   }
 
   evidenceFor(c: LegalCase): Evidence[] {
@@ -178,9 +189,21 @@ export class LegalAction {
     if (ok) form.reset();
   }
 
-  async pledge(c: LegalCase, amount: number): Promise<void> {
-    if (!this.guard.requireAuth('pledge to this case')) return;
-    await this.store.create('case_pledge', { amount }, c.id);
+  donate(c: LegalCase, amount: number): void {
+    const challengeId = this.challengeId();
+    if (c.approval !== 'Approved' || challengeId === null) return;
+    if (!this.guard.requireAuth('donate to this case')) return;
+    const data: DonationModalData = {
+      amount,
+      label: `${c.target} (${c.jurisdiction})`,
+      context: { challengeId, actionKey: 'legal', targetId: String(c.id), targetTitle: c.target, targetLocation: c.jurisdiction }
+    };
+    this.dialog
+      .open<DonationModalComponent, DonationModalData, DonationModalResult>(DonationModalComponent, { data, width: '520px', maxWidth: '90vw' })
+      .afterClosed()
+      .subscribe(result => {
+        if (result?.paid) void this.store.reload(challengeId);
+      });
   }
 
   async addFiling(event: Event, c: LegalCase): Promise<void> {

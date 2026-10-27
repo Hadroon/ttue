@@ -41,6 +41,12 @@
     </button>
     <button
       class="tab-btn"
+      [class.active]="activeTab() === 'cases'"
+      (click)="setTab('cases')">
+      Approvals
+    </button>
+    <button
+      class="tab-btn"
       [class.active]="activeTab() === 'donations'"
       (click)="setTab('donations')">
       Donations
@@ -393,6 +399,84 @@
       }
     }
 
+    <!-- Approvals Tab -->
+    @if (activeTab() === 'cases') {
+      @if (loading()) {
+        <div class="loading">Loading approvals…</div>
+      } @else {
+        <div class="donation-summary">
+          @for (f of ['Pending', 'Approved', 'all']; track f) {
+            <button class="tab-btn" [class.active]="approvalFilter() === f"
+                    (click)="approvalFilter.set($any(f))">{{ f }}</button>
+          }
+        </div>
+        <p class="donation-summary">Legal cases and bounty-board tasks can receive donations only after you approve them. Donations arrive through Stripe and also appear under Donations.</p>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Entry</th>
+              <th>Challenge</th>
+              <th>Submitted by</th>
+              <th>Donated</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of visibleApprovals(); track a.id) {
+              <tr>
+                <td class="content-cell">
+                  @if (a.kind === 'case') {
+                    <span class="badge badge-user">Legal case</span>
+                    <strong>{{ truncate(a.data['target'], 60) }}</strong>
+                    <div class="content-id">{{ a.data['jurisdiction'] }} · {{ a.data['basis'] }}</div>
+                    <div class="content-id">retainer target {{ a.data['budget'] | number }}@if (a.data['lead']) { · lead {{ a.data['lead'] }} }</div>
+                  } @else {
+                    <span class="badge badge-user">Task</span>
+                    <strong>{{ truncate(a.data['title'], 60) }}</strong>
+                    @if (a.data['location']) { <div class="content-id">📍 {{ a.data['location'] }}</div> }
+                    <div class="content-id">cost {{ a.data['cost'] | number }} · {{ a.data['status'] }}</div>
+                  }
+                </td>
+                <td class="content-cell">
+                  <a [routerLink]="['/article-workbench']"
+                     [queryParams]="{ challengeId: a.challengeId, section: 'actions' }"
+                     class="content-link"
+                     target="_blank">
+                    {{ truncate(a.challengeTitle, 50) }}
+                    <span class="content-id">#{{ a.challengeId }}</span>
+                  </a>
+                </td>
+                <td>
+                  @if (a.authorUsername) {
+                    <a [routerLink]="['/profile', a.authorUsername]" class="content-link">{{ a.authorUsername }}</a>
+                  } @else {
+                    <span class="content-id">—</span>
+                  }
+                  <div class="content-id">{{ a.createdAt | date:'medium' }}</div>
+                </td>
+                <td>{{ a.donated / 100 | number:'1.0-2' }}</td>
+                <td>
+                  @if (a.status === 'Approved') {
+                    <span class="badge badge-admin">Approved</span>
+                  } @else {
+                    <span class="badge badge-user">Pending</span>
+                  }
+                </td>
+                <td>
+                  <button class="tab-btn" [disabled]="busyApproval() === a.id" (click)="toggleCaseApproval(a)">
+                    {{ a.status === 'Approved' ? 'Revoke' : 'Approve' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty-row">No {{ approvalFilter() === 'all' ? '' : approvalFilter().toLowerCase() }} entries yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
     <!-- Donations Tab -->
     @if (activeTab() === 'donations') {
       @if (loading()) {
@@ -412,7 +496,7 @@
               <th>Donor</th>
               <th>Challenge</th>
               <th>Action</th>
-              <th>Task</th>
+              <th>Target</th>
               <th>Stripe</th>
             </tr>
           </thead>
@@ -452,7 +536,7 @@
                   @if (d.targetTitle || d.targetId) {
                     {{ truncate(d.targetTitle ?? '(untitled)', 60) }}
                     @if (d.targetLocation) { <div class="content-id">📍 {{ d.targetLocation }}</div> }
-                    @if (d.targetId) { <div class="content-id">task id {{ d.targetId }}</div> }
+                    @if (d.targetId) { <div class="content-id">id {{ d.targetId }}</div> }
                   } @else {
                     <span class="content-id">—</span>
                   }

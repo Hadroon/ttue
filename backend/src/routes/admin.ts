@@ -1,7 +1,8 @@
 import { db } from "../db";
-import { users, ideas, comments, challenges, flags, donations, challengeActionVotes, challengeActions } from "../db/schema";
-import { eq, sql, or, desc } from "drizzle-orm";
+import { users, ideas, comments, challenges, flags, donations, challengeActionVotes, challengeActions, challengeActionItems } from "../db/schema";
+import { eq, sql, or, desc, inArray } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
+import { KINDS, getKind } from "../services/action-items";
 
 /**
  * Middleware: verify JWT and confirm isAdmin=true from DB
@@ -455,6 +456,84 @@ export async function handleAdminResolveFlag(req: Request, flagId: number): Prom
       JSON.stringify({ error: "Failed to resolve flag" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
+  }
+}
+
+const APPROVAL_KINDS = Object.entries(KINDS).filter(([, d]) => d.approval).map(([kind]) => kind);
+
+// GET /api/admin/approvals
+// Action-form entries that need an admin's approval before they can receive donations (legal cases and
+// bounty-board tasks), pending ones first, with what has been donated to each so far.
+export async function handleAdminGetApprovals(req: Request): Promise<Response> {
+  const auth = await adminAuth(req);
+  if (auth instanceof Response) return auth;
+
+  try {
+    const rows = await db
+      .select({
+        id: challengeActionItems.id,
+        kind: challengeActionItems.kind,
+        actionKey: challengeActionItems.actionKey,
+        challengeId: challengeActionItems.challengeId,
+        challengeTitle: challenges.title,
+        data: challengeActionItems.data,
+        authorUsername: users.username,
+        createdAt: challengeActionItems.createdAt,
+        donated: sql<number>`coalesce((
+          select sum(${donations.amount}) from ${donations}
+          where ${donations.challengeId} = ${challengeActionItems.challengeId}
+            and ${donations.actionKey} = ${challengeActionItems.actionKey}
+            and ${donations.targetId} = ${challengeActionItems.id}::text
+        ), 0)::float8`,
+      })
+      .from(challengeActionItems)
+      .innerJoin(challenges, eq(challengeActionItems.challengeId, challenges.id))
+      .leftJoin(users, eq(challengeActionItems.userId, users.id))
+      .where(inArray(challengeActionItems.kind, APPROVAL_KINDS))
+      .orderBy(desc(sql`${challengeActionItems.data}->>'approval' is distinct from 'Approved'`), desc(challengeActionItems.createdAt))
+      .limit(500);
+
+    return new Response(
+      JSON.stringify(rows.map(r => ({ ...r, status: r.data.approval ?? "Pending" }))),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Admin get approvals error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to load approvals" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// PUT /api/admin/approvals/:id  { approved: boolean }
+export async function handleAdminSetApproval(req: Request, itemId: number): Promise<Response> {
+  const auth = await adminAuth(req);
+  if (auth instanceof Response) return auth;
+
+  const reply = (body: unknown, status: number) =>
+    new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+
+  try {
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body.approved !== "boolean") return reply({ error: "Body must be { approved: boolean }" }, 400);
+
+    const [item] = await db
+      .select({ id: challengeActionItems.id, kind: challengeActionItems.kind, data: challengeActionItems.data })
+      .from(challengeActionItems)
+      .where(eq(challengeActionItems.id, itemId))
+      .limit(1);
+    if (!item || !getKind(item.kind)?.approval) return reply({ error: "Entry not found" }, 404);
+
+    const status = body.approved ? "Approved" : "Pending";
+    await db
+      .update(challengeActionItems)
+      .set({ data: { ...item.data, approval: status }, updatedAt: new Date() })
+      .where(eq(challengeActionItems.id, itemId));
+    return reply({ id: itemId, status }, 200);
+  } catch (error) {
+    console.error("Admin set approval error:", error);
+    return reply({ error: "Failed to update approval" }, 500);
   }
 }
 

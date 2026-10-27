@@ -24,6 +24,8 @@ export interface Filing extends Owned {
   url: string;
 }
 
+export type Approval = 'Pending' | 'Approved';
+
 export interface LegalCase extends Owned {
   id: number;
   target: string;
@@ -31,8 +33,10 @@ export interface LegalCase extends Owned {
   basis: string;
   budget: number;
   lead: string;
-  /** pledged by everyone; intent only, nothing is charged */
-  pledged: number;
+  /** donations open once an admin approves the case */
+  approval: Approval;
+  /** confirmed donations from everyone, in major currency units */
+  donated: number;
   filings: Filing[];
   createdAt: string;
 }
@@ -100,6 +104,8 @@ export interface CivicTask extends Owned {
   milestones: string[];
   location: string;
   status: TaskStatus;
+  /** funding opens once an admin approves the task */
+  approval: Approval;
   applicationCount: number;
   /** the signed-in user has applied */
   applied: boolean;
@@ -196,7 +202,8 @@ function build(items: ActionItem[], aggregates: ActionItemAggregate[]): ActionsD
     id: i.id, ownerId: i.userId,
     target: text(i.data['target']), jurisdiction: text(i.data['jurisdiction']), basis: text(i.data['basis']),
     budget: num(i.data['budget']), lead: text(i.data['lead']),
-    pledged: total('case_pledge', i.id)?.total ?? 0,
+    approval: i.data['approval'] === 'Approved' ? 'Approved' : 'Pending',
+    donated: (total('donation', i.id)?.total ?? 0) / 100,
     filings: childrenOf('filing', i.id).map(f => ({ id: f.id, ownerId: f.userId, title: text(f.data['title']), url: text(f.data['url']) })),
     createdAt: i.createdAt
   }));
@@ -234,6 +241,7 @@ function build(items: ActionItem[], aggregates: ActionItemAggregate[]): ActionsD
       funded: (total('donation', i.id)?.total ?? 0) / 100,
       milestones: (i.data['milestones'] as string[]) ?? [], location: text(i.data['location']),
       status: (text(i.data['status']) || 'Open') as TaskStatus,
+      approval: i.data['approval'] === 'Approved' ? 'Approved' : 'Pending',
       applicationCount: total('application', i.id)?.count ?? 0,
       applied: childrenOf('application', i.id).length > 0,
       proof: proof ? {

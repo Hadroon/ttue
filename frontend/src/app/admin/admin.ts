@@ -10,11 +10,12 @@ import {
   AdminChallenge,
   AdminDonation,
   AdminActionRecommendation,
+  AdminApproval,
   ChallengeActionKey,
   Flag
 } from '../shared/services/api.service';
 
-type AdminTab = 'dashboard' | 'users' | 'content' | 'flags' | 'actions' | 'donations';
+type AdminTab = 'dashboard' | 'users' | 'content' | 'flags' | 'actions' | 'cases' | 'donations';
 type ContentTab = 'ideas' | 'comments' | 'challenges';
 
 const ACTION_LABELS: Record<ChallengeActionKey, string> = {
@@ -53,6 +54,14 @@ export class Admin implements OnInit {
       filter === 'all' || (filter === 'approved') === (r.activatedAt !== null));
   });
   busyRecommendation = signal<string | null>(null);
+
+  approvals = signal<AdminApproval[]>([]);
+  approvalFilter = signal<'Pending' | 'Approved' | 'all'>('Pending');
+  visibleApprovals = computed(() => {
+    const filter = this.approvalFilter();
+    return this.approvals().filter(a => filter === 'all' || a.status === filter);
+  });
+  busyApproval = signal<number | null>(null);
   /** Totals per currency, in major units */
   donationTotals = computed(() => {
     const totals = new Map<string, number>();
@@ -77,6 +86,7 @@ export class Admin implements OnInit {
     else if (tab === 'content') this.loadIdeas();
     else if (tab === 'flags') this.loadFlags();
     else if (tab === 'actions') this.loadRecommendations();
+    else if (tab === 'cases') this.loadApprovals();
     else if (tab === 'donations') this.loadDonations();
   }
 
@@ -209,6 +219,25 @@ export class Admin implements OnInit {
         this.busyRecommendation.set(null);
       },
       error: () => { this.error.set('Failed to update the action'); this.busyRecommendation.set(null); }
+    });
+  }
+
+  loadApprovals() {
+    this.loading.set(true);
+    this.apiService.getAdminApprovals().subscribe({
+      next: (data) => { this.approvals.set(data); this.loading.set(false); },
+      error: () => { this.error.set('Failed to load approvals'); this.loading.set(false); }
+    });
+  }
+
+  toggleCaseApproval(a: AdminApproval) {
+    this.busyApproval.set(a.id);
+    this.apiService.setAdminApproval(a.id, a.status !== 'Approved').subscribe({
+      next: ({ status }) => {
+        this.approvals.update(list => list.map(x => x.id === a.id ? { ...x, status } : x));
+        this.busyApproval.set(null);
+      },
+      error: () => { this.error.set('Failed to update the approval'); this.busyApproval.set(null); }
     });
   }
 
