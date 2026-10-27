@@ -4,6 +4,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthGuardService } from '../../shared/services/auth-guard.service';
 import { DonationModalComponent, DonationModalData, DonationModalResult } from '../../shared/components/donation-modal/donation-modal';
 import { ActionsStore, CivicTask, TaskStatus, VOICE_CREDITS } from './actions.store';
+import { DonationOption, donationOptions } from './donation-options';
+
+const QUICK_AMOUNTS = [10, 50, 100];
 
 const SKILLS = ['Electrician', 'Software Engineer', 'Heavy Equipment Operator', 'Legal Advisor', 'Builder', 'Environmental Scientist', 'Organiser'];
 const COLUMNS: TaskStatus[] = ['Open', 'Funded', 'In Progress', 'Verification', 'Completed'];
@@ -85,10 +88,12 @@ function safeUrl(value: string): string | null {
 
                   @if (t.status === 'Open' || t.status === 'Funded') {
                     <div class="btn-row">
-                      @for (a of [10, 50, 100]; track a) {
+                      @for (option of options(t); track option.amount) {
                         <button class="abtn sm" type="button" [disabled]="t.approval !== 'Approved'"
                                 [attr.title]="t.approval === 'Approved' ? null : 'Funding opens once an admin approves this task'"
-                                (click)="fund(t, a)">+ {{ a }}</button>
+                                (click)="fund(t, option.amount)">{{ option.rest ? 'Fund the rest: ' + option.amount : '+ ' + option.amount }}</button>
+                      } @empty {
+                        <span class="muted">Fully funded.</span>
                       }
                     </div>
                     @if (t.approval === 'Pending') {
@@ -226,6 +231,10 @@ export class DirectAction {
 
   pct(t: CivicTask): number {
     return t.cost > 0 ? Math.min(100, Math.round((t.funded / t.cost) * 100)) : 100;
+  }
+
+  options(t: CivicTask): DonationOption[] {
+    return donationOptions(t.cost - t.funded, QUICK_AMOUNTS);
   }
 
   safe(url: string): string | null { return safeUrl(url); }

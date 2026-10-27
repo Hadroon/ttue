@@ -4,6 +4,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthGuardService } from '../../shared/services/auth-guard.service';
 import { DonationModalComponent, DonationModalData, DonationModalResult } from '../../shared/components/donation-modal/donation-modal';
 import { ActionsStore, Confidentiality, Evidence, LegalCase } from './actions.store';
+import { DonationOption, donationOptions } from './donation-options';
+
+const QUICK_AMOUNTS = [10, 25, 50, 100];
 
 async function sha256Hex(file: File): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
@@ -61,10 +64,12 @@ async function sha256Hex(file: File): Promise<string> {
                    [attr.aria-valuenow]="percent(c)" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="percent(c)"></span></div>
               <span class="muted">{{ c.donated | number }} donated of {{ c.budget | number }} target ({{ percent(c) }}%)</span>
               <div class="btn-row">
-                @for (amount of [10, 25, 50, 100]; track amount) {
+                @for (option of options(c); track option.amount) {
                   <button class="abtn sm" type="button" [disabled]="c.approval !== 'Approved'"
                           [attr.title]="c.approval === 'Approved' ? null : 'Donations open once an admin approves this case'"
-                          (click)="donate(c, amount)">+ {{ amount }}</button>
+                          (click)="donate(c, option.amount)">{{ option.rest ? 'Fund the rest: ' + option.amount : '+ ' + option.amount }}</button>
+                } @empty {
+                  <span class="muted">Fully funded.</span>
                 }
               </div>
               @if (c.approval === 'Pending') {
@@ -164,6 +169,10 @@ export class LegalAction {
 
   percent(c: LegalCase): number {
     return c.budget > 0 ? Math.min(100, Math.round((c.donated / c.budget) * 100)) : 0;
+  }
+
+  options(c: LegalCase): DonationOption[] {
+    return donationOptions(c.budget - c.donated, QUICK_AMOUNTS);
   }
 
   evidenceFor(c: LegalCase): Evidence[] {
