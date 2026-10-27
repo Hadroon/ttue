@@ -12,7 +12,7 @@ import { ActionsStore, EconPledge, EconTarget } from './actions.store';
     <section class="feature" aria-labelledby="eco-impact">
       <header>
         <h4 id="eco-impact">Your impact</h4>
-        <p class="muted">These totals only include pledges made on this device. Community-wide totals need the shared backend.</p>
+        <p class="muted">Totals of your own pledges. Pledges are intent only; nothing is charged.</p>
       </header>
       <div class="stats">
         <div class="stat-box"><strong>{{ pledges().length }}</strong><span>your pledges</span></div>
@@ -51,7 +51,7 @@ import { ActionsStore, EconPledge, EconTarget } from './actions.store';
               }
               <div class="btn-row">
                 <button class="abtn sm" type="button" (click)="selected.set(t.id)">Pledge on this target</button>
-                <button class="abtn sm quiet" type="button" (click)="removeTarget(t)">Remove</button>
+                @if (canRemove(t.ownerId)) { <button class="abtn sm quiet" type="button" (click)="removeTarget(t)">Remove</button> }
               </div>
             </li>
           }
@@ -191,59 +191,53 @@ export class EconomicPressure {
     return { form, data: new FormData(form) };
   }
 
-  addTarget(event: Event): void {
+  async addTarget(event: Event): Promise<void> {
     const { form, data } = this.fields(event);
     if (!this.guard.requireAuth('add a target')) return;
     const altName = String(data.get('altName') ?? '').trim();
-    const target: EconTarget = {
-      id: this.store.nextId(),
+    const ok = await this.store.create('target', {
       brand: String(data.get('brand')).trim(),
       parent: String(data.get('parent') ?? '').trim(),
-      subsidiaries: [],
       alternative: altName ? { name: altName, note: String(data.get('altNote') ?? '').trim() } : null
-    };
-    this.store.update(d => ({ ...d, targets: [...d.targets, target] }));
-    form.reset();
+    });
+    if (ok) form.reset();
   }
 
-  removeTarget(t: EconTarget): void {
-    this.store.update(d => ({
-      ...d,
-      targets: d.targets.filter(x => x.id !== t.id),
-      pledges: d.pledges.filter(p => p.targetId !== t.id)
-    }));
+  canRemove(ownerId: number | null): boolean {
+    return this.store.canRemove(ownerId);
   }
 
-  addPledge(event: Event): void {
+  async removeTarget(t: EconTarget): Promise<void> {
+    await this.store.remove(t.id);
+  }
+
+  async addPledge(event: Event): Promise<void> {
     const { form, data } = this.fields(event);
     if (!this.guard.requireAuth('make a pledge')) return;
-    const pledge: EconPledge = {
-      id: this.store.nextId(),
-      targetId: Number(data.get('targetId')),
+    const ok = await this.store.create('pledge', {
       kind: data.get('kind') === 'buycott' ? 'buycott' : 'boycott',
-      monthly: Math.max(0, Number(data.get('monthly')) || 0),
+      monthly: Math.max(0, Math.round(Number(data.get('monthly')) || 0)),
       duration: String(data.get('duration')),
       alternative: String(data.get('alternative') ?? '').trim()
-    };
-    this.store.update(d => ({ ...d, pledges: [...d.pledges, pledge] }));
-    form.reset();
-    this.selected.set(null);
+    }, Number(data.get('targetId')));
+    if (ok) {
+      form.reset();
+      this.selected.set(null);
+    }
   }
 
-  removePledge(p: EconPledge): void {
-    this.store.update(d => ({ ...d, pledges: d.pledges.filter(x => x.id !== p.id) }));
+  async removePledge(p: EconPledge): Promise<void> {
+    await this.store.remove(p.id);
   }
 
-  addSubsidiary(event: Event): void {
+  async addSubsidiary(event: Event): Promise<void> {
     const { form, data } = this.fields(event);
     if (!this.guard.requireAuth('map a subsidiary')) return;
-    const id = Number(data.get('targetId'));
-    const sub = { name: String(data.get('name')).trim(), citation: String(data.get('citation')).trim() };
-    this.store.update(d => ({
-      ...d,
-      targets: d.targets.map(t => t.id === id ? { ...t, subsidiaries: [...t.subsidiaries, sub] } : t)
-    }));
-    form.reset();
+    const ok = await this.store.create('subsidiary', {
+      name: String(data.get('name')).trim(),
+      citation: String(data.get('citation')).trim()
+    }, Number(data.get('targetId')));
+    if (ok) form.reset();
   }
 
   private defaultLetter(): string {

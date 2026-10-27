@@ -87,9 +87,9 @@ function safeUrl(value: string): string | null {
                       @for (a of [10, 50, 100]; track a) { <button class="abtn sm" type="button" (click)="fund(t, a)">+ {{ a }}</button> }
                     </div>
                   }
-                  @if (t.status === 'Funded') {
+                  @if (t.status === 'Funded' || (t.status === 'In Progress' && !t.applied)) {
                     <details>
-                      <summary>Apply / start work ({{ t.applications.length }} applications)</summary>
+                      <summary>Apply / start work ({{ t.applicationCount }} {{ t.applicationCount === 1 ? 'application' : 'applications' }})</summary>
                       <form class="form-grid" style="margin-top:8px" (submit)="apply($event, t)">
                         <label class="field wide">Cover note <textarea name="note" rows="2" required></textarea></label>
                         <label class="field">Availability <input name="availability" required placeholder="e.g. weekends from May"></label>
@@ -98,7 +98,7 @@ function safeUrl(value: string): string | null {
                       </form>
                     </details>
                   }
-                  @if (t.status === 'In Progress') {
+                  @if (t.status === 'In Progress' && (t.applied || canRemove(t.ownerId))) {
                     <details>
                       <summary>Submit completion</summary>
                       <form class="form-grid" style="margin-top:8px" (submit)="complete($event, t)">
@@ -117,7 +117,7 @@ function safeUrl(value: string): string | null {
                   @if (t.status === 'Verification') {
                     <span class="notice">Waiting for independent auditors. This step is not available until the backend can pick auditors and release funds.</span>
                   }
-                  <button class="abtn sm quiet" type="button" (click)="removeTask(t)">Remove</button>
+                  @if (canRemove(t.ownerId)) { <button class="abtn sm quiet" type="button" (click)="removeTask(t)">Remove</button> }
                 </div>
               }
             </div>
@@ -153,7 +153,7 @@ function safeUrl(value: string): string | null {
     <section class="feature" aria-labelledby="da-budget">
       <header>
         <h4 id="da-budget">Participatory budgeting</h4>
-        <p class="muted">You have {{ credits }} voice credits. Each extra vote on the same project costs more (votes squared), so spreading support is cheaper than piling it on one project. Your allocation is saved on this device and not yet counted anywhere.</p>
+        <p class="muted">You have {{ credits }} voice credits. Each extra vote on the same project costs more (votes squared), so spreading support is cheaper than piling it on one project. Your allocation is saved to your account; it isn't counted towards any decision yet.</p>
       </header>
       <div class="stats">
         <div class="stat-box"><strong>{{ creditsLeft() }}</strong><span>credits left</span></div>
@@ -196,8 +196,10 @@ export class DirectAction {
   readonly tasks = computed(() => this.store.data().tasks);
   readonly proofs = computed(() => this.tasks().filter(t => t.proof !== null));
   readonly votable = computed(() => this.tasks().filter(t => t.status === 'Open' || t.status === 'Funded'));
-  readonly creditsUsed = computed(() =>
-    Object.values(this.store.data().allocation).reduce((sum, v) => sum + v * v, 0));
+  readonly creditsUsed = computed(() => {
+    const allocation = this.store.data().allocation;
+    return this.tasks().reduce((sum, t) => sum + (allocation[t.id] ?? 0) ** 2, 0);
+  });
   readonly creditsLeft = computed(() => VOICE_CREDITS - this.creditsUsed());
 
   emptySet(): Set<string> { return new Set(); }
@@ -227,10 +229,19 @@ export class DirectAction {
     return (v + 1) ** 2 - v ** 2 <= this.creditsLeft();
   }
 
-  vote(t: CivicTask, delta: 1 | -1): void {
+  async vote(t: CivicTask, delta: 1 | -1): Promise<void> {
     if (delta === 1 && !this.canAdd(t)) return;
     if (!this.guard.requireAuth('allocate your budget votes')) return;
-    this.store.update(d => ({ ...d, allocation: { ...d.allocation, [t.id]: Math.max(0, (d.allocation[t.id] ?? 0) + delta) } }));
+    const current = this.store.data().allocation;
+    // Only send votes for tasks that still exist
+    const votes: Record<string, number> = {};
+    for (const task of this.tasks()) votes[task.id] = current[task.id] ?? 0;
+    votes[t.id] = Math.max(0, votes[t.id] + delta);
+    await this.store.create('allocation', { votes });
+  }
+
+  canRemove(ownerId: number | null): boolean {
+    return this.store.canRemove(ownerId);
   }
 
   private fields(event: Event): { form: HTMLFormElement; data: FormData } {
@@ -239,35 +250,21 @@ export class DirectAction {
     return { form, data: new FormData(form) };
   }
 
-  private patch(t: CivicTask, change: (x: CivicTask) => CivicTask): void {
-    this.store.update(d => ({ ...d, tasks: d.tasks.map(x => x.id === t.id ? change(x) : x) }));
-  }
-
-  addTask(event: Event): void {
+  async addTask(event: Event): Promise<void> {
     const { form, data } = this.fields(event);
     if (!this.guard.requireAuth('propose a task')) return;
-    const task: CivicTask = {
-      id: this.store.nextId(),
+    const ok = await this.store.create('task', {
       title: String(data.get('title')).trim(),
       skills: data.getAll('skills').map(String),
-      cost: Math.max(0, Number(data.get('cost')) || 0),
-      funded: 0,
+      cost: Math.max(0, Math.round(Number(data.get('cost')) || 0)),
       milestones: String(data.get('milestones')).split('\n').map(s => s.trim()).filter(Boolean),
-      location: String(data.get('location') ?? '').trim(),
-      status: 'Open',
-      applications: [],
-      assignee: false,
-      proof: null
-    };
-    this.store.update(d => ({ ...d, tasks: [...d.tasks, task] }));
-    form.reset();
+      location: String(data.get('location') ?? '').trim()
+    });
+    if (ok) form.reset();
   }
 
-  removeTask(t: CivicTask): void {
-    this.store.update(d => {
-      const { [t.id]: _removed, ...allocation } = d.allocation;
-      return { ...d, tasks: d.tasks.filter(x => x.id !== t.id), allocation };
-    });
+  async removeTask(t: CivicTask): Promise<void> {
+    await this.store.remove(t.id);
   }
 
   fund(t: CivicTask, amount: number): void {
@@ -288,38 +285,33 @@ export class DirectAction {
       .open<DonationModalComponent, DonationModalData, DonationModalResult>(DonationModalComponent, { data, width: '520px', maxWidth: '90vw' })
       .afterClosed()
       .subscribe(result => {
-        if (result?.paid) this.store.addFunding(challengeId, t.id, result.amount);
+        if (result?.paid) void this.store.reload(challengeId);
       });
   }
 
-  apply(event: Event, t: CivicTask): void {
+  async apply(event: Event, t: CivicTask): Promise<void> {
     const { data } = this.fields(event);
     if (!this.guard.requireAuth('apply for this task')) return;
-    const application = {
+    await this.store.create('application', {
       note: String(data.get('note')).trim(),
       availability: String(data.get('availability')).trim(),
       tools: String(data.get('tools') ?? '').trim()
-    };
-    this.patch(t, x => ({ ...x, applications: [...x.applications, application], assignee: true, status: 'In Progress' }));
+    }, t.id);
   }
 
-  complete(event: Event, t: CivicTask): void {
+  async complete(event: Event, t: CivicTask): Promise<void> {
     const { data } = this.fields(event);
     const before = safeUrl(String(data.get('before')));
     const after = safeUrl(String(data.get('after')));
     if (!before || !after) return;
     if (!this.guard.requireAuth('submit completion proof')) return;
     const receipts = data.getAll('receipts').filter(f => f instanceof File && f.size > 0).length;
-    this.patch(t, x => ({
-      ...x,
-      status: 'Verification',
-      proof: {
-        beforeUrl: before,
-        afterUrl: after,
-        note: String(data.get('note')).trim(),
-        milestonesDone: data.getAll('milestone').length,
-        receipts
-      }
-    }));
+    await this.store.create('proof', {
+      beforeUrl: before,
+      afterUrl: after,
+      note: String(data.get('note')).trim(),
+      milestonesDone: data.getAll('milestone').length,
+      receipts
+    }, t.id);
   }
 }

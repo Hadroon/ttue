@@ -1,8 +1,8 @@
 import Stripe from "stripe";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { config } from "../config/app.config";
 import { db } from "../db";
-import { challenges, donations, users } from "../db/schema";
+import { challengeActionItems, challengeActions, challenges, donations, users } from "../db/schema";
 import { optionalAuth } from "../middleware/auth";
 
 const MIN_AMOUNT = 100; // smallest unit (e.g. cents)
@@ -94,7 +94,40 @@ async function recordPaidSession(session: Stripe.Checkout.Session): Promise<bool
       targetLocation: meta.target_location || null,
     })
     .onConflictDoNothing({ target: donations.stripeSessionId });
+
+  if (meta.action_key === "direct" && challengeId !== null && meta.target_id && /^\d+$/.test(meta.target_id)) {
+    await markTaskFundedIfCovered(challengeId, Number(meta.target_id));
+  }
   return true;
+}
+
+/** An Open bounty-board task becomes Funded once confirmed donations cover its cost (amounts are in cents) */
+export async function markTaskFundedIfCovered(challengeId: number, taskId: number): Promise<void> {
+  const [task] = await db
+    .select({ id: challengeActionItems.id, data: challengeActionItems.data })
+    .from(challengeActionItems)
+    .where(and(
+      eq(challengeActionItems.id, taskId),
+      eq(challengeActionItems.challengeId, challengeId),
+      eq(challengeActionItems.kind, "task"),
+    ))
+    .limit(1);
+  if (!task || task.data.status !== "Open") return;
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`coalesce(sum(${donations.amount}), 0)::float8` })
+    .from(donations)
+    .where(and(
+      eq(donations.challengeId, challengeId),
+      eq(donations.actionKey, "direct"),
+      eq(donations.targetId, String(taskId)),
+    ));
+  if (total >= Number(task.data.cost) * 100) {
+    await db
+      .update(challengeActionItems)
+      .set({ data: { ...task.data, status: "Funded" }, updatedAt: new Date() })
+      .where(eq(challengeActionItems.id, taskId));
+  }
 }
 
 export async function handleGetDonationConfig(_req: Request): Promise<Response> {
@@ -157,14 +190,41 @@ export async function handleCreateDonationSession(req: Request): Promise<Respons
     if (!ACTION_KEYS.has(actionKey) || challengeId === null) {
       return json({ error: "Invalid action" }, 400);
     }
+    const [approved] = await db
+      .select({ key: challengeActions.actionKey })
+      .from(challengeActions)
+      .where(and(eq(challengeActions.challengeId, challengeId), eq(challengeActions.actionKey, actionKey)))
+      .limit(1);
+    if (!approved) {
+      return json({ error: "This action is not approved for donations yet" }, 403);
+    }
     metadata.action_key = actionKey;
   }
-  // Targets (e.g. bounty-board tasks) live in the donor's browser, so these are snapshots
-  const targetId = clean(ctx.targetId, 40);
-  const targetTitle = clean(ctx.targetTitle);
-  const targetLocation = clean(ctx.targetLocation);
+
+  let targetId = clean(ctx.targetId, 40);
+  let targetTitle = clean(ctx.targetTitle);
+  let targetLocation = clean(ctx.targetLocation);
   if ((targetId || targetTitle || targetLocation) && !actionKey) {
     return json({ error: "A target needs an action" }, 400);
+  }
+  if (targetId) {
+    // A bounty-board target must be a real task of this challenge; its stored details replace the client's
+    const [task] = actionKey === "direct" && challengeId !== null && /^\d+$/.test(targetId)
+      ? await db
+          .select({ data: challengeActionItems.data })
+          .from(challengeActionItems)
+          .where(and(
+            eq(challengeActionItems.id, Number(targetId)),
+            eq(challengeActionItems.challengeId, challengeId),
+            eq(challengeActionItems.kind, "task"),
+          ))
+          .limit(1)
+      : [];
+    if (!task) {
+      return json({ error: "Task not found" }, 400);
+    }
+    targetTitle = clean(task.data.title);
+    targetLocation = clean(task.data.location);
   }
   if (targetId) metadata.target_id = targetId;
   if (targetTitle) metadata.target_title = targetTitle;

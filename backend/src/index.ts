@@ -14,6 +14,7 @@ import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, han
 import { handleGetDraftVotes, handleVoteDraft } from "./routes/draft-votes";
 import { handleGetChallengeLinks, handleCreateChallengeLink, handleDeleteChallengeLink } from "./routes/challenge-links";
 import { handleGetChallengeActions, handleVoteChallengeAction, handleSetChallengeActionActivation } from "./routes/challenge-actions";
+import { handleGetActionItems, handleCreateActionItem, handleUpdateActionItem, handleDeleteActionItem } from "./routes/challenge-action-items";
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations, handleAdminGetActionRecommendations } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
@@ -249,6 +250,22 @@ serve({
       if (url.pathname.match(/^\/api\/challenges\/\d+\/actions\/[a-z]+\/activation$/) && req.method === "PUT") {
         const [, , , id, , key] = url.pathname.split("/");
         return handleSetChallengeActionActivation(req, parseInt(id), key);
+      }
+
+      // Action form entries (cases, pledges, tasks, ...)
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/action-items$/) && req.method === "GET") {
+        return handleGetActionItems(req, parseInt(url.pathname.split("/")[3]));
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/action-items$/) && req.method === "POST") {
+        return handleCreateActionItem(req, parseInt(url.pathname.split("/")[3]));
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/action-items\/\d+$/) && req.method === "PUT") {
+        const [, , , id, , itemId] = url.pathname.split("/");
+        return handleUpdateActionItem(req, parseInt(id), parseInt(itemId));
+      }
+      if (url.pathname.match(/^\/api\/challenges\/\d+\/action-items\/\d+$/) && req.method === "DELETE") {
+        const [, , , id, , itemId] = url.pathname.split("/");
+        return handleDeleteActionItem(req, parseInt(id), parseInt(itemId));
       }
 
       // Challenge link routes

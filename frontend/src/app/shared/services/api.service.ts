@@ -136,6 +136,28 @@ export interface AdminActionRecommendation {
   activatedAt: string | null;
 }
 
+export interface ActionItem {
+  id: number;
+  challengeId: number;
+  actionKey: ChallengeActionKey;
+  kind: string;
+  parentId: number | null;
+  userId: number | null;
+  data: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+  authorUsername: string | null;
+  authorDisplayName: string | null;
+}
+
+/** Per-parent totals: pledged amounts, applications, co-sponsored shares, and donations (in cents) to a task */
+export interface ActionItemAggregate {
+  kind: string;
+  parentId: number;
+  count: number;
+  total: number;
+}
+
 export interface ChallengeLink {
   id: number;
   challengeId: number;
@@ -830,6 +852,25 @@ export class ApiService {
   setChallengeActionActive(challengeId: number, key: ChallengeActionKey, active: boolean) {
     return this.http.put<{ message: string; action: ChallengeActionState }>(
       `${this.baseUrl}/challenges/${challengeId}/actions/${key}/activation`, { active });
+  }
+
+  /** Entries submitted through the action forms: shared ones for everyone, personal ones for the caller */
+  getActionItems(challengeId: number) {
+    return this.http.get<{ items: ActionItem[]; aggregates: ActionItemAggregate[] }>(
+      `${this.baseUrl}/challenges/${challengeId}/action-items`);
+  }
+
+  /** Add an entry; kinds that allow one per user replace the caller's existing entry */
+  createActionItem(challengeId: number, kind: string, data: Record<string, unknown>, parentId?: number) {
+    return this.http.post<ActionItem>(`${this.baseUrl}/challenges/${challengeId}/action-items`, { kind, parentId, data });
+  }
+
+  updateActionItem(challengeId: number, itemId: number, data: Record<string, unknown>) {
+    return this.http.put<ActionItem>(`${this.baseUrl}/challenges/${challengeId}/action-items/${itemId}`, { data });
+  }
+
+  deleteActionItem(challengeId: number, itemId: number) {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/challenges/${challengeId}/action-items/${itemId}`);
   }
 
   /** Links users have attached to a challenge, newest first */

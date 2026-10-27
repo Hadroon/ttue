@@ -165,35 +165,29 @@ export class LegalAction {
     return { form, data: new FormData(form) };
   }
 
-  createCase(event: Event): void {
+  async createCase(event: Event): Promise<void> {
     const { form, data } = this.formData(event);
     if (!this.guard.requireAuth('start a legal action')) return;
-    const c: LegalCase = {
-      id: this.store.nextId(),
+    const ok = await this.store.create('case', {
       target: String(data.get('target')).trim(),
       jurisdiction: String(data.get('jurisdiction')).trim(),
       basis: String(data.get('basis')),
-      budget: Math.max(0, Number(data.get('budget')) || 0),
-      lead: String(data.get('lead') ?? '').trim(),
-      pledged: 0,
-      filings: [],
-      createdAt: new Date().toISOString()
-    };
-    this.store.update(d => ({ ...d, cases: [...d.cases, c] }));
-    form.reset();
+      budget: Math.max(0, Math.round(Number(data.get('budget')) || 0)),
+      lead: String(data.get('lead') ?? '').trim()
+    });
+    if (ok) form.reset();
   }
 
-  pledge(c: LegalCase, amount: number): void {
+  async pledge(c: LegalCase, amount: number): Promise<void> {
     if (!this.guard.requireAuth('pledge to this case')) return;
-    this.store.update(d => ({ ...d, cases: d.cases.map(x => x.id === c.id ? { ...x, pledged: x.pledged + amount } : x) }));
+    await this.store.create('case_pledge', { amount }, c.id);
   }
 
-  addFiling(event: Event, c: LegalCase): void {
+  async addFiling(event: Event, c: LegalCase): Promise<void> {
     const { form, data } = this.formData(event);
     if (!this.guard.requireAuth('add a filing')) return;
-    const filing = { title: String(data.get('title')).trim(), url: String(data.get('url')).trim() };
-    this.store.update(d => ({ ...d, cases: d.cases.map(x => x.id === c.id ? { ...x, filings: [...x.filings, filing] } : x) }));
-    form.reset();
+    const ok = await this.store.create('filing', { title: String(data.get('title')).trim(), url: String(data.get('url')).trim() }, c.id);
+    if (ok) form.reset();
   }
 
   async addEvidence(event: Event): Promise<void> {
@@ -203,10 +197,8 @@ export class LegalAction {
     if (!this.guard.requireAuth('record evidence')) return;
     this.hashing.set(true);
     try {
-      const caseId = data.get('caseId') ? Number(data.get('caseId')) : null;
-      const entry: Evidence = {
-        id: this.store.nextId(),
-        caseId,
+      const caseId = data.get('caseId') ? Number(data.get('caseId')) : undefined;
+      const ok = await this.store.create('evidence', {
         name: file.name,
         size: file.size,
         sha256: await sha256Hex(file),
@@ -214,28 +206,24 @@ export class LegalAction {
         capturedAt: String(data.get('capturedAt')),
         location: String(data.get('location')).trim(),
         device: String(data.get('device') ?? '').trim()
-      };
-      this.store.update(d => ({ ...d, evidence: [...d.evidence, entry] }));
-      form.reset();
+      }, caseId);
+      if (ok) form.reset();
     } finally {
       this.hashing.set(false);
     }
   }
 
-  requestLawyer(event: Event): void {
+  async requestLawyer(event: Event): Promise<void> {
     const { data } = this.formData(event);
     if (!this.guard.requireAuth('request lawyer verification')) return;
-    this.store.update(d => ({
-      ...d,
-      lawyerRequest: {
-        name: String(data.get('name')).trim(),
-        jurisdiction: String(data.get('jurisdiction')).trim(),
-        submittedAt: new Date().toLocaleDateString()
-      }
-    }));
+    await this.store.create('lawyer_request', {
+      name: String(data.get('name')).trim(),
+      jurisdiction: String(data.get('jurisdiction')).trim()
+    });
   }
 
-  withdrawLawyer(): void {
-    this.store.update(d => ({ ...d, lawyerRequest: null }));
+  async withdrawLawyer(): Promise<void> {
+    const request = this.lawyer();
+    if (request) await this.store.remove(request.id);
   }
 }

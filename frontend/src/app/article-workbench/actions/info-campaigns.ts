@@ -32,7 +32,7 @@ function safeUrl(value: string): string | null {
               <span class="muted">License: {{ m.license }}</span>
               <div class="btn-row">
                 <a class="abtn sm primary" [href]="m.url" target="_blank" rel="noopener noreferrer">Open / download</a>
-                <button class="abtn sm quiet" type="button" (click)="removeMedia(m)">Remove</button>
+                @if (canRemove(m.ownerId)) { <button class="abtn sm quiet" type="button" (click)="removeMedia(m)">Remove</button> }
               </div>
             </li>
           }
@@ -52,7 +52,7 @@ function safeUrl(value: string): string | null {
     <section class="feature" aria-labelledby="ic-shares">
       <header>
         <h4 id="ic-shares">Shareholder meeting coordination</h4>
-        <p class="muted">Pool shares, even fractional ones, to reach the threshold a company requires for an agenda item. Share ownership can't be verified yet, so counts are self-reported and stored on this device only. Check the company's own rules and the law in its jurisdiction before filing anything.</p>
+        <p class="muted">Pool shares, even fractional ones, to reach the threshold a company requires for an agenda item. Share ownership can't be verified yet, so counts are self-reported. Check the company's own rules and the law in its jurisdiction before filing anything.</p>
       </header>
       @if (resolutions().length === 0) {
         <div class="empty">No resolutions yet.</div>
@@ -67,7 +67,7 @@ function safeUrl(value: string): string | null {
               <span class="muted">{{ pooled(r) | number }} of {{ r.threshold | number }} shares pledged (self-reported)</span>
               <div class="btn-row">
                 <label class="check"><input type="checkbox" [checked]="r.cosponsor" (change)="toggleCosponsor(r)"> I co-sponsor with my shares</label>
-                <button class="abtn sm quiet" type="button" (click)="removeResolution(r)">Remove</button>
+                @if (canRemove(r.ownerId)) { <button class="abtn sm quiet" type="button" (click)="removeResolution(r)">Remove</button> }
               </div>
             </li>
           }
@@ -75,8 +75,8 @@ function safeUrl(value: string): string | null {
       }
       <form class="form-grid" (submit)="addResolution($event)">
         <label class="field">Company ticker <input name="ticker" required placeholder="e.g. ACME" maxlength="12"></label>
-        <label class="field">Shares needed to file <input name="threshold" type="number" min="1" step="any" required></label>
-        <label class="field">Shares I hold <input name="mine" type="number" min="0" step="any" value="0"></label>
+        <label class="field">Shares needed to file <input name="threshold" type="number" min="1" step="1" required></label>
+        <label class="field">Shares I hold <input name="mine" type="number" min="0" step="1" value="0"></label>
         <label class="field wide">Resolution text <textarea name="text" rows="3" required></textarea></label>
         <label class="field wide">Proof of ownership <input name="proof" type="file" disabled></label>
         <label class="check wide"><input type="checkbox" name="cosponsor" checked> Count the shares I hold towards this resolution</label>
@@ -111,56 +111,59 @@ export class InfoCampaigns {
   readonly media = computed(() => this.store.data().media);
   readonly resolutions = computed(() => this.store.data().resolutions);
 
-  pooled(r: ShareResolution): number { return r.cosponsor ? r.mine : 0; }
+  pooled(r: ShareResolution): number { return r.pooled; }
   pct(r: ShareResolution): number {
     return r.threshold > 0 ? Math.min(100, Math.round((this.pooled(r) / r.threshold) * 100)) : 0;
   }
 
-  addMedia(event: Event): void {
+  canRemove(ownerId: number | null): boolean {
+    return this.store.canRemove(ownerId);
+  }
+
+  async addMedia(event: Event): Promise<void> {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const data = new FormData(form);
     const url = safeUrl(String(data.get('url')));
     if (!url) return;
     if (!this.guard.requireAuth('share an asset')) return;
-    const asset: MediaAsset = {
-      id: this.store.nextId(),
+    const created = await this.store.create('media', {
       title: String(data.get('title')).trim(),
-      type: String(data.get('type')) as MediaAsset['type'],
+      type: String(data.get('type')),
       url,
       license: String(data.get('license')).trim()
-    };
-    this.store.update(d => ({ ...d, media: [...d.media, asset] }));
-    form.reset();
+    });
+    if (created) form.reset();
   }
 
-  removeMedia(m: MediaAsset): void {
-    this.store.update(d => ({ ...d, media: d.media.filter(x => x.id !== m.id) }));
+  async removeMedia(m: MediaAsset): Promise<void> {
+    await this.store.remove(m.id);
   }
 
-  addResolution(event: Event): void {
+  async addResolution(event: Event): Promise<void> {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const data = new FormData(form);
     if (!this.guard.requireAuth('start a shareholder resolution')) return;
-    const resolution: ShareResolution = {
-      id: this.store.nextId(),
+    const created = await this.store.create('resolution', {
       ticker: String(data.get('ticker')).trim().toUpperCase(),
       text: String(data.get('text')).trim(),
-      threshold: Math.max(1, Number(data.get('threshold')) || 1),
-      mine: Math.max(0, Number(data.get('mine')) || 0),
-      cosponsor: data.get('cosponsor') !== null
-    };
-    this.store.update(d => ({ ...d, resolutions: [...d.resolutions, resolution] }));
+      threshold: Math.max(1, Math.round(Number(data.get('threshold')) || 1))
+    });
+    if (!created) return;
+    const shares = Math.max(0, Math.round(Number(data.get('mine')) || 0));
+    if (shares > 0) {
+      await this.store.create('resolution_cosponsor', { shares, cosponsor: data.get('cosponsor') !== null }, created.id);
+    }
     form.reset();
   }
 
-  toggleCosponsor(r: ShareResolution): void {
+  async toggleCosponsor(r: ShareResolution): Promise<void> {
     if (!this.guard.requireAuth('co-sponsor a resolution')) return;
-    this.store.update(d => ({ ...d, resolutions: d.resolutions.map(x => x.id === r.id ? { ...x, cosponsor: !x.cosponsor } : x) }));
+    await this.store.create('resolution_cosponsor', { shares: r.mine, cosponsor: !r.cosponsor }, r.id);
   }
 
-  removeResolution(r: ShareResolution): void {
-    this.store.update(d => ({ ...d, resolutions: d.resolutions.filter(x => x.id !== r.id) }));
+  async removeResolution(r: ShareResolution): Promise<void> {
+    await this.store.remove(r.id);
   }
 }

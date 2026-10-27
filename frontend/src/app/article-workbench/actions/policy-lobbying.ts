@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { AuthGuardService } from '../../shared/services/auth-guard.service';
 import { AuthService } from '../../shared/services/auth.service';
-import { ActionsStore, BillAmendment, Representative } from './actions.store';
+import { ActionsStore, BillAmendment, BillDraft, Representative } from './actions.store';
 
 interface DiffPart { kind: 'same' | 'added' | 'removed'; text: string; }
 
@@ -146,7 +146,7 @@ function wordDiff(before: string, after: string): DiffPart[] {
         <button class="abtn" type="button" (click)="log('mail')">I posted a letter</button>
         @if (messageOverride() !== null) { <button class="abtn quiet" type="button" (click)="messageOverride.set(null)">Reset text</button> }
       </div>
-      <div class="stats" aria-label="Your outreach on this device">
+      <div class="stats" aria-label="Your outreach">
         <div class="stat-box"><strong>{{ outreach().email }}</strong><span>emails you started</span></div>
         <div class="stat-box"><strong>{{ outreach().call }}</strong><span>calls you started</span></div>
         <div class="stat-box"><strong>{{ outreach().mail }}</strong><span>letters you posted</span></div>
@@ -164,7 +164,7 @@ export class PolicyLobbying {
 
   readonly bill = computed(() => this.store.data().bill);
   readonly reps = computed(() => this.store.data().reps);
-  readonly postalCode = computed(() => this.store.data().postalCode);
+  readonly postalCode = computed(() => this.store.data().outreach.postalCode);
   readonly outreach = computed(() => this.store.data().outreach);
 
   readonly repId = signal<number | null>(null);
@@ -177,30 +177,39 @@ export class PolicyLobbying {
 
   diff(a: BillAmendment): DiffPart[] { return wordDiff(a.oldText, a.newText); }
 
-  setField(field: 'title' | 'intent' | 'impact' | 'citations', value: string): void {
-    this.store.update(d => ({ ...d, bill: { ...d.bill, [field]: value } }));
+  /** The draft is one personal entry; every change saves the whole draft */
+  private async saveBill(next: BillDraft): Promise<boolean> {
+    if (!this.guard.requireAuth('save your policy draft')) return false;
+    return (await this.store.create('bill_draft', {
+      title: next.title, intent: next.intent, impact: next.impact, citations: next.citations,
+      amendments: next.amendments.map(({ section, oldText, newText }) => ({ section, oldText, newText }))
+    })) !== null;
   }
 
-  addAmendment(event: Event): void {
+  async setField(field: 'title' | 'intent' | 'impact' | 'citations', value: string): Promise<void> {
+    await this.saveBill({ ...this.bill(), [field]: value.trim() });
+  }
+
+  async addAmendment(event: Event): Promise<void> {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const data = new FormData(form);
     const amendment: BillAmendment = {
-      id: this.store.nextId(),
+      id: this.bill().amendments.length,
       section: String(data.get('section')).trim(),
       oldText: String(data.get('oldText') ?? '').trim(),
       newText: String(data.get('newText')).trim()
     };
-    this.store.update(d => ({ ...d, bill: { ...d.bill, amendments: [...d.bill.amendments, amendment] } }));
-    form.reset();
+    const ok = await this.saveBill({ ...this.bill(), amendments: [...this.bill().amendments, amendment] });
+    if (ok) form.reset();
   }
 
-  removeAmendment(a: BillAmendment): void {
-    this.store.update(d => ({ ...d, bill: { ...d.bill, amendments: d.bill.amendments.filter(x => x.id !== a.id) } }));
+  async removeAmendment(a: BillAmendment): Promise<void> {
+    await this.saveBill({ ...this.bill(), amendments: this.bill().amendments.filter(x => x.id !== a.id) });
   }
 
-  clearBill(): void {
-    this.store.update(d => ({ ...d, bill: { title: '', intent: '', amendments: [], impact: '', citations: '' } }));
+  async clearBill(): Promise<void> {
+    await this.saveBill({ title: '', intent: '', amendments: [], impact: '', citations: '' });
   }
 
   private billMarkdown(): string {
@@ -219,28 +228,27 @@ export class PolicyLobbying {
     } catch { /* clipboard blocked */ }
   }
 
-  addRep(event: Event): void {
+  async addRep(event: Event): Promise<void> {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const data = new FormData(form);
-    const rep: Representative = {
-      id: this.store.nextId(),
+    if (!this.guard.requireAuth('save a representative')) return;
+    const ok = await this.store.create('representative', {
       name: String(data.get('name')).trim(),
       office: String(data.get('office')).trim(),
       email: String(data.get('email') ?? '').trim(),
       phone: String(data.get('phone') ?? '').trim()
-    };
-    this.store.update(d => ({ ...d, reps: [...d.reps, rep] }));
-    form.reset();
+    });
+    if (ok) form.reset();
   }
 
-  removeRep(r: Representative): void {
-    this.store.update(d => ({ ...d, reps: d.reps.filter(x => x.id !== r.id) }));
-    if (this.repId() === r.id) this.repId.set(null);
+  async removeRep(r: Representative): Promise<void> {
+    if (await this.store.remove(r.id) && this.repId() === r.id) this.repId.set(null);
   }
 
-  setPostal(value: string): void {
-    this.store.update(d => ({ ...d, postalCode: value.trim() }));
+  async setPostal(value: string): Promise<void> {
+    if (!this.guard.requireAuth('save your postal code')) return;
+    await this.store.create('outreach', { ...this.outreach(), postalCode: value.trim() });
   }
 
   private defaultMessage(): string {
@@ -265,8 +273,9 @@ export class PolicyLobbying {
     } catch { /* clipboard blocked */ }
   }
 
-  log(kind: 'email' | 'call' | 'mail'): void {
+  async log(kind: 'email' | 'call' | 'mail'): Promise<void> {
     if (!this.guard.requireAuth('log your outreach')) return;
-    this.store.update(d => ({ ...d, outreach: { ...d.outreach, [kind]: d.outreach[kind] + 1 } }));
+    const current = this.outreach();
+    await this.store.create('outreach', { ...current, [kind]: current[kind] + 1 });
   }
 }

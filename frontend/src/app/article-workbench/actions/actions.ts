@@ -97,6 +97,9 @@ const ACTIONS: ActionInfo[] = [
           {{ error() }} <button class="btn quiet" type="button" (click)="reload()">Try again</button>
         </div>
       }
+      @if (store.error(); as storeError) {
+        <div class="state error" role="alert">{{ storeError }}</div>
+      }
       <ul class="cards" style="list-style:none;margin:0;padding:0" aria-label="Recommend actions">
         @for (info of infos; track info.key) {
           @let s = stateOf(info.key);
@@ -152,8 +155,8 @@ const ACTIONS: ActionInfo[] = [
         <section aria-label="Active actions">
           <h3>Active actions</h3>
           <p class="banner" role="note">
-            The tools below are an early version: what you add is saved in this browser only, and escrow,
-            verification and secure drops are not live yet. Funding a bounty-board task takes a real donation through Stripe.
+            The tools below are an early version: what you add is saved to the platform and shown to others where it is shared,
+            while escrow, verification and secure drops are not live yet. Funding a bounty-board task takes a real donation through Stripe.
             Each section says what is and isn't working.
           </p>
           <div class="tabs" role="tablist" aria-label="Active actions" style="margin-top:12px">
@@ -189,7 +192,7 @@ export class Actions {
   private readonly api = inject(ApiService);
   private readonly guard = inject(AuthGuardService);
   private readonly auth = inject(AuthService);
-  private readonly store = inject(ActionsStore);
+  protected readonly store = inject(ActionsStore);
 
   readonly infos = ACTIONS;
   readonly states = signal<ChallengeActionState[]>([]);

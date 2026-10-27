@@ -120,6 +120,13 @@
       "when": 1789295889411,
       "tag": "0016_donations",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789295889412,
+      "tag": "0017_challenge_action_items",
+      "breakpoints": true
     }
   ]
 }

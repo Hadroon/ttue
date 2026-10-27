@@ -38,7 +38,7 @@ export class DonationReturnService {
       next: (res) => {
         const taskId = Number(res.targetId);
         if (res.paid && res.actionKey === 'direct' && Number.isFinite(taskId)) {
-          this.store.addFunding(res.challengeId, taskId, res.amount / 100);
+          void this.store.reload(res.challengeId);
         }
         this.snackBar.open(
           res.paid ? 'Thank you for your support! ❤️' : 'Thank you! Your payment is being processed.',

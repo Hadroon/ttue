@@ -8,11 +8,17 @@ CREATE TABLE IF NOT EXISTS "challenge_links" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "challenge_links" ADD CONSTRAINT "challenge_links_challenge_id_challenges_id_fk"
-	FOREIGN KEY ("challenge_id") REFERENCES "public"."challenges"("id") ON DELETE cascade ON UPDATE no action;
+DO $$ BEGIN
+	ALTER TABLE "challenge_links" ADD CONSTRAINT "challenge_links_challenge_id_challenges_id_fk"
+		FOREIGN KEY ("challenge_id") REFERENCES "public"."challenges"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "challenge_links" ADD CONSTRAINT "challenge_links_user_id_users_id_fk"
-	FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+DO $$ BEGIN
+	ALTER TABLE "challenge_links" ADD CONSTRAINT "challenge_links_user_id_users_id_fk"
+		FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "challenge_links_challenge_idx" ON "challenge_links" USING btree ("challenge_id","created_at");
 --> statement-breakpoint

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, boolean, index, uniqueIndex, json, primaryKey, check } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, boolean, index, uniqueIndex, json, primaryKey, check, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
 // Users table
@@ -233,6 +233,31 @@ export const challengeActions = pgTable("challenge_actions", {
   activatedAt: timestamp("activated_at").defaultNow().notNull(),
 }, (table) => ({
   pk: primaryKey({ columns: [table.challengeId, table.actionKey] }),
+}));
+
+// Entries submitted through the action forms (cases, evidence, targets, pledges, tasks, ...).
+// `kind` selects the validator in services/action-items.ts; `data` holds the validated fields.
+// Child entries (filings, pledges, applications, ...) point at their parent through parent_id.
+export const challengeActionItems = pgTable("challenge_action_items", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+  actionKey: text("action_key").notNull(),
+  kind: text("kind").notNull(),
+  parentId: integer("parent_id").references((): AnyPgColumn => challengeActionItems.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  data: json("data").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  listIdx: index("challenge_action_items_list_idx").on(table.challengeId, table.actionKey, table.kind),
+  parentIdx: index("challenge_action_items_parent_idx").on(table.parentId),
+  userIdx: index("challenge_action_items_user_idx").on(table.userId),
+  singletonUnique: uniqueIndex("challenge_action_items_singleton_unique")
+    .on(table.challengeId, table.kind, table.userId)
+    .where(sql`${table.parentId} IS NULL AND ${table.kind} IN ('lawyer_request', 'bill_draft', 'outreach', 'allocation')`),
+  perParentUnique: uniqueIndex("challenge_action_items_per_parent_unique")
+    .on(table.challengeId, table.kind, table.userId, table.parentId)
+    .where(sql`${table.kind} IN ('pledge', 'application', 'proof', 'resolution_cosponsor')`),
 }));
 
 // Reference links users attach to a challenge
