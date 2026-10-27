@@ -118,7 +118,7 @@ export interface Challenge {
   updatedAt: string;
 }
 
-export type ChallengeActionKey = 'legal' | 'economic' | 'direct' | 'policy' | 'info';
+export type ChallengeActionKey = 'legal' | 'economic' | 'direct' | 'policy' | 'info' | 'protest';
 
 export interface ChallengeActionState {
   key: ChallengeActionKey;

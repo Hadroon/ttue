@@ -9,6 +9,7 @@ import { EconomicPressure } from './economic-pressure';
 import { DirectAction } from './direct-action';
 import { PolicyLobbying } from './policy-lobbying';
 import { InfoCampaigns } from './info-campaigns';
+import { Protests } from './protests';
 
 interface ActionInfo {
   key: ChallengeActionKey;
@@ -33,12 +34,15 @@ const ACTIONS: ActionInfo[] = [
     includes: ['Legislative studio with diffs', 'Representative outreach', 'Campaign tracker'] },
   { key: 'info', icon: '📣', title: 'Information Warfare & Shareholder Activism',
     summary: 'Share open campaign material and coordinate small shareholders.',
-    includes: ['Media and meme library', 'Shareholder resolutions', 'Whistleblower vault (not available yet)'] }
+    includes: ['Media and meme library', 'Shareholder resolutions', 'Whistleblower vault (not available yet)'] },
+  { key: 'protest', icon: '📢', title: 'Protests & Public Gatherings',
+    summary: 'Show where and when people are meeting, with a map and a link to the organisers.',
+    includes: ['Events with date and place', 'Map links', 'Organiser links', 'Upcoming and past'] }
 ];
 
 @Component({
   selector: 'app-actions',
-  imports: [NgTemplateOutlet, LegalAction, EconomicPressure, DirectAction, PolicyLobbying, InfoCampaigns],
+  imports: [NgTemplateOutlet, LegalAction, EconomicPressure, DirectAction, PolicyLobbying, InfoCampaigns, Protests],
   styles: [`
     :host { display: grid; gap: 20px; }
     h2, h3 { margin: 0; }
@@ -180,6 +184,7 @@ const ACTIONS: ActionInfo[] = [
         @case ('direct') { <app-direct-action [challengeId]="challengeId()" /> }
         @case ('policy') { <app-policy-lobbying [challengeTitle]="challengeTitle()" (openDraft)="openDraft.emit()" /> }
         @case ('info') { <app-info-campaigns /> }
+        @case ('protest') { <app-protests /> }
       }
     </ng-template>
   `

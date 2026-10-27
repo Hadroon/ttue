@@ -2,9 +2,9 @@ import { db } from "../db";
 import { challenges, challengeActions, challengeActionItems, donations, users } from "../db/schema";
 import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
-import { KINDS, ValidationError, getKind, parseItemData, type ActionKey, type KindDef } from "../services/action-items";
+import { ACTION_KEYS, KINDS, ValidationError, getKind, parseItemData, type ActionKey, type KindDef } from "../services/action-items";
 
-const ACTION_KEYS: readonly string[] = ["legal", "economic", "direct", "policy", "info"];
+const ACTION_KEY_LIST: readonly string[] = ACTION_KEYS;
 const MAX_BODY_BYTES = 50_000;
 
 // Child entries that move their parent task forward: the statuses it must be in, and where it goes
@@ -155,7 +155,7 @@ async function loadAggregates(challengeId: number, actionKey: string | null) {
 export async function handleGetActionItems(req: Request, challengeId: number): Promise<Response> {
   const { user } = await optionalAuth(req);
   const actionKey = new URL(req.url).searchParams.get("action");
-  if (actionKey !== null && !ACTION_KEYS.includes(actionKey)) return json({ error: "Unknown action" }, 400);
+  if (actionKey !== null && !ACTION_KEY_LIST.includes(actionKey)) return json({ error: "Unknown action" }, 400);
 
   try {
     const [challenge] = await db.select({ id: challenges.id }).from(challenges).where(eq(challenges.id, challengeId)).limit(1);

@@ -47,6 +47,15 @@ const bool = (label: string, fallback = false): Validator => value => {
 
 const url = (label: string): Validator => value => normalizeUrl(value, 500) ?? fail(`${label} must be a valid http(s) link`);
 
+const optionalUrl = (label: string): Validator => value => (value === undefined || value === null || value === "" ? "" : url(label)(value));
+
+const number = (label: string, min: number, max: number): Validator => value => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max) {
+    return fail(`${label} must be a number between ${min} and ${max}`);
+  }
+  return value;
+};
+
 const timestamp = (label: string): Validator => value => {
   if (typeof value !== "string" || value.length > 40 || Number.isNaN(Date.parse(value))) {
     return fail(`${label} must be a valid date`);
@@ -94,7 +103,8 @@ const allocationVotes: Validator = value => {
 
 export const TASK_STATUSES = ["Open", "Funded", "In Progress", "Verification", "Completed"] as const;
 
-export type ActionKey = "legal" | "economic" | "direct" | "policy" | "info";
+export const ACTION_KEYS = ["legal", "economic", "direct", "policy", "info", "protest"] as const;
+export type ActionKey = (typeof ACTION_KEYS)[number];
 
 export interface KindDef {
   actionKey: ActionKey;
@@ -113,6 +123,8 @@ export interface KindDef {
   /** the server marks new entries `approval: "Pending"`; an admin approves them before they can receive donations */
   approval?: boolean;
   shape: Shape;
+  /** checks that span several fields, run after the fields themselves are valid */
+  validate?: (data: Record<string, unknown>) => void;
 }
 
 export const KINDS: Record<string, KindDef> = {
@@ -260,6 +272,28 @@ export const KINDS: Record<string, KindDef> = {
     actionKey: "info", scope: "personal", parent: { kind: "resolution", required: true }, unique: true, maxPerUser: 50, sumField: "shares", sumWhen: "cosponsor",
     shape: { shares: int("Shares", 0, 1_000_000_000), cosponsor: bool("Cosponsor") },
   },
+
+  // Protests and public gatherings
+  protest: {
+    actionKey: "protest", scope: "shared", maxPerUser: 20,
+    shape: {
+      title: text("Title", 200),
+      description: text("Description", 2000, false),
+      startsAt: timestamp("Start time"),
+      endsAt: nullable(timestamp("End time")),
+      place: text("Meeting point", 200),
+      city: text("City", 100),
+      country: text("Country", 100, false),
+      lat: nullable(number("Latitude", -90, 90)),
+      lng: nullable(number("Longitude", -180, 180)),
+      organizerName: text("Organiser", 200),
+      organizerUrl: optionalUrl("Organiser link"),
+    },
+    validate: data => {
+      if (data.endsAt && String(data.endsAt) < String(data.startsAt)) fail("The end time must be after the start time");
+      if ((data.lat === null) !== (data.lng === null)) fail("Give both latitude and longitude, or neither");
+    },
+  },
 };
 
 export function getKind(kind: unknown): KindDef | null {
@@ -269,5 +303,7 @@ export function getKind(kind: unknown): KindDef | null {
 /** Validate and clean an entry's fields; unknown fields are dropped. Throws ValidationError. */
 export function parseItemData(def: KindDef, input: unknown): Record<string, unknown> {
   if (!input || typeof input !== "object" || Array.isArray(input)) fail("data must be an object");
-  return parseShape(def.shape, input as Record<string, unknown>);
+  const data = parseShape(def.shape, input as Record<string, unknown>);
+  def.validate?.(data);
+  return data;
 }

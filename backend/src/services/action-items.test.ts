@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { KINDS, ValidationError, getKind, parseItemData } from "./action-items";
+import { ACTION_KEYS, KINDS, ValidationError, getKind, parseItemData } from "./action-items";
 
 const parse = (kind: string, data: unknown) => parseItemData(getKind(kind)!, data);
 
@@ -65,6 +65,36 @@ describe("action item registry", () => {
     expect(KINDS.subsidiary.parent).toEqual({ kind: "target", required: true });
     expect(KINDS.subsidiary.scope).toBe("shared");
     expect(KINDS.resolution_cosponsor.sumWhen).toBe("cosponsor");
+  });
+
+  test("protests need a place, a start time and an organiser", () => {
+    const ok = parse("protest", {
+      title: "Climate march", startsAt: "2026-11-14T10:00:00.000Z", place: "Town Hall Square", city: "Berlin",
+      organizerName: "Climate Now", organizerUrl: "climatenow.example/march", lat: 52.52, lng: 13.405,
+    });
+    expect(ok).toMatchObject({ title: "Climate march", endsAt: null, country: "", description: "", lat: 52.52, lng: 13.405, organizerUrl: "https://climatenow.example/march" });
+    const base = { title: "T", startsAt: "2026-11-14T10:00:00.000Z", place: "P", city: "C", organizerName: "O" };
+    expect(parse("protest", base)).toMatchObject({ lat: null, lng: null, organizerUrl: "" });
+    expect(() => parse("protest", { ...base, place: "" })).toThrow(ValidationError);
+    expect(() => parse("protest", { ...base, startsAt: "soon" })).toThrow(ValidationError);
+    expect(() => parse("protest", { ...base, organizerUrl: "javascript:alert(1)" })).toThrow(ValidationError);
+  });
+
+  test("protest times and coordinates are cross-checked", () => {
+    const base = { title: "T", startsAt: "2026-11-14T10:00:00.000Z", place: "P", city: "C", organizerName: "O" };
+    expect(() => parse("protest", { ...base, endsAt: "2026-11-14T09:00:00.000Z" })).toThrow("end time");
+    expect(parse("protest", { ...base, endsAt: "2026-11-14T12:00:00.000Z" }).endsAt).toBe("2026-11-14T12:00:00.000Z");
+    expect(() => parse("protest", { ...base, lat: 52.5 })).toThrow("both latitude and longitude");
+    expect(() => parse("protest", { ...base, lat: 91, lng: 0 })).toThrow(ValidationError);
+    expect(() => parse("protest", { ...base, lat: 0, lng: 181 })).toThrow(ValidationError);
+    expect(() => parse("protest", { ...base, lat: "52.5", lng: 13 })).toThrow(ValidationError);
+  });
+
+  test("protests belong to their own action and need no approval", () => {
+    expect(KINDS.protest.actionKey).toBe("protest");
+    expect(KINDS.protest.approval).toBeUndefined();
+    expect(ACTION_KEYS).toContain("protest");
+    for (const [kind, def] of Object.entries(KINDS)) expect(ACTION_KEYS, kind).toContain(def.actionKey);
   });
 
   test("tasks default to Open and reject unknown statuses", () => {

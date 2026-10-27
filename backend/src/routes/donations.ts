@@ -4,18 +4,19 @@ import { config } from "../config/app.config";
 import { db } from "../db";
 import { challengeActionItems, challengeActions, challenges, donations, users } from "../db/schema";
 import { optionalAuth } from "../middleware/auth";
-import { getKind } from "../services/action-items";
+import { getKind, ACTION_KEYS as ACTION_KEY_LIST } from "../services/action-items";
 
 const MIN_AMOUNT = 100; // smallest unit (e.g. cents)
 const MAX_AMOUNT = 100_000;
 
-const ACTION_KEYS = new Set(["legal", "economic", "direct", "policy", "info"]);
+const ACTION_KEYS = new Set<string>(ACTION_KEY_LIST);
 const ACTION_LABELS: Record<string, string> = {
   legal: "Legal action",
   economic: "Economic pressure",
   direct: "Direct action",
   policy: "Policy & lobbying",
   info: "Information campaigns",
+  protest: "Protests",
 };
 
 // The kind of action-form entry a donation can be earmarked for, per action

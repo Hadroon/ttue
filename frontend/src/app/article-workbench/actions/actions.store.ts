@@ -162,6 +162,23 @@ export interface Outreach {
   mail: number;
 }
 
+export interface Protest extends Owned {
+  id: number;
+  title: string;
+  description: string;
+  /** ISO timestamps */
+  startsAt: string;
+  endsAt: string | null;
+  place: string;
+  city: string;
+  country: string;
+  lat: number | null;
+  lng: number | null;
+  organizerName: string;
+  organizerUrl: string;
+  postedBy: string | null;
+}
+
 export interface ActionsData {
   cases: LegalCase[];
   evidence: Evidence[];
@@ -176,6 +193,7 @@ export interface ActionsData {
   outreach: Outreach;
   media: MediaAsset[];
   resolutions: ShareResolution[];
+  protests: Protest[];
 }
 
 export const VOICE_CREDITS = 100;
@@ -188,7 +206,7 @@ const emptyData = (): ActionsData => ({
   targets: [], pledges: [],
   tasks: [], allocation: {},
   bill: emptyBill(), reps: [], outreach: emptyOutreach(),
-  media: [], resolutions: []
+  media: [], resolutions: [], protests: []
 });
 
 function build(items: ActionItem[], aggregates: ActionItemAggregate[]): ActionsData {
@@ -284,10 +302,20 @@ function build(items: ActionItem[], aggregates: ActionItemAggregate[]): ActionsD
     };
   });
 
+  const protests: Protest[] = ofKind('protest').map(i => ({
+    id: i.id, ownerId: i.userId, postedBy: i.authorUsername,
+    title: text(i.data['title']), description: text(i.data['description']),
+    startsAt: text(i.data['startsAt']), endsAt: text(i.data['endsAt']) || null,
+    place: text(i.data['place']), city: text(i.data['city']), country: text(i.data['country']),
+    lat: typeof i.data['lat'] === 'number' ? i.data['lat'] : null,
+    lng: typeof i.data['lng'] === 'number' ? i.data['lng'] : null,
+    organizerName: text(i.data['organizerName']), organizerUrl: text(i.data['organizerUrl'])
+  }));
+
   return {
     cases, evidence,
     lawyerRequest: lawyer ? { id: lawyer.id, name: text(lawyer.data['name']), jurisdiction: text(lawyer.data['jurisdiction']), submittedAt: new Date(lawyer.createdAt).toLocaleDateString() } : null,
-    targets, pledges, tasks, allocation, bill, reps, outreach, media, resolutions
+    targets, pledges, tasks, allocation, bill, reps, outreach, media, resolutions, protests
   };
 }
 

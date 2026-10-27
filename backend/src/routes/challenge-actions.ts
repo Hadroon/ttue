@@ -2,10 +2,7 @@ import { db } from "../db";
 import { challenges, challengeActionVotes, challengeActions, users } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
-
-// The community actions people can recommend for a challenge.
-export const ACTION_KEYS = ["legal", "economic", "direct", "policy", "info"] as const;
-export type ActionKey = (typeof ACTION_KEYS)[number];
+import { ACTION_KEYS, type ActionKey } from "../services/action-items";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });

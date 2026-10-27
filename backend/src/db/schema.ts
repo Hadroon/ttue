@@ -561,7 +561,7 @@ export const donations = pgTable("donations", {
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "set null" }),
   challengeTitle: text("challenge_title"),
-  actionKey: text("action_key"), // 'legal' | 'economic' | 'direct' | 'policy' | 'info'; null = general donation
+  actionKey: text("action_key"), // 'legal' | 'economic' | 'direct' | 'policy' | 'info' | 'protest'; null = general donation
   targetId: text("target_id"),
   targetTitle: text("target_title"),
   targetLocation: text("target_location"),

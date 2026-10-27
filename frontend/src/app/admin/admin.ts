@@ -23,7 +23,8 @@ const ACTION_LABELS: Record<ChallengeActionKey, string> = {
   economic: 'Economic pressure',
   direct: 'Direct action',
   policy: 'Policy & lobbying',
-  info: 'Information campaigns'
+  info: 'Information campaigns',
+  protest: 'Protests'
 };
 
 @Component({
