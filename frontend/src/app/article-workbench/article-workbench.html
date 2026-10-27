@@ -342,7 +342,7 @@
 
   @if (activeSection() === 'actions') {
     <div class="card-body actions-container" id="actions">
-      <app-actions [challengeId]="challengeId()" [challengeTitle]="challenge()?.title ?? ''" [creatorId]="challenge()?.creatorId ?? null" (openDraft)="openDraftTab()"></app-actions>
+      <app-actions [challengeId]="challengeId()" [challengeTitle]="challenge()?.title ?? ''" (openDraft)="openDraftTab()"></app-actions>
     </div>
   }
   </div>

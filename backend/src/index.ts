@@ -14,7 +14,7 @@ import { handleGetChallenges, handleGetChallengeTags, handleCreateChallenge, han
 import { handleGetDraftVotes, handleVoteDraft } from "./routes/draft-votes";
 import { handleGetChallengeLinks, handleCreateChallengeLink, handleDeleteChallengeLink } from "./routes/challenge-links";
 import { handleGetChallengeActions, handleVoteChallengeAction, handleSetChallengeActionActivation } from "./routes/challenge-actions";
-import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations } from "./routes/admin";
+import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations, handleAdminGetActionRecommendations } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
 
@@ -333,6 +333,9 @@ serve({
       }
       if (url.pathname === "/api/admin/flags" && req.method === "GET") {
         return handleAdminGetFlags(req);
+      }
+      if (url.pathname === "/api/admin/action-recommendations" && req.method === "GET") {
+        return handleAdminGetActionRecommendations(req);
       }
       if (url.pathname === "/api/admin/donations" && req.method === "GET") {
         return handleAdminGetDonations(req);

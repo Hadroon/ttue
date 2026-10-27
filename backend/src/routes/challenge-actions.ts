@@ -91,7 +91,7 @@ export async function handleVoteChallengeAction(req: Request, challengeId: numbe
 }
 
 // PUT /api/challenges/:id/actions/:key/activation  { active: boolean }
-// Only a site admin or the challenge's creator may switch an action on or off.
+// Anyone can recommend an action, but only a site admin may approve (activate) or deactivate it.
 export async function handleSetChallengeActionActivation(req: Request, challengeId: number, key: string): Promise<Response> {
   const auth = await authenticate(req);
   if (auth instanceof Response) return auth;
@@ -103,18 +103,12 @@ export async function handleSetChallengeActionActivation(req: Request, challenge
       return json({ error: "Body must be { active: boolean }" }, 400);
     }
 
-    const [challenge] = await db
-      .select({ id: challenges.id, creatorId: challenges.creatorId })
-      .from(challenges)
-      .where(eq(challenges.id, challengeId))
-      .limit(1);
-    if (!challenge) return json({ error: "Challenge not found" }, 404);
-
     const userId = auth.user.userId;
     const [user] = await db.select({ isAdmin: users.isAdmin }).from(users).where(eq(users.id, userId)).limit(1);
-    if (!user?.isAdmin && challenge.creatorId !== userId) {
-      return json({ error: "Only the challenge creator or an admin can activate actions" }, 403);
-    }
+    if (!user?.isAdmin) return json({ error: "Only an admin can approve actions" }, 403);
+
+    const [challenge] = await db.select({ id: challenges.id }).from(challenges).where(eq(challenges.id, challengeId)).limit(1);
+    if (!challenge) return json({ error: "Challenge not found" }, 404);
 
     if (body.active) {
       await db.insert(challengeActions).values({ challengeId, actionKey: key, activatedBy: userId }).onConflictDoNothing();

@@ -35,6 +35,12 @@
     </button>
     <button
       class="tab-btn"
+      [class.active]="activeTab() === 'actions'"
+      (click)="setTab('actions')">
+      Actions
+    </button>
+    <button
+      class="tab-btn"
       [class.active]="activeTab() === 'donations'"
       (click)="setTab('donations')">
       Donations
@@ -324,6 +330,63 @@
               </tr>
             } @empty {
               <tr><td colspan="8" class="empty-row">No flags found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Actions Tab -->
+    @if (activeTab() === 'actions') {
+      @if (loading()) {
+        <div class="loading">Loading action recommendations…</div>
+      } @else {
+        <div class="donation-summary">
+          @for (f of ['pending', 'approved', 'all']; track f) {
+            <button class="tab-btn" [class.active]="recommendationFilter() === f"
+                    (click)="recommendationFilter.set($any(f))">{{ f }}</button>
+          }
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Challenge</th>
+              <th>Action</th>
+              <th>Recommendations</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of visibleRecommendations(); track r.challengeId + ':' + r.actionKey) {
+              <tr>
+                <td class="content-cell">
+                  <a [routerLink]="['/article-workbench']"
+                     [queryParams]="{ challengeId: r.challengeId, section: 'actions' }"
+                     class="content-link"
+                     target="_blank">
+                    {{ truncate(r.challengeTitle, 60) }}
+                    <span class="content-id">#{{ r.challengeId }}</span>
+                  </a>
+                </td>
+                <td>{{ actionLabel(r.actionKey) }}</td>
+                <td><strong>{{ r.votes }}</strong></td>
+                <td>
+                  @if (r.activatedAt) {
+                    <span class="badge badge-admin">Approved {{ r.activatedAt | date:'mediumDate' }}</span>
+                  } @else {
+                    <span class="badge badge-user">Pending</span>
+                  }
+                </td>
+                <td>
+                  <button class="tab-btn" [disabled]="busyRecommendation() === r.challengeId + ':' + r.actionKey"
+                          (click)="toggleApproval(r)">
+                    {{ r.activatedAt ? 'Revoke' : 'Approve' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="empty-row">No {{ recommendationFilter() === 'all' ? '' : recommendationFilter() }} recommendations yet.</td></tr>
             }
           </tbody>
         </table>

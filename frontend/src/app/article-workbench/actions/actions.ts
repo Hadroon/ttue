@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { ApiService, ChallengeActionKey, ChallengeActionState } from '../../shared/services/api.service';
 import { AuthGuardService } from '../../shared/services/auth-guard.service';
@@ -37,7 +38,7 @@ const ACTIONS: ActionInfo[] = [
 
 @Component({
   selector: 'app-actions',
-  imports: [LegalAction, EconomicPressure, DirectAction, PolicyLobbying, InfoCampaigns],
+  imports: [NgTemplateOutlet, LegalAction, EconomicPressure, DirectAction, PolicyLobbying, InfoCampaigns],
   styles: [`
     :host { display: grid; gap: 20px; }
     h2, h3 { margin: 0; }
@@ -70,6 +71,9 @@ const ACTIONS: ActionInfo[] = [
     .tab { flex: 0 0 auto; padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
     .tab[aria-selected="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 9%, var(--card)); }
     .panel { display: grid; gap: 16px; }
+    .preview { display: grid; gap: 12px; padding: 16px; border: 1px dashed var(--border); border-radius: 14px; }
+    .preview-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+    .preview-frame { display: grid; gap: 16px; opacity: .6; user-select: none; pointer-events: none; }
     h4 { margin: 0; font-size: 18px; }
     @media (max-width: 640px) {
       .card { grid-template-columns: auto 1fr; }
@@ -80,8 +84,8 @@ const ACTIONS: ActionInfo[] = [
     <header>
       <h2>Actions</h2>
       <p class="lead">
-        Recommend which actions this challenge should use. The tools for an action stay locked, and only voting is shown,
-        until the challenge creator or an admin activates it.
+        Anyone can recommend which actions this challenge should use, and preview what each one looks like.
+        The tools can only be used once an admin approves the action.
       </p>
     </header>
 
@@ -115,15 +119,32 @@ const ACTIONS: ActionInfo[] = [
                       [disabled]="busy() === info.key" (click)="recommend(info.key)">
                 {{ s.voted ? '✓ Recommended' : 'Recommend' }}
               </button>
-              @if (canManage()) {
-                <button class="btn quiet" type="button" [disabled]="busy() === info.key" (click)="toggleActive(info.key)">
-                  {{ s.activated ? 'Deactivate' : 'Activate' }}
+              @if (!s.activated) {
+                <button class="btn quiet" type="button" [attr.aria-expanded]="preview() === info.key"
+                        (click)="togglePreview(info.key)">
+                  {{ preview() === info.key ? 'Hide preview' : 'Preview' }}
                 </button>
               }
             </div>
           </li>
         }
       </ul>
+
+      @if (previewInfo(); as p) {
+        <section class="preview" [attr.aria-label]="'Preview of ' + p.title">
+          <div class="preview-head">
+            <h3>{{ p.icon }} {{ p.title }}</h3>
+            <button class="btn quiet" type="button" (click)="preview.set(null)">Close preview</button>
+          </div>
+          <p class="banner" role="note">
+            Preview only. This action is not approved yet, so the tools below are read-only.
+            Recommend it above to help get it approved.
+          </p>
+          <div class="preview-frame" inert aria-hidden="true">
+            <ng-container *ngTemplateOutlet="tools; context: { $implicit: p.key }" />
+          </div>
+        </section>
+      }
 
       @if (activeInfos().length === 0) {
         <div class="state">No action is active yet. Voting is open, so recommend the ones you want to see.</div>
@@ -143,23 +164,26 @@ const ACTIONS: ActionInfo[] = [
             }
           </div>
           <div class="panel" role="tabpanel" style="margin-top:16px" [id]="'act-panel-' + shown()" [attr.aria-labelledby]="'act-tab-' + shown()">
-            @switch (shown()) {
-              @case ('legal') { <app-legal-action /> }
-              @case ('economic') { <app-economic-pressure [challengeTitle]="challengeTitle()" /> }
-              @case ('direct') { <app-direct-action [challengeId]="challengeId()" /> }
-              @case ('policy') { <app-policy-lobbying [challengeTitle]="challengeTitle()" (openDraft)="openDraft.emit()" /> }
-              @case ('info') { <app-info-campaigns /> }
-            }
+            <ng-container *ngTemplateOutlet="tools; context: { $implicit: shown() }" />
           </div>
         </section>
       }
     }
+
+    <ng-template #tools let-key>
+      @switch (key) {
+        @case ('legal') { <app-legal-action /> }
+        @case ('economic') { <app-economic-pressure [challengeTitle]="challengeTitle()" /> }
+        @case ('direct') { <app-direct-action [challengeId]="challengeId()" /> }
+        @case ('policy') { <app-policy-lobbying [challengeTitle]="challengeTitle()" (openDraft)="openDraft.emit()" /> }
+        @case ('info') { <app-info-campaigns /> }
+      }
+    </ng-template>
   `
 })
 export class Actions {
   readonly challengeId = input<number | null>(null);
   readonly challengeTitle = input('');
-  readonly creatorId = input<number | null>(null);
   readonly openDraft = output<void>();
 
   private readonly api = inject(ApiService);
@@ -173,11 +197,18 @@ export class Actions {
   readonly error = signal<string | null>(null);
   readonly busy = signal<ChallengeActionKey | null>(null);
   readonly selected = signal<ChallengeActionKey | null>(null);
+  readonly preview = signal<ChallengeActionKey | null>(null);
 
-  readonly canManage = computed(() => {
-    const user = this.auth.currentUser();
-    return !!user && (user.isAdmin === true || (this.creatorId() !== null && user.id === this.creatorId()));
+  /** The read-only preview, hidden once that action gets approved */
+  readonly previewInfo = computed(() => {
+    const key = this.preview();
+    if (key === null || this.states().some(s => s.key === key && s.activated)) return null;
+    return ACTIONS.find(a => a.key === key) ?? null;
   });
+
+  togglePreview(key: ChallengeActionKey): void {
+    this.preview.update(current => current === key ? null : key);
+  }
 
   readonly activeInfos = computed(() =>
     ACTIONS.filter(a => this.states().some(s => s.key === a.key && s.activated)));
@@ -244,16 +275,6 @@ export class Actions {
     this.api.voteChallengeAction(id, key).subscribe({
       next: ({ action }) => { this.apply(action); this.error.set(null); this.busy.set(null); },
       error: () => { this.error.set('Could not save your recommendation.'); this.busy.set(null); }
-    });
-  }
-
-  toggleActive(key: ChallengeActionKey): void {
-    const id = this.challengeId();
-    if (id === null) return;
-    this.busy.set(key);
-    this.api.setChallengeActionActive(id, key, !this.stateOf(key).activated).subscribe({
-      next: ({ action }) => { this.apply(action); this.error.set(null); this.busy.set(null); },
-      error: () => { this.error.set('Could not change the action. Only the creator or an admin can do that.'); this.busy.set(null); }
     });
   }
 

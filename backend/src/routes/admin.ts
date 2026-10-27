@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { users, ideas, comments, challenges, flags, donations } from "../db/schema";
+import { users, ideas, comments, challenges, flags, donations, challengeActionVotes, challengeActions } from "../db/schema";
 import { eq, sql, or, desc } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 
@@ -453,6 +453,66 @@ export async function handleAdminResolveFlag(req: Request, flagId: number): Prom
     console.error("Admin resolve flag error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to resolve flag" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// GET /api/admin/action-recommendations
+// One row per challenge + action that has recommendations or is approved, most recommended first.
+export async function handleAdminGetActionRecommendations(req: Request): Promise<Response> {
+  const auth = await adminAuth(req);
+  if (auth instanceof Response) return auth;
+
+  try {
+    const [voted, approved] = await Promise.all([
+      db
+        .select({
+          challengeId: challengeActionVotes.challengeId,
+          actionKey: challengeActionVotes.actionKey,
+          votes: sql<number>`count(*)::int`,
+        })
+        .from(challengeActionVotes)
+        .groupBy(challengeActionVotes.challengeId, challengeActionVotes.actionKey),
+      db
+        .select({
+          challengeId: challengeActions.challengeId,
+          actionKey: challengeActions.actionKey,
+          activatedAt: challengeActions.activatedAt,
+        })
+        .from(challengeActions),
+    ]);
+
+    const rows = new Map<string, { challengeId: number; actionKey: string; votes: number; activatedAt: Date | null }>();
+    for (const v of voted) {
+      rows.set(`${v.challengeId}:${v.actionKey}`, { ...v, activatedAt: null });
+    }
+    for (const a of approved) {
+      const key = `${a.challengeId}:${a.actionKey}`;
+      rows.set(key, { challengeId: a.challengeId, actionKey: a.actionKey, votes: rows.get(key)?.votes ?? 0, activatedAt: a.activatedAt });
+    }
+
+    const challengeIds = [...new Set([...rows.values()].map(r => r.challengeId))];
+    const titles = challengeIds.length
+      ? await db
+          .select({ id: challenges.id, title: challenges.title })
+          .from(challenges)
+          .where(sql`${challenges.id} IN (${sql.join(challengeIds.map(id => sql`${id}`), sql`, `)})`)
+      : [];
+    const titleOf = new Map(titles.map(t => [t.id, t.title]));
+
+    const result = [...rows.values()]
+      .map(r => ({ ...r, challengeTitle: titleOf.get(r.challengeId) ?? "(untitled)" }))
+      .sort((a, b) => b.votes - a.votes || a.challengeId - b.challengeId);
+
+    return new Response(
+      JSON.stringify(result),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Admin get action recommendations error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to load action recommendations" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

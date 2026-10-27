@@ -9,11 +9,12 @@ import {
   AdminComment,
   AdminChallenge,
   AdminDonation,
+  AdminActionRecommendation,
   ChallengeActionKey,
   Flag
 } from '../shared/services/api.service';
 
-type AdminTab = 'dashboard' | 'users' | 'content' | 'flags' | 'donations';
+type AdminTab = 'dashboard' | 'users' | 'content' | 'flags' | 'actions' | 'donations';
 type ContentTab = 'ideas' | 'comments' | 'challenges';
 
 const ACTION_LABELS: Record<ChallengeActionKey, string> = {
@@ -44,6 +45,14 @@ export class Admin implements OnInit {
   flags = signal<Flag[]>([]);
   flagStatusFilter = signal<'pending' | 'marked' | 'all'>('pending');
   donations = signal<AdminDonation[]>([]);
+  recommendations = signal<AdminActionRecommendation[]>([]);
+  recommendationFilter = signal<'pending' | 'approved' | 'all'>('pending');
+  visibleRecommendations = computed(() => {
+    const filter = this.recommendationFilter();
+    return this.recommendations().filter(r =>
+      filter === 'all' || (filter === 'approved') === (r.activatedAt !== null));
+  });
+  busyRecommendation = signal<string | null>(null);
   /** Totals per currency, in major units */
   donationTotals = computed(() => {
     const totals = new Map<string, number>();
@@ -67,6 +76,7 @@ export class Admin implements OnInit {
     else if (tab === 'users') this.loadUsers();
     else if (tab === 'content') this.loadIdeas();
     else if (tab === 'flags') this.loadFlags();
+    else if (tab === 'actions') this.loadRecommendations();
     else if (tab === 'donations') this.loadDonations();
   }
 
@@ -175,6 +185,30 @@ export class Admin implements OnInit {
     this.apiService.markAdminContent(flag.id).subscribe({
       next: () => this.loadFlags(),
       error: () => this.error.set('Failed to mark content')
+    });
+  }
+
+  loadRecommendations() {
+    this.loading.set(true);
+    this.apiService.getAdminActionRecommendations().subscribe({
+      next: (data) => { this.recommendations.set(data); this.loading.set(false); },
+      error: () => { this.error.set('Failed to load action recommendations'); this.loading.set(false); }
+    });
+  }
+
+  toggleApproval(r: AdminActionRecommendation) {
+    const id = `${r.challengeId}:${r.actionKey}`;
+    const approve = r.activatedAt === null;
+    this.busyRecommendation.set(id);
+    this.apiService.setChallengeActionActive(r.challengeId, r.actionKey, approve).subscribe({
+      next: ({ action }) => {
+        this.recommendations.update(list => list.map(x =>
+          x.challengeId === r.challengeId && x.actionKey === r.actionKey
+            ? { ...x, activatedAt: action.activatedAt }
+            : x));
+        this.busyRecommendation.set(null);
+      },
+      error: () => { this.error.set('Failed to update the action'); this.busyRecommendation.set(null); }
     });
   }
 

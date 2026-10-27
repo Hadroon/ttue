@@ -128,6 +128,14 @@ export interface ChallengeActionState {
   activatedAt: string | null;
 }
 
+export interface AdminActionRecommendation {
+  challengeId: number;
+  challengeTitle: string;
+  actionKey: ChallengeActionKey;
+  votes: number;
+  activatedAt: string | null;
+}
+
 export interface ChallengeLink {
   id: number;
   challengeId: number;
@@ -813,7 +821,12 @@ export class ApiService {
       `${this.baseUrl}/challenges/${challengeId}/actions/${key}/vote`, {});
   }
 
-  /** Switch an action on or off. Allowed for the challenge creator and admins. */
+  /** Recommendation counts per challenge and action (admin only) */
+  getAdminActionRecommendations(): Observable<AdminActionRecommendation[]> {
+    return this.http.get<AdminActionRecommendation[]>(`${this.baseUrl}/admin/action-recommendations`);
+  }
+
+  /** Approve or revoke an action (admin only) */
   setChallengeActionActive(challengeId: number, key: ChallengeActionKey, active: boolean) {
     return this.http.put<{ message: string; action: ChallengeActionState }>(
       `${this.baseUrl}/challenges/${challengeId}/actions/${key}/activation`, { active });
