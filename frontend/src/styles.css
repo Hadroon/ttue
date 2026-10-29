@@ -24,6 +24,11 @@
   --blue-rgba: rgba(35, 135, 171, 1);
   --green-rgba: rgba(90, 158, 57, 0.1);
   --orange-rgba: rgba(253, 135, 35, 0.1);
+  /* Favicon colors */
+  --logo-blue: #248bb3;
+  --logo-green: #52ae5d;
+  --logo-orange: #f99534;
+  --logo-yellow: #ffcc46;
 }
 /* --bg: #f7f8fa; */
 /* --surface: #ffffff; */
