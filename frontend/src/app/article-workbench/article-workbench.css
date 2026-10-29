@@ -97,6 +97,13 @@
   padding: 32px;
 }
 
+.share-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .category-badge {
   display: inline-block;
   margin-bottom: 12px;

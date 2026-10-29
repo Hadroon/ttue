@@ -424,3 +424,11 @@ html, body { height: 100%; }
   font-feature-settings: 'liga';
   vertical-align: middle;
 } */
+
+
+/* Groups the share button and the actions menu in content headers */
+.share-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}

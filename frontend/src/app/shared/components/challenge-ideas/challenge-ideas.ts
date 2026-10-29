@@ -1,16 +1,17 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, Output, EventEmitter, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Idea } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
 import { Comments } from '../comments/comments';
+import { ShareButton } from '../share-button/share-button';
 
 @Component({
   selector: 'app-challenge-ideas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu, Comments],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu, Comments, ShareButton],
   templateUrl: './challenge-ideas.html',
   styleUrl: './challenge-ideas.css'
 })
@@ -29,6 +30,14 @@ export class ChallengeIdeas implements OnInit {
   currentPage = 1;
   readonly pageSize = 10;
   readonly openComments = new Set<string>();
+  readonly highlightedId = signal<string | null>(null);
+
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  // A shared link like #idea-12 to bring into view once the ideas have loaded
+  private pendingFragment: string | null = (() => {
+    const fragment = inject(ActivatedRoute).snapshot.fragment;
+    return fragment?.startsWith('idea-') ? fragment : null;
+  })();
 
   toggleComments(ideaId: string): void {
     if (!this.openComments.delete(ideaId)) {
@@ -82,6 +91,27 @@ export class ChallengeIdeas implements OnInit {
     // Reset to first page when filter/sort changes
     this.currentPage = 1;
     this.updateDisplayedIdeas();
+    this.revealPendingFragment();
+  }
+
+  private revealPendingFragment(): void {
+    const target = this.pendingFragment;
+    if (!target || !this.isBrowser || this.compact) {
+      return;
+    }
+    const index = this.filteredIdeas.findIndex(idea => `idea-${idea.id}` === target);
+    if (index < 0) {
+      return;
+    }
+    this.pendingFragment = null;
+    this.currentPage = Math.floor(index / this.pageSize) + 1;
+    this.updateDisplayedIdeas();
+    // Wait for the card to render before scrolling to it
+    setTimeout(() => {
+      document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      this.highlightedId.set(target);
+      setTimeout(() => this.highlightedId.set(null), 3000);
+    }, 100);
   }
 
   sortIdeas() {

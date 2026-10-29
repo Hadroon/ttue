@@ -54,7 +54,7 @@
   } @else {
     <div class="comments-list">
       @for (comment of displayedComments(); track comment.id) {
-        <article class="comment-card" [class.is-marked]="comment.isMarked">
+        <article class="comment-card" [id]="'comment-' + comment.id" [class.is-marked]="comment.isMarked" [class.fragment-target]="highlightedId() === 'comment-' + comment.id">
           @if (comment.isMarked) {
             <div class="marked-banner">⚠ Reviewed by moderator</div>
           }
@@ -71,11 +71,21 @@
                 }
                 <span class="comment-time">{{ formatTimeAgo(comment.createdAt) }}</span>
               </div>
-              <app-content-actions-menu
-                contentType="comment"
-                [contentId]="comment.id"
-                [contentLabel]="'comment by ' + comment.author">
-              </app-content-actions-menu>
+              <span class="share-tools">
+                <app-share-button
+                  [title]="'Comment by ' + comment.author"
+                  [text]="comment.content"
+                  path="/article-workbench"
+                  [queryParams]="{ challengeId: shareChallengeIdValue ?? comment.challengeId, section: shareSection }"
+                  [fragment]="shareFragment ?? 'comment-' + comment.id"
+                  ariaLabel="Share this comment">
+                </app-share-button>
+                <app-content-actions-menu
+                  contentType="comment"
+                  [contentId]="comment.id"
+                  [contentLabel]="'comment by ' + comment.author">
+                </app-content-actions-menu>
+              </span>
             </div>
 
             <div class="comment-main">
@@ -129,7 +139,7 @@
             @if (comment.replies && comment.replies.length > 0 && expandedReplies().has(comment.id)) {
               <div class="replies-list">
                 @for (reply of comment.replies; track reply.id) {
-                  <article class="reply-card">
+                  <article class="reply-card" [id]="'comment-' + reply.id" [class.fragment-target]="highlightedId() === 'comment-' + reply.id">
                     <div class="comment-content">
                       <div class="comment-header">
                         <div class="comment-author">
@@ -143,6 +153,14 @@
                           }
                           <span class="comment-time">{{ formatTimeAgo(reply.createdAt) }}</span>
                         </div>
+                        <app-share-button
+                          [title]="'Reply by ' + reply.author"
+                          [text]="reply.content"
+                          path="/article-workbench"
+                          [queryParams]="{ challengeId: shareChallengeIdValue ?? reply.challengeId, section: shareSection }"
+                          [fragment]="shareFragment ?? 'comment-' + reply.id"
+                          ariaLabel="Share this reply">
+                        </app-share-button>
                       </div>
 
                       <div class="comment-main">

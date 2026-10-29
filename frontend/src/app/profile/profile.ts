@@ -3,7 +3,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Header } from '../shared/components';
+import { Header, ShareButton } from '../shared/components';
 import {
   CivicActivity,
   CivicProfile,
@@ -18,7 +18,7 @@ type ProfileTab = 'activity' | 'contributions' | 'reputation' | 'following';
 
 @Component({
   selector: 'app-profile',
-  imports: [DatePipe, FormsModule, Header, RouterLink],
+  imports: [DatePipe, FormsModule, Header, RouterLink, ShareButton],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })

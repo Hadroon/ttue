@@ -18,6 +18,7 @@ import { handleGetActionItems, handleCreateActionItem, handleUpdateActionItem, h
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations, handleAdminGetActionRecommendations, handleAdminGetApprovals, handleAdminSetApproval } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
+import { injectSocialMeta } from "./utils/social-meta";
 
 // Log configuration on startup
 logConfig();
@@ -394,10 +395,14 @@ serve({
     
     // Serve static files
     try {
-      const filePath = join(publicDir, url.pathname === "/" ? "index.html" : url.pathname);
+      const isIndexRequest = url.pathname === "/" || url.pathname === "/index.html";
+      const filePath = join(publicDir, isIndexRequest ? "index.html" : url.pathname);
       const file = Bun.file(filePath);
       
       if (await file.exists()) {
+        if (isIndexRequest) {
+          return serveIndexWithMeta(file, req, url);
+        }
         return new Response(file, {
           headers: {
             "Content-Type": getContentType(filePath),
@@ -413,12 +418,7 @@ serve({
     try {
       const indexFile = Bun.file(join(publicDir, "index.html"));
       if (await indexFile.exists()) {
-        return new Response(indexFile, {
-          headers: {
-            "Content-Type": "text/html",
-            "Cache-Control": "no-cache",
-          },
-        });
+        return serveIndexWithMeta(indexFile, req, url);
       }
     } catch (error) {
       console.error("Error serving index.html:", error);
@@ -431,6 +431,17 @@ serve({
     });
   },
 });
+
+// Serves index.html with per-page social preview tags
+async function serveIndexWithMeta(file: ReturnType<typeof Bun.file>, req: Request, url: URL): Promise<Response> {
+  const html = await injectSocialMeta(await file.text(), req, url);
+  return new Response(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-cache",
+    },
+  });
+}
 
 // Helper function to get content type
 function getContentType(filePath: string): string {

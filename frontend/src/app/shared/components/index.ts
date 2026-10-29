@@ -7,3 +7,4 @@ export { ChallengeItem } from './challenge-item/challenge-item';
 export { GoogleSigninButtonComponent } from './google-signin-button/google-signin-button';
 export { DemoCard } from './demo-card/demo-card';
 export { RichTextEditor } from './rich-text-editor/rich-text-editor';
+export { ShareButton } from './share-button/share-button';

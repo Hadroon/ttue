@@ -40,7 +40,17 @@
   @if (activeSection() === 'challenge') {
       <article class="card-body" id="challenge">
         @if (challenge()) {
-          <span class="category-badge">Challenge • {{ challenge()!.category }}</span>
+          <div class="share-row">
+            <span class="category-badge">Challenge • {{ challenge()!.category }}</span>
+            <app-share-button
+              [title]="challenge()!.title"
+              [text]="challenge()!.description"
+              path="/article-workbench"
+              [queryParams]="{ challengeId: challengeId(), section: 'challenge' }"
+              label="Share"
+              ariaLabel="Share this challenge">
+            </app-share-button>
+          </div>
           <h1 class="document-title">{{ challenge()!.title }}</h1>
           <div class="document-body rich-text" [innerHTML]="challenge()!.description"></div>
         } @else if (loadingChallenge()) {
@@ -80,6 +90,7 @@
             <app-comments
               [entityId]="challengeId()!"
               entityType="challenge"
+              [shareChallengeId]="challengeId() ?? undefined"
               [allComments]="challengeComments()"
               [parentIsMarked]="!!challenge()?.isMarked"
               [serverPaging]="true"
@@ -110,6 +121,14 @@
             }
           </div>
           <div class="panel-actions">
+            <app-share-button
+              [title]="'Draft bill: ' + (challenge()?.title ?? '')"
+              [text]="backendDraft()?.content ?? challenge()?.description ?? ''"
+              path="/article-workbench"
+              [queryParams]="{ challengeId: challengeId(), section: 'draft' }"
+              label="Share"
+              ariaLabel="Share this draft bill">
+            </app-share-button>
             <button type="button" class="btn" [class.primary]="!isEditing()" (click)="toggleEditMode()" [disabled]="loadingDraft()">
               {{ isEditing() ? 'Done Editing' : 'Edit' }}
             </button>
@@ -384,7 +403,7 @@
       }
 
       @if (activeSection() === 'draft' && backendDraft(); as draft) {
-          <app-comments [entityId]="draft.id" entityType="draft" [autoLoad]="true"></app-comments>
+          <app-comments [entityId]="draft.id" entityType="draft" [autoLoad]="true" [shareChallengeId]="challengeId() ?? undefined" shareSection="draft"></app-comments>
       }
 
       @if (activeSection() === 'draft') {

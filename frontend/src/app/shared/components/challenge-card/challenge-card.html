@@ -27,9 +27,14 @@
     <div class="challenge-body">
       <div class="challenge-step-row">
         <span class="step-badge">1. Challenge</span>
-        <app-content-actions-menu contentType="challenge" [contentId]="challenge().id"
-          [contentLabel]="challenge().title">
-        </app-content-actions-menu>
+        <span class="share-tools">
+          <app-share-button [title]="challenge().title" [text]="challenge().description" path="/article-workbench"
+            [queryParams]="{ challengeId: challenge().id }" ariaLabel="Share this challenge">
+          </app-share-button>
+          <app-content-actions-menu contentType="challenge" [contentId]="challenge().id"
+            [contentLabel]="challenge().title">
+          </app-content-actions-menu>
+        </span>
       </div>
       <div class="challenge-vote">
         <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"

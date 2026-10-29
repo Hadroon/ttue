@@ -1,14 +1,15 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, signal, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, signal, ChangeDetectorRef, DestroyRef, PLATFORM_ID } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Comment } from '../../models/baseModels';
 import { MatIconModule } from "@angular/material/icon";
 import { AuthGuardService } from '../../services/auth-guard.service';
 import { AuthService } from '../../services/auth.service';
 import { ApiService, Comment as ApiComment } from '../../services/api.service';
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
+import { ShareButton } from '../share-button/share-button';
 import { AutofocusDirective } from '../../directives/autofocus.directive';
 
 export type CommentSort = 'recent' | 'votes' | 'oldest' | 'replies';
@@ -16,7 +17,7 @@ export type CommentSort = 'recent' | 'votes' | 'oldest' | 'replies';
 @Component({
   selector: 'app-comments',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu, AutofocusDirective],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, ContentActionsMenu, ShareButton, AutofocusDirective],
   templateUrl: './comments.html',
   styleUrl: './comments.css'
 })
@@ -34,6 +35,11 @@ export class Comments implements OnInit, OnChanges {
   @Input() loadingMore: boolean = false;
   // When true, the component fetches, pages, sorts and votes on its own thread
   @Input() autoLoad: boolean = false;
+  // Where shared links to a comment should land; defaults to the challenge thread
+  @Input() shareChallengeId?: string | number;
+  @Input() shareSection: 'challenge' | 'draft' | 'ideas' = 'challenge';
+  // Overrides the per-comment anchor (e.g. an idea thread shares the idea itself)
+  @Input() shareFragment?: string;
   @Output() voteComment = new EventEmitter<string>();
   @Output() sortChange = new EventEmitter<CommentSort>();
   @Output() loadMore = new EventEmitter<void>();
@@ -42,8 +48,19 @@ export class Comments implements OnInit, OnChanges {
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  // A shared link like #comment-12 to bring into view once the thread has loaded
+  private pendingFragment: string | null = (() => {
+    const fragment = inject(ActivatedRoute).snapshot.fragment;
+    return fragment?.startsWith('comment-') ? fragment : null;
+  })();
   private page = 1;
   loading = signal(false);
+  highlightedId = signal<string | null>(null);
+
+  get shareChallengeIdValue(): string | number | undefined {
+    return this.shareChallengeId ?? (this.entityType === 'challenge' ? this.entityId : undefined);
+  }
 
   constructor() {
     // Refetch so voted state reflects the logged-in user
@@ -167,6 +184,29 @@ export class Comments implements OnInit, OnChanges {
     }
     this.filteredComments.set(filtered);
     this.updateDisplayedComments(filtered);
+    this.revealPendingFragment();
+  }
+
+  private revealPendingFragment(): void {
+    const target = this.pendingFragment;
+    if (!target || !this.isBrowser || this.compact) {
+      return;
+    }
+    const id = target.slice('comment-'.length);
+    const comment = this.allComments.find(c => c.id === id);
+    if (!comment) {
+      return;
+    }
+    this.pendingFragment = null;
+    if (comment.parentId) {
+      this.expandedReplies.update(set => new Set(set).add(comment.parentId!));
+    }
+    // Wait for the comment to render before scrolling to it
+    setTimeout(() => {
+      document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      this.highlightedId.set(target);
+      setTimeout(() => this.highlightedId.set(null), 3000);
+    }, 100);
   }
 
   sortComments(list: Comment[]) {

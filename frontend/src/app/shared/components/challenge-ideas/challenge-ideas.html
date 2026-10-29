@@ -49,17 +49,27 @@
 
     <div class="ideas-grid" [class.compact]="!isExpanded">
       @for (idea of displayedIdeas; track idea.id) {
-        <article class="idea-card-mini" [class.is-marked]="idea.isMarked">
+        <article class="idea-card-mini" [id]="'idea-' + idea.id" [class.is-marked]="idea.isMarked" [class.fragment-target]="highlightedId() === 'idea-' + idea.id">
           @if (idea.isMarked) {
             <div class="marked-banner">⚠ Reviewed by moderator</div>
           }
           <div class="idea-card-header">
             <span class="step-badge-solution">2. Leading Solution</span>
-            <app-content-actions-menu
-              contentType="idea"
-              [contentId]="idea.id"
-              [contentLabel]="idea.title">
-            </app-content-actions-menu>
+            <span class="share-tools">
+              <app-share-button
+                [title]="idea.title"
+                [text]="idea.description"
+                path="/article-workbench"
+                [queryParams]="{ challengeId: challengeId, section: 'ideas' }"
+                [fragment]="'idea-' + idea.id"
+                ariaLabel="Share this idea">
+              </app-share-button>
+              <app-content-actions-menu
+                contentType="idea"
+                [contentId]="idea.id"
+                [contentLabel]="idea.title">
+              </app-content-actions-menu>
+            </span>
           </div>
 
           <div class="idea-card-body">
@@ -106,7 +116,8 @@
             </div>
             @if (openComments.has(idea.id)) {
               <app-comments [entityId]="idea.id" entityType="idea" [autoLoad]="true"
-                [parentIsMarked]="!!idea.isMarked"></app-comments>
+                [parentIsMarked]="!!idea.isMarked" [shareChallengeId]="challengeId" shareSection="ideas"
+                [shareFragment]="'idea-' + idea.id"></app-comments>
             }
           }
         </article>

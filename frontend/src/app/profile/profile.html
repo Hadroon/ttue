@@ -46,6 +46,13 @@
             <button class="btn follow-button" [class.primary]="!isFollowing()" [class.secondary]="isFollowing()" type="button" [disabled]="followBusy()" [attr.aria-pressed]="isFollowing()" (click)="toggleFollow()">{{ isFollowing() ? 'Following' : 'Follow' }}</button>
           }
 
+          <app-share-button
+            [title]="(civicProfile.identity.displayName || civicProfile.identity.username) + ' on Earth Forum'"
+            [path]="'/profile/' + civicProfile.identity.username"
+            label="Share profile"
+            ariaLabel="Share this profile">
+          </app-share-button>
+
           <dl class="identity-meta">
             @if (civicProfile.identity.location) {
               <div><dt>Region</dt><dd>{{ civicProfile.identity.location }}</dd></div>

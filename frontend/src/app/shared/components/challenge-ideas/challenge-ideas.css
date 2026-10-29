@@ -233,6 +233,11 @@
   filter: grayscale(0.6);
 }
 
+.idea-card-mini.fragment-target {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
 .marked-banner {
   font-size: 0.72rem;
   font-weight: 600;

@@ -9,6 +9,7 @@ import { AuthService } from '../shared/services/auth.service';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
 import { Comments, CommentSort } from '../shared/components/comments/comments';
+import { ShareButton } from '../shared/components/share-button/share-button';
 import { Actions } from './actions/actions';
 import { ChallengeLinks } from './links/challenge-links';
 import { Idea as BaseIdea, Comment as BaseComment } from '../shared/models/baseModels';
@@ -30,7 +31,7 @@ interface RevisionSnapshot {
 @Component({
   selector: 'app-article-workbench',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatTabsModule, Header, ChallengeIdeas, Comments, Actions, ChallengeLinks],
+  imports: [CommonModule, FormsModule, RouterLink, MatTabsModule, Header, ChallengeIdeas, Comments, ShareButton, Actions, ChallengeLinks],
   templateUrl: './article-workbench.html',
   styleUrl: './article-workbench.css'
 })

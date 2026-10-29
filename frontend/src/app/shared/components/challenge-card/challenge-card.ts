@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Challenge } from '../../models/baseModels';
 import { ContentActionsMenu } from '../content-actions-menu/content-actions-menu';
+import { ShareButton } from '../share-button/share-button';
 
 @Component({
   selector: 'app-challenge-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, ContentActionsMenu],
+  imports: [CommonModule, RouterLink, ContentActionsMenu, ShareButton],
   templateUrl: './challenge-card.html',
   styleUrl: './challenge-card.css'
 })
