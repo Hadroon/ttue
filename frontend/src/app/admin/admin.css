@@ -124,9 +124,9 @@
 }
 
 .content-tab-btn.active {
-  background: var(--color-primary, #2563eb);
+  background: var(--logo-blue-dark);
   color: #fff;
-  border-color: var(--color-primary, #2563eb);
+  border-color: var(--logo-blue-dark);
 }
 
 /* Table */

@@ -126,7 +126,7 @@ mat-paginator ::ng-deep .mat-mdc-paginator-container {
 }
 
 .enter-btn {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: var(--logo-blue-dark);
   color: white;
   border: none;
   border-radius: 8px;
@@ -135,13 +135,13 @@ mat-paginator ::ng-deep .mat-mdc-paginator-container {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(11, 153, 213, 0.3);
 }
 
 .enter-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  background: var(--logo-blue-darker);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 12px rgba(11, 153, 213, 0.4);
 }
 
 .enter-btn:disabled {

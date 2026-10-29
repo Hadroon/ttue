@@ -248,7 +248,7 @@
 }
 
 .vote-btn.positive {
-  background: #10b981;
+  background: var(--logo-green-dark);
 }
 
 .vote-btn.negative {
@@ -756,8 +756,8 @@
 }
 
 .act-btn.primary {
-  background: var(--brand-600);
-  border-color: var(--brand-600);
+  background: var(--logo-blue-dark);
+  border-color: var(--logo-blue-dark);
   color: #fff;
 }
 

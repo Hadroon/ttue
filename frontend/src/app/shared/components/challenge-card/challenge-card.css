@@ -38,20 +38,23 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  min-height: 28px;
+  margin-bottom: 12px;
 }
 
 .step-badge {
   display: inline-block;
   font-size: 11px;
   font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 2px 10px;
   border-radius: 4px;
-  background: #e0f2fe;
-  color: #075985;
-  border: 1px solid #bae6fd;
+  background: #e1f4fc;
+  color: var(--logo-blue-darker);
+  border: 1px solid #9fd8f0;
 }
 
 .challenge-vote {
@@ -82,11 +85,11 @@
 } */
 
 .vote-btn-large.voted {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: var(--logo-green-dark);
   border-color: transparent;
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(58, 125, 66, 0.3);
   animation: uplift 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 

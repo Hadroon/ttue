@@ -80,7 +80,7 @@ label.check input { margin-top: 3px; }
 
 .abtn:hover:not(:disabled) { border-color: var(--brand); }
 .abtn:disabled { opacity: .5; cursor: not-allowed; }
-.abtn.primary { background: var(--brand-600); border-color: var(--brand-600); color: #fff; }
+.abtn.primary { background: var(--logo-blue-dark); border-color: var(--logo-blue-dark); color: #fff; }
 .abtn.quiet { border-color: transparent; background: transparent; color: var(--muted); text-decoration: underline; padding-inline: 6px; }
 .abtn.sm { padding: 4px 10px; font-size: 12px; }
 

@@ -25,8 +25,12 @@
   --green-rgba: rgba(90, 158, 57, 0.1);
   --orange-rgba: rgba(253, 135, 35, 0.1);
   /* Favicon colors */
-  --logo-blue: #248bb3;
+  --logo-blue: #0b99d5;
+  --logo-blue-dark: #0979aa;
+  --logo-blue-darker: #086891;
   --logo-green: #52ae5d;
+  --logo-green-dark: #3a7d42;
+  --logo-green-darker: #2f6636;
   --logo-orange: #f99534;
   --logo-yellow: #ffcc46;
 }
@@ -172,11 +176,15 @@ a {
 }
 
 .btn.primary {
-  background: var(--brand-600);
+  background: var(--logo-blue-dark);
   /* background: #121938; */
   /* background: linear-gradient(135deg, var(--brand), #10b981); */
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(122, 240, 184, 0.3);
+  box-shadow: 0 2px 8px rgba(11, 153, 213, 0.3);
+}
+
+.btn.primary:hover {
+  background: var(--logo-blue-darker);
 }
 
 /* .btn.primary:hover {
