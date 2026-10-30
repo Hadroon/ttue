@@ -4,6 +4,22 @@
   <section class="section workspace">
   <div class="container workspace-grid" [class.draft-layout]="activeSection() === 'draft'">
   <div class="content-card">
+    @if (challenge()) {
+      <header class="challenge-header">
+        <div class="share-row">
+          <span class="category-badge">Challenge • {{ challenge()!.category }}</span>
+          <app-share-button
+            [title]="challenge()!.title"
+            [text]="challenge()!.description"
+            path="/article-workbench"
+            [queryParams]="{ challengeId: challengeId(), section: 'challenge' }"
+            label="Share"
+            ariaLabel="Share this challenge">
+          </app-share-button>
+        </div>
+        <h1 class="document-title">{{ challenge()!.title }}</h1>
+      </header>
+    }
     <div class="page-nav">
     <nav mat-tab-nav-bar
          class="page-nav-tabs"
@@ -40,18 +56,6 @@
   @if (activeSection() === 'challenge') {
       <article class="card-body" id="challenge">
         @if (challenge()) {
-          <div class="share-row">
-            <span class="category-badge">Challenge • {{ challenge()!.category }}</span>
-            <app-share-button
-              [title]="challenge()!.title"
-              [text]="challenge()!.description"
-              path="/article-workbench"
-              [queryParams]="{ challengeId: challengeId(), section: 'challenge' }"
-              label="Share"
-              ariaLabel="Share this challenge">
-            </app-share-button>
-          </div>
-          <h1 class="document-title">{{ challenge()!.title }}</h1>
           <div class="document-body rich-text" [innerHTML]="challenge()!.description"></div>
         } @else if (loadingChallenge()) {
           <p class="document-body">Loading challenge...</p>
