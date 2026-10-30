@@ -82,6 +82,11 @@
   align-items: start;
 }
 
+/* no sidebar content (every tab except Draft): let the content card take the full width */
+.workspace-grid:not(:has(> :nth-child(2))) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .content-card,
 .voting-card {
   background: var(--card);
