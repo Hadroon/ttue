@@ -13,7 +13,7 @@ export const users = pgTable("users", {
   location: text("location"),
   websiteUrl: text("website_url"),
   googleId: text("google_id").unique(), // Google OAuth ID
-  authProvider: text("auth_provider").default("local").notNull(), // 'local' or 'google'
+  authProvider: text("auth_provider").default("local").notNull(), // 'local', 'google' or 'dev' (local mock users)
   reputation: integer("reputation").default(0).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
   lastLoginAt: timestamp("last_login_at"),

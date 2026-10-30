@@ -6,6 +6,7 @@ import { db, testConnection } from "./db";
 import { sql } from "drizzle-orm";
 import { handleRegister, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
 import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
+import { handleDevLogin, handleGetDevLoginConfig } from "./routes/dev-auth";
 import { handleGetDonationConfig, handleCreateDonationSession, handleConfirmDonation, handleStripeWebhook } from "./routes/donations";
 import { handleCreateIdea, handleGetIdeas, handleGetIdea, handleUpdateIdea, handleDeleteIdea } from "./routes/ideas";
 import { handleCreateComment, handleGetThreadComments, handleUpdateComment, handleDeleteComment, handleAcceptComment } from "./routes/comments";
@@ -139,6 +140,14 @@ serve({
       }
       if (url.pathname === "/api/auth/google/config" && req.method === "GET") {
         return handleGetGoogleConfig(req);
+      }
+
+      // Mock-user login for local development (disabled unless DEV_LOGIN=true and NODE_ENV=development)
+      if (url.pathname === "/api/auth/dev-login" && req.method === "POST") {
+        return handleDevLogin(req);
+      }
+      if (url.pathname === "/api/auth/dev-login/config" && req.method === "GET") {
+        return handleGetDevLoginConfig();
       }
       
       // Donation routes

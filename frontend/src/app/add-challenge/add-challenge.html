@@ -2,7 +2,7 @@
 <app-header></app-header>
 
 <main id="main" role="main">
-  @if (isAuthenticated) {
+  @if (isAuthenticated()) {
     <section class="hero">
       <div class="container page-head">
         <div class="kicker">New challenge</div>
@@ -22,13 +22,14 @@
             <legend class="group-title"><span class="group-icon" aria-hidden="true">📝</span>Basics</legend>
             <p class="group-hint">The essentials people see first in the challenge list.</p>
 
-            <div class="type-field">
-              <span class="type-label" id="type-label">Type</span>
-              <mat-button-toggle-group [(ngModel)]="challenge.type" name="type" aria-labelledby="type-label" hideSingleSelectionIndicator>
-                @for (option of typeOptions; track option.value) {
-                  <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
-                }
-              </mat-button-toggle-group>
+            <div class="type-options" role="radiogroup" aria-label="Type">
+              @for (option of typeOptions; track option.value) {
+                <label class="type-option" [class.selected]="challenge.type === option.value">
+                  <input type="radio" class="visually-hidden" name="type" [value]="option.value" [(ngModel)]="challenge.type">
+                  <span class="type-icon" [class.alt]="option.value === 'proposal'" aria-hidden="true">{{ option.icon }}</span>
+                  <span class="type-title">{{ option.label }}</span>
+                </label>
+              }
             </div>
 
             <!-- Category and civic domain are hidden for now; defaults are sent from add-challenge.ts.

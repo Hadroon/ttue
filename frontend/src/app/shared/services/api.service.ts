@@ -689,6 +689,20 @@ export class ApiService {
   }
 
   /**
+   * Whether the backend allows the local mock-user login
+   */
+  getDevLoginConfig() {
+    return this.http.get<{ enabled: boolean }>(`${this.baseUrl}/auth/dev-login/config`);
+  }
+
+  /**
+   * Passwordless login as a mock user (local development only)
+   */
+  devLogin(username?: string) {
+    return this.http.post<{ user: User; token: string; isNewUser: boolean }>(`${this.baseUrl}/auth/dev-login`, { username });
+  }
+
+  /**
    * Get donation (Stripe) configuration
    */
   getDonationConfig() {

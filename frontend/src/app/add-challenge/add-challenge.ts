@@ -10,7 +10,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { SigninModalComponent } from '../shared/components/signin-modal/signin-modal';
 import { AuthService } from '../shared/services/auth.service';
 import { ApiService, ChallengeType } from '../shared/services/api.service';
@@ -29,8 +28,7 @@ import { CivicDomain } from '../shared/models/civic-profile';
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatChipsModule,
-    MatButtonToggleModule
+    MatChipsModule
   ],
   templateUrl: './add-challenge.html',
   styleUrl: './add-challenge.css'
@@ -42,7 +40,7 @@ export class AddChallenge implements OnInit {
   authGuard = inject(AuthGuardService);
   router = inject(Router);
 
-  isAuthenticated = false;
+  readonly isAuthenticated = signal(false);
   isLoading = false;
 
   // Category, domain, urgency and reward pool are hidden in the form for now,
@@ -59,9 +57,9 @@ export class AddChallenge implements OnInit {
     tags: [] as string[]
   };
 
-  readonly typeOptions: { value: ChallengeType; label: string }[] = [
-    { value: 'challenge', label: 'Challenge' },
-    { value: 'proposal', label: 'Proposal' }
+  readonly typeOptions: { value: ChallengeType; label: string; icon: string }[] = [
+    { value: 'challenge', label: 'Challenge', icon: '🎯' },
+    { value: 'proposal', label: 'Proposal', icon: '💡' }
   ];
 
   categories = [
@@ -113,7 +111,7 @@ export class AddChallenge implements OnInit {
     if (!user) {
       this.openSignInModal();
     } else {
-      this.isAuthenticated = true;
+      this.isAuthenticated.set(true);
     }
   }
 
@@ -126,7 +124,7 @@ export class AddChallenge implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.success) {
-        this.isAuthenticated = true;
+        this.isAuthenticated.set(true);
       } else {
         this.router.navigate(['/challenges']);
       }

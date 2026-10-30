@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,7 +33,7 @@ export class AddIdea implements OnInit {
   router = inject(Router);
   route = inject(ActivatedRoute);
 
-  isAuthenticated = false;
+  readonly isAuthenticated = signal(false);
   isSubmitting = false;
   errorMessage = '';
   challengeId: number | null = null;
@@ -58,7 +58,7 @@ export class AddIdea implements OnInit {
     if (!user) {
       this.openSignInModal();
     } else {
-      this.isAuthenticated = true;
+      this.isAuthenticated.set(true);
     }
   }
 
@@ -71,7 +71,7 @@ export class AddIdea implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.success) {
-        this.isAuthenticated = true;
+        this.isAuthenticated.set(true);
       } else {
         this.navigateBack();
       }

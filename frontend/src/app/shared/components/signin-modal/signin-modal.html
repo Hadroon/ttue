@@ -10,6 +10,22 @@
       (loginError)="onGoogleLoginError($event)">
     </app-google-signin-button>
   </div>
+
+  @if (devLoginEnabled()) {
+    <div class="dev-login">
+      <span class="dev-login-label">Local dev only</span>
+      <div class="dev-login-row">
+        <input class="dev-login-input" type="text" [(ngModel)]="devUsername" placeholder="devuser"
+               aria-label="Mock username" maxlength="30" (keydown.enter)="onDevLogin()">
+        <button type="button" class="btn secondary" (click)="onDevLogin()" [disabled]="devLoginBusy()">
+          {{ devLoginBusy() ? 'Signing in...' : 'Sign in as mock user' }}
+        </button>
+      </div>
+      @if (devLoginError()) {
+        <p class="dev-login-error" role="alert">{{ devLoginError() }}</p>
+      }
+    </div>
+  }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

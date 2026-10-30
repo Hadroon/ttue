@@ -37,6 +37,9 @@ export interface AppConfig {
     emailVerification: boolean;
   };
   adminEmails: string[];
+  devLogin: {
+    enabled: boolean;
+  };
 }
 
 function getConfig(): AppConfig {
@@ -81,6 +84,10 @@ function getConfig(): AppConfig {
       emailVerification: process.env.FEATURE_EMAIL_VERIFICATION !== 'false',
     },
     adminEmails: process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(Boolean) ?? [],
+    // Passwordless mock-user login for local testing; requires an explicit opt-in AND NODE_ENV=development
+    devLogin: {
+      enabled: process.env.DEV_LOGIN === 'true' && process.env.NODE_ENV === 'development',
+    },
   };
 
   // Environment-specific overrides
