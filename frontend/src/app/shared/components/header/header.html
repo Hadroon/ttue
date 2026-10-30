@@ -16,6 +16,12 @@
     </nav>
 
     <div class="header-cta">
+      <app-share-button
+        [currentPage]="true"
+        [title]="'Time to unite Earth'"
+        [resolveContent]="pageShareContent"
+        ariaLabel="Share this page">
+      </app-share-button>
       @if (!authService.isLoggedIn()) {
         <a class="btn ghost" href="#signin" (click)="openSignInModal(); $event.preventDefault()">Sign in</a>
       } @else {

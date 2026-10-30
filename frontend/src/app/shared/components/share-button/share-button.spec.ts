@@ -1,6 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { ShareButton } from './share-button';
 
 describe('ShareButton', () => {
@@ -71,6 +71,19 @@ describe('ShareButton', () => {
     fixture.componentRef.setInput('text', 'word '.repeat(200));
     expect(fixture.componentInstance.plainText().length).toBeLessThanOrEqual(300);
     expect(fixture.componentInstance.plainText().endsWith('…')).toBeTrue();
+  });
+
+  it('shares the current page with content read from the rendered page', () => {
+    fixture.componentRef.setInput('currentPage', true);
+    fixture.componentRef.setInput('resolveContent', () => ({ title: 'Page headline', text: 'Page intro' }));
+    spyOnProperty(TestBed.inject(Router), 'url', 'get').and.returnValue('/challenges?tag=water');
+    trigger().click();
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    expect(component.shareUrl()).toBe(`${window.location.origin}/challenges?tag=water`);
+    const reddit = new URL(component.targets().find(t => t.id === 'reddit')!.href).searchParams;
+    expect(reddit.get('title')).toBe('Page headline');
+    expect(reddit.get('text')).toContain('Page intro');
   });
 
   it('closes when clicking outside', () => {

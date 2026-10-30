@@ -108,7 +108,8 @@
 }
 
 @media (max-width: 640px) {
-  .header-cta {
+  /* Keep the share button; the rest of the actions live in the menu */
+  .header-cta > :not(app-share-button) {
     display: none;
   }
 }

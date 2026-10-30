@@ -27,14 +27,22 @@ export class ShareButton {
   /** Shown next to the icon; leave empty for an icon-only button */
   readonly label = input<string>('');
   readonly ariaLabel = input<string>('Share');
+  /** Share the page the user is on, including its query string and fragment */
+  readonly currentPage = input<boolean>(false);
+  /** Read just before the menu opens, for content that only the rendered page knows */
+  readonly resolveContent = input<(() => { title?: string; text?: string }) | null>(null);
 
   readonly isOpen = signal(false);
   readonly copied = signal(false);
   readonly shareUrl = signal('');
   readonly canNativeShare = signal(false);
+  private readonly resolved = signal<{ title?: string; text?: string } | null>(null);
+
+  readonly effectiveTitle = computed(() => this.resolved()?.title || this.title());
+  readonly effectiveText = computed(() => this.resolved()?.text || this.text());
 
   readonly plainText = computed(() => {
-    const raw = this.text();
+    const raw = this.effectiveText();
     if (!raw) {
       return '';
     }
@@ -51,7 +59,7 @@ export class ShareButton {
       return [];
     }
     const u = encodeURIComponent(url);
-    const title = this.title() || 'Earth Forum';
+    const title = this.effectiveTitle() || 'Earth Forum';
     const t = encodeURIComponent(title);
     const summary = this.plainText();
     const withSummary = summary ? `${title}\n\n${summary}\n\n${url}` : `${title} ${url}`;
@@ -84,6 +92,7 @@ export class ShareButton {
       this.isOpen.set(false);
       return;
     }
+    this.resolved.set(this.resolveContent()?.() ?? null);
     this.shareUrl.set(this.buildUrl());
     this.canNativeShare.set(this.isBrowser && typeof navigator !== 'undefined' && typeof navigator.share === 'function');
     this.copied.set(false);
@@ -123,7 +132,7 @@ export class ShareButton {
     event.stopPropagation();
     this.isOpen.set(false);
     try {
-      await navigator.share({ title: this.title() || undefined, text: this.plainText() || undefined, url: this.shareUrl() });
+      await navigator.share({ title: this.effectiveTitle() || undefined, text: this.plainText() || undefined, url: this.shareUrl() });
     } catch {
       // The user dismissed the share sheet
     }
@@ -136,6 +145,9 @@ export class ShareButton {
   private buildUrl(): string {
     if (!this.isBrowser) {
       return '';
+    }
+    if (this.currentPage()) {
+      return window.location.origin + this.router.url;
     }
     const queryParams: Record<string, string | number> = {};
     for (const [key, value] of Object.entries(this.queryParams())) {
