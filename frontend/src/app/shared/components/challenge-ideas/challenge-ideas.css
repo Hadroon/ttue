@@ -627,28 +627,6 @@ button.btn-link {
   padding: 20px 22px 0;
   border-radius: 16px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-
-.challenge-ideas-container.full .idea-card-mini::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: linear-gradient(to bottom, #14b8a6, #2563eb);
-  opacity: 0;
-  transition: opacity .15s ease;
-}
-
-.challenge-ideas-container.full .idea-card-mini:hover,
-.challenge-ideas-container.full .idea-card-mini:focus-within {
-  border-color: color-mix(in srgb, #14b8a6 45%, var(--border));
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
-}
-
-.challenge-ideas-container.full .idea-card-mini:hover::before,
-.challenge-ideas-container.full .idea-card-mini:focus-within::before {
-  opacity: 1;
 }
 
 .challenge-ideas-container.full .step-badge-solution {
@@ -708,11 +686,11 @@ button.btn-link {
   width: 100%;
   padding: 12px 22px;
   text-align: left;
+  color: #0d9488;
 }
 
 .challenge-ideas-container.full .idea-card-actions .btn-link:hover {
-  background: color-mix(in srgb, var(--brand) 8%, transparent);
-  color: var(--brand);
+  color: #0d9488;
   text-decoration: none;
 }
 
