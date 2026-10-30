@@ -156,11 +156,10 @@ main {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 14px;
+  padding: 16px 18px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--card);
   cursor: pointer;
   transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
@@ -168,12 +167,47 @@ main {
 
 .type-option:hover {
   border-color: #99f6e4;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
 .type-option.selected {
   border-color: #14b8a6;
-  background: #f0fdfa;
+  background: linear-gradient(135deg, #f0fdfa, #eff6ff);
   box-shadow: 0 0 0 1px #14b8a6;
+}
+
+.type-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.type-desc {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.type-check {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: transparent;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.type-option.selected .type-check {
+  border-color: transparent;
+  background: linear-gradient(135deg, #14b8a6, #2563eb);
+  color: #fff;
 }
 
 .type-option:has(input:focus-visible) {

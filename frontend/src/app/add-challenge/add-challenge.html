@@ -27,7 +27,11 @@
                 <label class="type-option" [class.selected]="challenge.type === option.value">
                   <input type="radio" class="visually-hidden" name="type" [value]="option.value" [(ngModel)]="challenge.type">
                   <span class="type-icon" [class.alt]="option.value === 'proposal'" aria-hidden="true">{{ option.icon }}</span>
-                  <span class="type-title">{{ option.label }}</span>
+                  <span class="type-text">
+                    <span class="type-title">{{ option.label }}</span>
+                    <span class="type-desc">{{ option.description }}</span>
+                  </span>
+                  <span class="type-check" aria-hidden="true">✓</span>
                 </label>
               }
             </div>

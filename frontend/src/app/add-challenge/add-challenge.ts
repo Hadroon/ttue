@@ -57,9 +57,9 @@ export class AddChallenge implements OnInit {
     tags: [] as string[]
   };
 
-  readonly typeOptions: { value: ChallengeType; label: string; icon: string }[] = [
-    { value: 'challenge', label: 'Challenge', icon: '🎯' },
-    { value: 'proposal', label: 'Proposal', icon: '💡' }
+  readonly typeOptions: { value: ChallengeType; label: string; icon: string; description: string }[] = [
+    { value: 'challenge', label: 'Challenge', icon: '🎯', description: 'Describe a problem for the community to solve.' },
+    { value: 'proposal', label: 'Proposal', icon: '💡', description: 'Put forward a concrete change or solution.' }
   ];
 
   categories = [
