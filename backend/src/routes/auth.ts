@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth";
 import { authenticate } from "../middleware/auth";
 import { config } from "../config/app.config";
+import { TEXT_LIMITS, checkTextLimits, lengthError } from "../utils/text-limits";
 
 // Shift last login into previous_login_at so "since last login" stays stable during the session
 export async function recordLogin(userId: number): Promise<void> {
@@ -25,6 +26,13 @@ export async function handleRegister(req: Request): Promise<Response> {
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    const limitError = checkTextLimits({
+      Username: [username, TEXT_LIMITS.username],
+      Email: [email, TEXT_LIMITS.email],
+      "Display name": [displayName, TEXT_LIMITS.displayName],
+    });
+    if (limitError) return lengthError(limitError);
 
     // Check if user already exists
     const existingUser = await db

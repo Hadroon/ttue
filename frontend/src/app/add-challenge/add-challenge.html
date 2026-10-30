@@ -44,7 +44,7 @@
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Title</mat-label>
-              <input matInput [(ngModel)]="challenge.title" name="title" required placeholder="A clear, concise problem statement">
+              <input matInput [(ngModel)]="challenge.title" name="title" required maxlength="200" placeholder="A clear, concise problem statement">
               <mat-hint>Describe the problem, not the solution &mdash; e.g. &ldquo;Rural areas lack reliable public transport&rdquo;.</mat-hint>
             </mat-form-field>
 
@@ -73,7 +73,7 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Reward pool</mat-label>
-                <input matInput [(ngModel)]="challenge.rewardPool" name="rewardPool" placeholder="e.g., $5,000">
+                <input matInput [(ngModel)]="challenge.rewardPool" name="rewardPool" maxlength="100" placeholder="e.g., $5,000">
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -87,7 +87,7 @@
             <div class="tags-section">
               <mat-form-field appearance="outline" class="tag-input">
                 <mat-label>Tags</mat-label>
-                <input matInput [(ngModel)]="tagInput" name="tagInput"
+                <input matInput [(ngModel)]="tagInput" name="tagInput" maxlength="50"
                        (keydown.enter)="$event.preventDefault(); addTag()"
                        placeholder="Type a tag and press Enter">
                 <mat-hint>Tags make your challenge easier to find.</mat-hint>

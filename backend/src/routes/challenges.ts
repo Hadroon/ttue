@@ -3,6 +3,7 @@ import { challenges, challengeVotes, ideas, comments, users, ideaVotes, commentV
 import { eq, desc, asc, and, sql, or, getTableColumns, ilike, gte, lt, isNull, inArray, type SQL } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 import { applyReputationChange, getVoteDelta } from "../services/reputation";
+import { TEXT_LIMITS, checkTextLimits, checkTagList, lengthError } from "../utils/text-limits";
 
 // Get all challenges with top idea and comments
 export async function handleGetChallenges(req: Request): Promise<Response> {
@@ -229,6 +230,14 @@ export async function handleCreateChallenge(req: Request): Promise<Response> {
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    const limitError = checkTextLimits({
+      Category: [category, TEXT_LIMITS.category],
+      Title: [title, TEXT_LIMITS.title],
+      Description: [description, TEXT_LIMITS.body],
+      "Reward pool": [rewardPool, TEXT_LIMITS.rewardPool],
+    }) ?? checkTagList(tagList);
+    if (limitError) return lengthError(limitError);
 
     // Validate urgency value
     const validUrgencies = ['Low', 'Medium', 'High', 'Critical'];
@@ -931,6 +940,9 @@ export async function handleResolveDraftProposal(req: Request, challengeId: numb
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    const limitError = checkTextLimits({ "Edited content": [editedContent, TEXT_LIMITS.body] });
+    if (limitError) return lengthError(limitError);
 
     // Get draft and verify creator
     const draft = await db

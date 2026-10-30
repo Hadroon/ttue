@@ -11,15 +11,17 @@
           <form class="idea-form" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Title *</mat-label>
-              <input matInput [(ngModel)]="idea.title" name="title" required
+              <input matInput [(ngModel)]="idea.title" name="title" required maxlength="200"
                      placeholder="Give your idea a clear, concise title">
+              <mat-hint align="end">{{ idea.title.length }}/200</mat-hint>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Description *</mat-label>
-              <textarea matInput [(ngModel)]="idea.content" name="content" required
+              <textarea matInput [(ngModel)]="idea.content" name="content" required maxlength="5000"
                         rows="10"
                         placeholder="Describe your idea in detail. Include context, rationale, and potential impact."></textarea>
+              <mat-hint align="end">{{ idea.content.length }}/5000</mat-hint>
             </mat-form-field>
 
             @if (errorMessage) {

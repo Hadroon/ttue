@@ -24,8 +24,8 @@ async function sha256Hex(file: File): Promise<string> {
         <p class="muted">Attach a case to this challenge so lawyers, funders and evidence collectors can find it.</p>
       </header>
       <form class="form-grid" (submit)="createCase($event)">
-        <label class="field">Target entity <input name="target" required placeholder="Company, agency or official"></label>
-        <label class="field">Jurisdiction / court level <input name="jurisdiction" required placeholder="e.g. Regional court, EU level"></label>
+        <label class="field">Target entity <input name="target" required maxlength="200" placeholder="Company, agency or official"></label>
+        <label class="field">Jurisdiction / court level <input name="jurisdiction" required maxlength="200" placeholder="e.g. Regional court, EU level"></label>
         <label class="field">Legal basis
           <select name="basis" required>
             <option value="">Choose…</option>
@@ -38,7 +38,7 @@ async function sha256Hex(file: File): Promise<string> {
           </select>
         </label>
         <label class="field">Target retainer budget <input name="budget" type="number" min="0" step="1" required placeholder="Filing fees + expert witnesses"></label>
-        <label class="field wide">Primary legal lead <input name="lead" placeholder="Name of the lawyer or organisation, if known"></label>
+        <label class="field wide">Primary legal lead <input name="lead" maxlength="200" placeholder="Name of the lawyer or organisation, if known"></label>
         <div class="btn-row wide"><button class="abtn primary" type="submit">Create case</button></div>
       </form>
     </section>
@@ -86,8 +86,8 @@ async function sha256Hex(file: File): Promise<string> {
                   }
                 </div>
                 <form class="btn-row" style="margin-top:10px" (submit)="addFiling($event, c)">
-                  <input class="plain-input" style="flex:1 1 140px" name="title" placeholder="Filing title" required aria-label="Filing title">
-                  <input class="plain-input" style="flex:2 1 200px" name="url" type="url" placeholder="https://…" required aria-label="Filing link">
+                  <input class="plain-input" style="flex:1 1 140px" name="title" placeholder="Filing title" required maxlength="200" aria-label="Filing title">
+                  <input class="plain-input" style="flex:2 1 200px" name="url" type="url" placeholder="https://…" required maxlength="500" aria-label="Filing link">
                   <button class="abtn sm" type="submit">Add filing</button>
                 </form>
               </details>
@@ -116,8 +116,8 @@ async function sha256Hex(file: File): Promise<string> {
           </select>
         </label>
         <label class="field">Date captured <input name="capturedAt" type="date" required></label>
-        <label class="field">Geo-location <input name="location" required placeholder="Place or coordinates"></label>
-        <label class="field wide">Raw device metadata <input name="device" placeholder="Camera / sensor model, firmware, settings"></label>
+        <label class="field">Geo-location <input name="location" required maxlength="200" placeholder="Place or coordinates"></label>
+        <label class="field wide">Raw device metadata <input name="device" maxlength="200" placeholder="Camera / sensor model, firmware, settings"></label>
         <label class="check wide"><input type="checkbox" name="affidavit" required> I confirm under oath that this evidence is authentic and unaltered.</label>
         <div class="btn-row wide">
           <button class="abtn primary" type="submit" [disabled]="hashing()">{{ hashing() ? 'Hashing…' : 'Record evidence' }}</button>
@@ -146,8 +146,8 @@ async function sha256Hex(file: File): Promise<string> {
         <div class="btn-row"><button class="abtn quiet" type="button" (click)="withdrawLawyer()">Withdraw request</button></div>
       } @else {
         <form class="form-grid" (submit)="requestLawyer($event)">
-          <label class="field">Full name <input name="name" required></label>
-          <label class="field">Bar / jurisdiction <input name="jurisdiction" required></label>
+          <label class="field">Full name <input name="name" required maxlength="200"></label>
+          <label class="field">Bar / jurisdiction <input name="jurisdiction" required maxlength="200"></label>
           <label class="field wide">Registration or credential reference <input name="credentialRef" required placeholder="For reviewers only. Not saved in this preview."></label>
           <div class="btn-row wide"><button class="abtn primary" type="submit">Request verification</button></div>
         </form>

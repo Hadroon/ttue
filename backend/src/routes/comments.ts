@@ -2,6 +2,7 @@ import { db } from "../db";
 import { comments, users, ideas, challenges, challengeDrafts, commentVotes } from "../db/schema";
 import { eq, desc, asc, and, sql, isNull, inArray, type SQL } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
+import { TEXT_LIMITS, checkTextLimits, lengthError } from "../utils/text-limits";
 
 // Create new comment
 export async function handleCreateComment(req: Request): Promise<Response> {
@@ -18,6 +19,9 @@ export async function handleCreateComment(req: Request): Promise<Response> {
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    const limitError = checkTextLimits({ Comment: [content, TEXT_LIMITS.comment] });
+    if (limitError) return lengthError(limitError);
 
     if (parentId) {
       const [parent] = await db
@@ -244,6 +248,9 @@ export async function handleUpdateComment(req: Request, commentId: number): Prom
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    const limitError = checkTextLimits({ Comment: [content, TEXT_LIMITS.comment] });
+    if (limitError) return lengthError(limitError);
 
     // Check if user owns the comment
     const [comment] = await db

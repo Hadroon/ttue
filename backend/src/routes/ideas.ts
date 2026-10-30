@@ -2,6 +2,7 @@ import { db } from "../db";
 import { ideas, users, ideaVotes, ideaTags, tags } from "../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
+import { TEXT_LIMITS, checkTextLimits, checkTagList, lengthError } from "../utils/text-limits";
 
 // Create new idea
 export async function handleCreateIdea(req: Request): Promise<Response> {
@@ -18,6 +19,12 @@ export async function handleCreateIdea(req: Request): Promise<Response> {
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    const limitError = checkTextLimits({
+      Title: [title, TEXT_LIMITS.title],
+      Content: [content, TEXT_LIMITS.body],
+    }) ?? checkTagList(tagNames);
+    if (limitError) return lengthError(limitError);
 
     // Create idea
     const [newIdea] = await db
@@ -181,6 +188,12 @@ export async function handleUpdateIdea(req: Request, ideaId: number): Promise<Re
 
   try {
     const { title, content } = await req.json();
+
+    const limitError = checkTextLimits({
+      Title: [title, TEXT_LIMITS.title],
+      Content: [content, TEXT_LIMITS.body],
+    });
+    if (limitError) return lengthError(limitError);
 
     // Check if user owns the idea
     const [idea] = await db

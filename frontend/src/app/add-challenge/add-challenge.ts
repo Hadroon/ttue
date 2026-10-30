@@ -121,6 +121,10 @@ export class AddChallenge implements OnInit {
   addTag() {
     const tag = this.tagInput.trim();
     if (tag && !this.challenge.tags.includes(tag)) {
+      if (this.challenge.tags.length >= 10) {
+        this.errorMessage = 'You can add at most 10 tags';
+        return;
+      }
       this.challenge.tags.push(tag);
       this.tagInput = '';
     }
@@ -136,6 +140,11 @@ export class AddChallenge implements OnInit {
     }
     if (!this.challenge.title || !this.challenge.category || !this.challenge.domainSlug || !this.challenge.description) {
       this.errorMessage = 'Please fill in all required fields';
+      return;
+    }
+    // The description is stored as HTML, so the limit includes formatting markup.
+    if (this.challenge.description.length > 5000) {
+      this.errorMessage = 'Description is too long (max 5000 characters including formatting)';
       return;
     }
 

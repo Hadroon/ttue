@@ -2,6 +2,7 @@ import { db } from "../db";
 import { flags, users } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
+import { TEXT_LIMITS } from "../utils/text-limits";
 
 // POST /api/flags  — create a flag (or 409 if already flagged by this user)
 export async function handleCreateFlag(req: Request): Promise<Response> {
@@ -28,6 +29,13 @@ export async function handleCreateFlag(req: Request): Promise<Response> {
     if (typeof reason !== "string" || reason.trim().length < 5) {
       return new Response(
         JSON.stringify({ error: "Please provide a reason (at least 5 characters)" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (reason.length > TEXT_LIMITS.flagReason) {
+      return new Response(
+        JSON.stringify({ error: `Reason must be at most ${TEXT_LIMITS.flagReason} characters` }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }

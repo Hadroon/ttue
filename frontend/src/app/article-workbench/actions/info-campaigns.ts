@@ -39,12 +39,12 @@ function safeUrl(value: string): string | null {
         </ul>
       }
       <form class="form-grid" (submit)="addMedia($event)">
-        <label class="field">Title <input name="title" required></label>
+        <label class="field">Title <input name="title" required maxlength="200"></label>
         <label class="field">Type
           <select name="type"><option>Infographic</option><option>Logo</option><option>Video</option><option>Press kit</option></select>
         </label>
-        <label class="field">Link <input name="url" type="url" required placeholder="https://…"></label>
-        <label class="field">License <input name="license" required value="CC BY 4.0"></label>
+        <label class="field">Link <input name="url" type="url" required maxlength="500" placeholder="https://…"></label>
+        <label class="field">License <input name="license" required maxlength="100" value="CC BY 4.0"></label>
         <div class="btn-row wide"><button class="abtn primary" type="submit">Share asset</button></div>
       </form>
     </section>
@@ -77,7 +77,7 @@ function safeUrl(value: string): string | null {
         <label class="field">Company ticker <input name="ticker" required placeholder="e.g. ACME" maxlength="12"></label>
         <label class="field">Shares needed to file <input name="threshold" type="number" min="1" step="1" required></label>
         <label class="field">Shares I hold <input name="mine" type="number" min="0" step="1" value="0"></label>
-        <label class="field wide">Resolution text <textarea name="text" rows="3" required></textarea></label>
+        <label class="field wide">Resolution text <textarea name="text" rows="3" required maxlength="5000"></textarea></label>
         <label class="field wide">Proof of ownership <input name="proof" type="file" disabled></label>
         <label class="check wide"><input type="checkbox" name="cosponsor" checked> Count the shares I hold towards this resolution</label>
         <div class="btn-row wide"><button class="abtn primary" type="submit">Start resolution</button></div>

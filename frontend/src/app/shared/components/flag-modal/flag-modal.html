@@ -18,9 +18,10 @@
       [(ngModel)]="reason"
       placeholder="Describe the issue (e.g. spam, offensive language, off-topic…)"
       rows="4"
+      maxlength="1000"
       [disabled]="submitting()"
     ></textarea>
-    <span class="flag-char-hint">{{ reason.length }} characters</span>
+    <span class="flag-char-hint">{{ reason.length }}/1000 characters</span>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">

@@ -60,10 +60,10 @@ import { ActionsStore, EconPledge, EconTarget } from './actions.store';
       <details>
         <summary>Add a target</summary>
         <form class="form-grid" style="margin-top:10px" (submit)="addTarget($event)">
-          <label class="field">Brand <input name="brand" required></label>
-          <label class="field">Parent company <input name="parent"></label>
-          <label class="field">Ethical alternative (optional) <input name="altName" placeholder="Local business or cooperative"></label>
-          <label class="field">Why it is a good alternative <input name="altNote"></label>
+          <label class="field">Brand <input name="brand" required maxlength="200"></label>
+          <label class="field">Parent company <input name="parent" maxlength="200"></label>
+          <label class="field">Ethical alternative (optional) <input name="altName" maxlength="200" placeholder="Local business or cooperative"></label>
+          <label class="field">Why it is a good alternative <input name="altNote" maxlength="500"></label>
           <div class="btn-row wide"><button class="abtn primary" type="submit">Add target</button></div>
         </form>
       </details>
@@ -91,7 +91,7 @@ import { ActionsStore, EconPledge, EconTarget } from './actions.store';
           <label class="field">Duration
             <select name="duration"><option>1 month</option><option>3 months</option><option>6 months</option><option>Until demands are met</option></select>
           </label>
-          <label class="field wide">Alternative vendor I will switch to (optional) <input name="alternative"></label>
+          <label class="field wide">Alternative vendor I will switch to (optional) <input name="alternative" maxlength="200"></label>
           <div class="btn-row wide"><button class="abtn primary" type="submit">Pledge</button></div>
         </form>
         @if (pledges().length > 0) {
@@ -126,8 +126,8 @@ import { ActionsStore, EconPledge, EconTarget } from './actions.store';
               @for (t of targets(); track t.id) { <option [value]="t.id">{{ t.brand }}</option> }
             </select>
           </label>
-          <label class="field">Sub-brand <input name="name" required></label>
-          <label class="field wide">Citation link <input name="citation" type="url" required placeholder="Company registry, annual report or news source"></label>
+          <label class="field">Sub-brand <input name="name" required maxlength="200"></label>
+          <label class="field wide">Citation link <input name="citation" type="url" required maxlength="500" placeholder="Company registry, annual report or news source"></label>
           <div class="btn-row wide"><button class="abtn primary" type="submit">Add mapping</button></div>
         </form>
         <p class="muted">Peer verification of mappings is not available yet, so every mapping is shown as unverified.</p>

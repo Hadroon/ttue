@@ -51,10 +51,10 @@ function wordDiff(before: string, after: string): DiffPart[] {
       </div>
       <div class="form-grid">
         <label class="field wide">Policy title
-          <input [value]="bill().title" (change)="setField('title', $any($event.target).value)">
+          <input maxlength="200" [value]="bill().title" (change)="setField('title', $any($event.target).value)">
         </label>
         <label class="field wide">Legislative intent
-          <textarea rows="3" [value]="bill().intent" (change)="setField('intent', $any($event.target).value)"></textarea>
+          <textarea rows="3" maxlength="2000" [value]="bill().intent" (change)="setField('intent', $any($event.target).value)"></textarea>
         </label>
       </div>
 
@@ -75,18 +75,18 @@ function wordDiff(before: string, after: string): DiffPart[] {
         </div>
       }
       <form class="form-grid" (submit)="addAmendment($event)">
-        <label class="field wide">Section reference <input name="section" required placeholder="e.g. Municipal Code §12.4(b)"></label>
-        <label class="field">Old text <textarea name="oldText" rows="3" placeholder="Leave empty for a new section"></textarea></label>
-        <label class="field">Proposed text <textarea name="newText" rows="3" required></textarea></label>
+        <label class="field wide">Section reference <input name="section" required maxlength="200" placeholder="e.g. Municipal Code §12.4(b)"></label>
+        <label class="field">Old text <textarea name="oldText" rows="3" maxlength="5000" placeholder="Leave empty for a new section"></textarea></label>
+        <label class="field">Proposed text <textarea name="newText" rows="3" required maxlength="5000"></textarea></label>
         <div class="btn-row wide"><button class="abtn" type="submit">Add amendment</button></div>
       </form>
 
       <div class="form-grid">
         <label class="field wide">Regulatory impact assessment
-          <textarea rows="3" [value]="bill().impact" (change)="setField('impact', $any($event.target).value)" placeholder="Who is affected, expected costs and benefits"></textarea>
+          <textarea rows="3" maxlength="5000" [value]="bill().impact" (change)="setField('impact', $any($event.target).value)" placeholder="Who is affected, expected costs and benefits"></textarea>
         </label>
         <label class="field wide">Citation links (one per line)
-          <textarea rows="3" [value]="bill().citations" (change)="setField('citations', $any($event.target).value)"></textarea>
+          <textarea rows="3" maxlength="5000" [value]="bill().citations" (change)="setField('citations', $any($event.target).value)"></textarea>
         </label>
       </div>
       <div class="btn-row">
@@ -112,10 +112,10 @@ function wordDiff(before: string, after: string): DiffPart[] {
         </ul>
       }
       <form class="form-grid" (submit)="addRep($event)">
-        <label class="field">Name <input name="name" required></label>
-        <label class="field">Office <input name="office" required placeholder="City council, parliament…"></label>
-        <label class="field">Email <input name="email" type="email"></label>
-        <label class="field">Phone <input name="phone" type="tel"></label>
+        <label class="field">Name <input name="name" required maxlength="200"></label>
+        <label class="field">Office <input name="office" required maxlength="200" placeholder="City council, parliament…"></label>
+        <label class="field">Email <input name="email" type="email" maxlength="200"></label>
+        <label class="field">Phone <input name="phone" type="tel" maxlength="50"></label>
         <div class="btn-row wide"><button class="abtn" type="submit">Add representative</button></div>
       </form>
     </section>
@@ -133,7 +133,7 @@ function wordDiff(before: string, after: string): DiffPart[] {
           </select>
         </label>
         <label class="field">Your postal code
-          <input [value]="postalCode()" (change)="setPostal($any($event.target).value)" autocomplete="postal-code">
+          <input maxlength="20" [value]="postalCode()" (change)="setPostal($any($event.target).value)" autocomplete="postal-code">
         </label>
         <label class="field wide">Message (editable)
           <textarea rows="8" [value]="message()" (input)="messageOverride.set($any($event.target).value)"></textarea>

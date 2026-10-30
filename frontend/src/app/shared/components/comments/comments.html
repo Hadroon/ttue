@@ -33,6 +33,7 @@
         (ngModelChange)="newCommentText.set($event)"
         placeholder="Share your thoughts, questions, or suggestions..."
         rows="3"
+        maxlength="2000"
         class="comment-textarea"></textarea>
       <div class="comment-actions">
         <button class="btn ghost sm" (click)="toggleCommentBox()">Cancel</button>
@@ -125,6 +126,7 @@
                   (ngModelChange)="replyText.set($event)"
                   placeholder="Write your reply..."
                   rows="2"
+                  maxlength="2000"
                   appAutofocus
                   class="comment-textarea"></textarea>
                 <div class="comment-actions">

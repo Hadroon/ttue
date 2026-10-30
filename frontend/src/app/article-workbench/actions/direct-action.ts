@@ -44,7 +44,7 @@ function safeUrl(value: string): string | null {
         <p class="muted">Break a local fix into a task people can fund and pick up, for example a mesh network, a water filter or a pocket park.</p>
       </header>
       <form class="form-grid" (submit)="addTask($event)">
-        <label class="field wide">Task title <input name="title" required></label>
+        <label class="field wide">Task title <input name="title" required maxlength="200"></label>
         <fieldset class="wide" style="border:none;padding:0;margin:0">
           <legend class="muted" style="margin-bottom:6px;font-weight:600">Skills required</legend>
           <div class="tags">
@@ -52,7 +52,7 @@ function safeUrl(value: string): string | null {
           </div>
         </fieldset>
         <label class="field">Estimated materials cost <input name="cost" type="number" min="0" step="1" required></label>
-        <label class="field">Location <input name="location" placeholder="Place or coordinates"></label>
+        <label class="field">Location <input name="location" maxlength="200" placeholder="Place or coordinates"></label>
         <label class="field wide">Milestones (one per line) <textarea name="milestones" rows="3" required></textarea></label>
         <div class="btn-row wide"><button class="abtn primary" type="submit">Add task</button></div>
       </form>
@@ -104,9 +104,9 @@ function safeUrl(value: string): string | null {
                     <details>
                       <summary>Apply / start work ({{ t.applicationCount }} {{ t.applicationCount === 1 ? 'application' : 'applications' }})</summary>
                       <form class="form-grid" style="margin-top:8px" (submit)="apply($event, t)">
-                        <label class="field wide">Cover note <textarea name="note" rows="2" required></textarea></label>
-                        <label class="field">Availability <input name="availability" required placeholder="e.g. weekends from May"></label>
-                        <label class="field">Tools and hardware I have <input name="tools"></label>
+                        <label class="field wide">Cover note <textarea name="note" rows="2" required maxlength="1000"></textarea></label>
+                        <label class="field">Availability <input name="availability" required maxlength="200" placeholder="e.g. weekends from May"></label>
+                        <label class="field">Tools and hardware I have <input name="tools" maxlength="200"></label>
                         <div class="btn-row wide"><button class="abtn primary sm" type="submit">Apply and start</button></div>
                       </form>
                     </details>
@@ -115,9 +115,9 @@ function safeUrl(value: string): string | null {
                     <details>
                       <summary>Submit completion</summary>
                       <form class="form-grid" style="margin-top:8px" (submit)="complete($event, t)">
-                        <label class="field wide">"Before" image link <input name="before" type="url" required></label>
-                        <label class="field wide">"After" image link <input name="after" type="url" required></label>
-                        <label class="field wide">What was done <textarea name="note" rows="2" required></textarea></label>
+                        <label class="field wide">"Before" image link <input name="before" type="url" required maxlength="500"></label>
+                        <label class="field wide">"After" image link <input name="after" type="url" required maxlength="500"></label>
+                        <label class="field wide">What was done <textarea name="note" rows="2" required maxlength="1000"></textarea></label>
                         <fieldset class="wide" style="border:none;padding:0;margin:0">
                           <legend class="muted" style="font-weight:600">Milestones completed</legend>
                           @for (m of t.milestones; track m) { <label class="check"><input type="checkbox" name="milestone"> {{ m }}</label> }
