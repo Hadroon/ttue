@@ -158,22 +158,27 @@ main {
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
-  border: 1px solid var(--border);
+  border: 2px solid transparent;
   border-radius: 14px;
-  background: var(--card);
+  background:
+    linear-gradient(#f8fafc, #f8fafc) padding-box,
+    linear-gradient(#e2e8f0, #e2e8f0) border-box;
   cursor: pointer;
-  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+  transition: background .15s ease, box-shadow .15s ease, transform .15s ease;
 }
 
 .type-option:hover {
-  border-color: #99f6e4;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #99f6e4, #bfdbfe) border-box;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .type-option.selected {
-  border-color: #14b8a6;
-  background: linear-gradient(135deg, #f0fdfa, #eff6ff);
-  box-shadow: 0 0 0 1px #14b8a6;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #14b8a6, #2563eb) border-box;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12), 0 4px 12px rgba(37, 99, 235, 0.10);
 }
 
 .type-text {
