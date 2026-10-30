@@ -96,6 +96,8 @@ export interface Vote {
   created_at: string;
 }
 
+export type ChallengeType = 'challenge' | 'proposal';
+
 export interface Challenge {
   id: number;
   creatorId?: number | null;
@@ -103,6 +105,7 @@ export interface Challenge {
   domainId?: number;
   domainSlug?: string;
   domainName?: string;
+  type?: ChallengeType;
   category: string;
   title: string;
   description: string;
@@ -327,6 +330,7 @@ export interface ChallengeSearch {
   from?: Date | null;
   to?: Date | null;
   tags?: string[];
+  type?: ChallengeType | null;
 }
 
 export interface IdeaRevision {
@@ -800,6 +804,7 @@ export class ApiService {
     if (filter.from) params['from'] = filter.from.toISOString();
     if (filter.to) params['to'] = filter.to.toISOString();
     if (filter.tags?.length) params['tag'] = filter.tags;
+    if (filter.type) params['type'] = filter.type;
 
     return this.http
       .get<FeaturedChallenge[]>(`${this.baseUrl}/challenges`, { params, observe: 'response' })
@@ -824,6 +829,7 @@ export class ApiService {
    * Create a new challenge
    */
   createChallenge(data: {
+    type?: ChallengeType;
     category: string;
     domainSlug: string;
     title: string;

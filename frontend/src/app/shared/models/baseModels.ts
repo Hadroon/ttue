@@ -17,6 +17,7 @@ export interface Challenge {
   id: number;
   creatorId?: number | null;
   creatorUsername?: string | null;
+  type?: 'challenge' | 'proposal';
   category: string;
   title: string;
   description: string;

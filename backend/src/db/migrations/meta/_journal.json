@@ -127,6 +127,13 @@
       "when": 1789295889412,
       "tag": "0017_challenge_action_items",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789295889413,
+      "tag": "0018_challenge_type",
+      "breakpoints": true
     }
   ]
 }

@@ -26,7 +26,7 @@
 
     <div class="challenge-body">
       <div class="challenge-step-row">
-        <span class="step-badge">1. Challenge</span>
+        <span class="step-badge">1. {{ challenge().type === 'proposal' ? 'Proposal' : 'Challenge' }}</span>
         <span class="share-tools">
           <app-share-button [title]="challenge().title" [text]="challenge().description" path="/article-workbench"
             [queryParams]="{ challengeId: challenge().id }" ariaLabel="Share this challenge">

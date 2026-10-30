@@ -22,6 +22,16 @@
             <legend class="group-title"><span class="group-icon" aria-hidden="true">📝</span>Basics</legend>
             <p class="group-hint">The essentials people see first in the challenge list.</p>
 
+            <div class="type-field">
+              <span class="type-label" id="type-label">Type</span>
+              <mat-button-toggle-group [(ngModel)]="challenge.type" name="type" aria-labelledby="type-label" hideSingleSelectionIndicator>
+                @for (option of typeOptions; track option.value) {
+                  <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+            </div>
+
+            <!-- Category and civic domain are hidden for now; defaults are sent from add-challenge.ts.
             <div class="field-row two">
               <mat-form-field appearance="outline">
                 <mat-label>Category</mat-label>
@@ -41,11 +51,16 @@
                 </mat-select>
               </mat-form-field>
             </div>
+            -->
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Title</mat-label>
               <input matInput [(ngModel)]="challenge.title" name="title" required maxlength="200" placeholder="A clear, concise problem statement">
-              <mat-hint>Describe the problem, not the solution &mdash; e.g. &ldquo;Rural areas lack reliable public transport&rdquo;.</mat-hint>
+                            @if (challenge.type === 'proposal') {
+                              <mat-hint>Name the change you propose &mdash; e.g. &ldquo;Run an hourly bus line to every rural village&rdquo;.</mat-hint>
+                            } @else {
+                              <mat-hint>Describe the problem, not the solution &mdash; e.g. &ldquo;Rural areas lack reliable public transport&rdquo;.</mat-hint>
+                            }
             </mat-form-field>
 
             <app-rich-text-editor
@@ -59,9 +74,10 @@
 
           <fieldset class="form-group">
             <legend class="group-title"><span class="group-icon alt" aria-hidden="true">⚙️</span>Details <span class="optional">optional</span></legend>
-            <p class="group-hint">Help contributors prioritise: how pressing is it, and by when do you need answers?</p>
+            <p class="group-hint">Help contributors prioritise: by when do you need answers?</p>
 
             <div class="field-row three">
+              <!-- Urgency and reward pool are hidden for now; defaults are sent from add-challenge.ts.
               <mat-form-field appearance="outline">
                 <mat-label>Urgency</mat-label>
                 <mat-select [(ngModel)]="challenge.urgency" name="urgency">
@@ -75,10 +91,10 @@
                 <mat-label>Reward pool</mat-label>
                 <input matInput [(ngModel)]="challenge.rewardPool" name="rewardPool" maxlength="100" placeholder="e.g., $5,000">
               </mat-form-field>
-
+                              -->
               <mat-form-field appearance="outline">
                 <mat-label>Deadline</mat-label>
-                <input matInput [matDatepicker]="picker" [(ngModel)]="challenge.deadline" name="deadline">
+                <input matInput [matDatepicker]="picker" [min]="minDeadline" [(ngModel)]="challenge.deadline" name="deadline">
                 <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
               </mat-form-field>
@@ -114,7 +130,7 @@
           <div class="form-actions">
             <button type="button" class="btn secondary" (click)="onCancel()" [disabled]="isSubmitting">Cancel</button>
             <button type="submit" class="btn primary" [disabled]="isSubmitting">
-              {{ isSubmitting ? 'Creating...' : 'Create Challenge' }}
+              {{ isSubmitting ? 'Creating...' : (challenge.type === 'proposal' ? 'Create Proposal' : 'Create Challenge') }}
             </button>
           </div>
         </form>

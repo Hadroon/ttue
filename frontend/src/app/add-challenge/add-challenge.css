@@ -145,6 +145,18 @@ main {
   gap: 16px;
 }
 
+.type-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.type-label {
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .field-row.two {
   grid-template-columns: repeat(2, 1fr);
 }

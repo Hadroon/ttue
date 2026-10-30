@@ -181,6 +181,7 @@ export const challenges = pgTable("challenges", {
   id: serial("id").primaryKey(),
   creatorId: integer("creator_id").references(() => users.id, { onDelete: "set null" }),
   domainId: integer("domain_id").notNull().references(() => domains.id, { onDelete: "restrict" }),
+  type: text("type").default("challenge").notNull(), // 'challenge', 'proposal'
   category: text("category").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
@@ -196,6 +197,8 @@ export const challenges = pgTable("challenges", {
 }, (table) => ({
   creatorIdx: index("challenge_creator_idx").on(table.creatorId),
   domainIdx: index("challenge_domain_idx").on(table.domainId),
+  typeIdx: index("challenge_type_idx").on(table.type),
+  typeCheck: check("challenge_type_check", sql`${table.type} IN ('challenge', 'proposal')`),
   categoryIdx: index("challenge_category_idx").on(table.category),
   urgencyIdx: index("challenge_urgency_idx").on(table.urgency),
   votesIdx: index("challenge_votes_idx").on(table.votes),

@@ -7,7 +7,7 @@
     @if (challenge()) {
       <header class="challenge-header">
         <div class="share-row">
-          <span class="category-badge">Challenge • {{ challenge()!.category }}</span>
+          <span class="category-badge">{{ challenge()!.type === 'proposal' ? 'Proposal' : 'Challenge' }} • {{ challenge()!.category }}</span>
           <app-share-button
             [title]="challenge()!.title"
             [text]="challenge()!.description"

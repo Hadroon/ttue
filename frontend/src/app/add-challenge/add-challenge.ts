@@ -10,9 +10,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { SigninModalComponent } from '../shared/components/signin-modal/signin-modal';
 import { AuthService } from '../shared/services/auth.service';
-import { ApiService } from '../shared/services/api.service';
+import { ApiService, ChallengeType } from '../shared/services/api.service';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { CivicDomain } from '../shared/models/civic-profile';
 
@@ -28,7 +29,8 @@ import { CivicDomain } from '../shared/models/civic-profile';
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatChipsModule
+    MatChipsModule,
+    MatButtonToggleModule
   ],
   templateUrl: './add-challenge.html',
   styleUrl: './add-challenge.css'
@@ -43,9 +45,12 @@ export class AddChallenge implements OnInit {
   isAuthenticated = false;
   isLoading = false;
 
+  // Category, domain, urgency and reward pool are hidden in the form for now,
+  // but the backend still requires them, so sensible defaults are submitted.
   challenge = {
-    category: '',
-    domainSlug: '',
+    type: 'challenge' as ChallengeType,
+    category: 'Other',
+    domainSlug: 'general-civic',
     title: '',
     description: '',
     urgency: 'Medium',
@@ -53,6 +58,11 @@ export class AddChallenge implements OnInit {
     deadline: null as Date | null,
     tags: [] as string[]
   };
+
+  readonly typeOptions: { value: ChallengeType; label: string }[] = [
+    { value: 'challenge', label: 'Challenge' },
+    { value: 'proposal', label: 'Proposal' }
+  ];
 
   categories = [
     'Environment',
@@ -69,13 +79,18 @@ export class AddChallenge implements OnInit {
   readonly domains = signal<CivicDomain[]>([]);
   readonly domainsLoading = signal(true);
 
+  readonly minDeadline = (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  })();
+
   tagInput = '';
   isSubmitting = false;
   errorMessage = '';
 
   ngOnInit() {
     this.checkAuthentication();
-    this.loadDomains();
   }
 
   private loadDomains() {
@@ -138,8 +153,12 @@ export class AddChallenge implements OnInit {
     if (!this.authGuard.requireAuth('submit a challenge')) {
       return;
     }
-    if (!this.challenge.title || !this.challenge.category || !this.challenge.domainSlug || !this.challenge.description) {
+    if (!this.challenge.title || !this.challenge.description) {
       this.errorMessage = 'Please fill in all required fields';
+      return;
+    }
+    if (this.challenge.deadline && this.challenge.deadline < this.minDeadline) {
+      this.errorMessage = 'Deadline cannot be in the past';
       return;
     }
     // The description is stored as HTML, so the limit includes formatting markup.
@@ -152,6 +171,7 @@ export class AddChallenge implements OnInit {
     this.errorMessage = '';
 
     const challengeData = {
+      type: this.challenge.type,
       category: this.challenge.category,
       domainSlug: this.challenge.domainSlug,
       title: this.challenge.title,

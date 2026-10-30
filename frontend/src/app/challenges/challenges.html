@@ -27,6 +27,13 @@
             </button>
           }
         </mat-form-field>
+        <mat-form-field class="toolbar-type" appearance="outline" subscriptSizing="dynamic">
+          <mat-select aria-label="Filter by type" [value]="typeFilter()" (selectionChange)="typeFilter.set($event.value)">
+            <mat-option [value]="null">All types</mat-option>
+            <mat-option value="challenge">Challenges</mat-option>
+            <mat-option value="proposal">Proposals</mat-option>
+          </mat-select>
+        </mat-form-field>
         <mat-form-field class="toolbar-date" appearance="outline" subscriptSizing="dynamic">
           <mat-date-range-input [rangePicker]="rangePicker" aria-label="Created between">
             <input matStartDate placeholder="From" [value]="fromDate()" (dateChange)="fromDate.set($event.value)">

@@ -12,15 +12,16 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
 import { Header, ChallengeItem } from '../shared/components';
-import { ApiService, FeaturedChallenge } from '../shared/services/api.service';
+import { ApiService, ChallengeType, FeaturedChallenge } from '../shared/services/api.service';
 import { Idea, Comment as BaseComment } from '../shared/models/baseModels';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
 import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-challenges',
-  imports: [Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule, MatPaginatorModule],
+  imports: [Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule, MatSelectModule, MatPaginatorModule],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })
@@ -41,6 +42,7 @@ export class Challenges implements OnInit {
   searchTerm = signal('');
   fromDate = signal<Date | null>(null);
   toDate = signal<Date | null>(null);
+  typeFilter = signal<ChallengeType | null>(null);
   selectedTags = toSignal(
     this.route.queryParamMap.pipe(
       map(params => params.getAll('tag')),
@@ -72,7 +74,8 @@ export class Challenges implements OnInit {
       from: this.fromDate(),
       // Server treats `to` as exclusive, so send the start of the next day
       to: to ? new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1) : null,
-      tags: this.selectedTags()
+      tags: this.selectedTags(),
+      type: this.typeFilter()
     };
   });
 

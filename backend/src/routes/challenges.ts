@@ -5,6 +5,8 @@ import { authenticate, optionalAuth } from "../middleware/auth";
 import { applyReputationChange, getVoteDelta } from "../services/reputation";
 import { TEXT_LIMITS, checkTextLimits, checkTagList, lengthError } from "../utils/text-limits";
 
+export const CHALLENGE_TYPES = ["challenge", "proposal"] as const;
+
 // Get all challenges with top idea and comments
 export async function handleGetChallenges(req: Request): Promise<Response> {
   const authResult = await optionalAuth(req);
@@ -32,6 +34,10 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
     if (tagList.length) {
       filters.push(sql`${challenges.tags}::jsonb @> ${JSON.stringify(tagList)}::jsonb`);
     }
+    const type = url.searchParams.get('type');
+    if (type && (CHALLENGE_TYPES as readonly string[]).includes(type)) {
+      filters.push(eq(challenges.type, type));
+    }
     const where = filters.length ? and(...filters) : undefined;
 
     const [{ total }] = await db
@@ -44,6 +50,7 @@ export async function handleGetChallenges(req: Request): Promise<Response> {
         id: challenges.id,
         creatorId: challenges.creatorId,
         creatorUsername: users.username,
+        type: challenges.type,
         category: challenges.category,
         title: challenges.title,
         description: challenges.description,
@@ -221,7 +228,14 @@ export async function handleCreateChallenge(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const { category, domainSlug, title, description, urgency, rewardPool, deadline, tags: tagList } = await req.json();
+    const { type = "challenge", category, domainSlug, title, description, urgency, rewardPool, deadline, tags: tagList } = await req.json();
+
+    if (!(CHALLENGE_TYPES as readonly string[]).includes(type)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid type. Must be challenge or proposal" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     // Validate input
     if (!category || !domainSlug || !title || !description || !urgency) {
@@ -267,6 +281,7 @@ export async function handleCreateChallenge(req: Request): Promise<Response> {
       .values({
         creatorId: authResult.user.userId,
         domainId: domain.id,
+        type,
         category,
         title,
         description,
