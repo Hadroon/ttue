@@ -334,10 +334,13 @@
 
   @if (activeSection() === 'ideas') {
     <div class="card-body ideas-container" id="ideas">
-      <header class="section-head">
-        <div>
-          <h2>Ideas</h2>
-          <p class="section-subtitle">Community-submitted ideas for this challenge, ranked by votes.</p>
+      <header class="section-head ideas-head">
+        <div class="ideas-head-text">
+          <span class="head-icon" aria-hidden="true">💡</span>
+          <div>
+            <h2>Ideas</h2>
+            <p class="section-subtitle">Community-submitted ideas for this challenge, ranked by votes.</p>
+          </div>
         </div>
         <button type="button" class="btn primary" (click)="navigateToAddIdea()">Add Idea</button>
       </header>

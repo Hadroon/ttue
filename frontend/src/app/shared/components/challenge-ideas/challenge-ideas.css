@@ -592,6 +592,157 @@ button.btn-link {
   }
 }
 
+/* Full (non-compact) layout, used on the workbench Ideas tab */
+.challenge-ideas-container.full {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.challenge-ideas-container.full .ideas-header {
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel, var(--card));
+}
+
+.challenge-ideas-container.full .ideas-count mat-icon {
+  color: #d97706;
+}
+
+.challenge-ideas-container.full .control-group select {
+  border-radius: 8px;
+  padding: 7px 28px 7px 10px;
+}
+
+.challenge-ideas-container.full .ideas-grid {
+  gap: 16px;
+}
+
+.challenge-ideas-container.full .idea-card-mini {
+  position: relative;
+  overflow: hidden;
+  padding: 20px 22px 0;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.challenge-ideas-container.full .idea-card-mini::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(to bottom, #14b8a6, #2563eb);
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+
+.challenge-ideas-container.full .idea-card-mini:hover,
+.challenge-ideas-container.full .idea-card-mini:focus-within {
+  border-color: color-mix(in srgb, #14b8a6 45%, var(--border));
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.challenge-ideas-container.full .idea-card-mini:hover::before,
+.challenge-ideas-container.full .idea-card-mini:focus-within::before {
+  opacity: 1;
+}
+
+.challenge-ideas-container.full .step-badge-solution {
+  border-radius: 999px;
+  padding: 3px 12px;
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+/* vote button in its own column, text stacked beside it */
+.challenge-ideas-container.full .idea-card-body {
+  display: grid;
+  grid-template-columns: var(--vote-col) minmax(0, 1fr);
+  column-gap: var(--vote-gap);
+  align-items: start;
+}
+
+.challenge-ideas-container.full .idea-vote-row {
+  display: contents;
+}
+
+.challenge-ideas-container.full .vote-btn-mini {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  border-radius: 14px;
+  background: var(--panel, var(--card));
+}
+
+.challenge-ideas-container.full .idea-title {
+  grid-column: 2;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 2px 0 0;
+}
+
+.challenge-ideas-container.full .idea-description-mini {
+  grid-column: 2;
+  margin: 8px 0 14px;
+}
+
+.challenge-ideas-container.full .idea-footer {
+  grid-column: 2;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.challenge-ideas-container.full .idea-card-actions {
+  margin: 16px -22px 0;
+  padding: 0;
+  background: var(--panel, var(--card));
+}
+
+.challenge-ideas-container.full .idea-card-actions .btn-link {
+  display: block;
+  width: 100%;
+  padding: 12px 22px;
+  text-align: left;
+}
+
+.challenge-ideas-container.full .idea-card-actions .btn-link:hover {
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.challenge-ideas-container.full .idea-card-mini app-comments {
+  padding: 12px 22px 16px;
+  margin: 0 -22px;
+}
+
+.challenge-ideas-container.full .page-btn.active {
+  background: linear-gradient(135deg, #14b8a6, #2563eb);
+  border-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .challenge-ideas-container.full {
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .challenge-ideas-container.full {
+    padding: 0;
+  }
+
+  .challenge-ideas-container.full .idea-card-body {
+    --vote-col: 52px;
+    --vote-gap: 14px;
+  }
+}
+
 /* Connector adjustments on smaller screens - none needed now */
 
 /* Dark/Light Mode Support */

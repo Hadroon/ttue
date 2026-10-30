@@ -1,4 +1,4 @@
-<div class="challenge-ideas-container" [class.expanded]="isExpanded">
+<div class="challenge-ideas-container" [class.expanded]="isExpanded" [class.full]="!compact">
   @if (filteredIdeas.length === 0) {
     <div class="empty-state">
       <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon>
