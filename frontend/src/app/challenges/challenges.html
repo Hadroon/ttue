@@ -29,7 +29,7 @@
         </mat-form-field>
         <mat-form-field class="toolbar-type" appearance="outline" subscriptSizing="dynamic">
           <mat-select aria-label="Filter by type" [value]="typeFilter()" (selectionChange)="typeFilter.set($event.value)">
-            <mat-option [value]="null">All types</mat-option>
+            <mat-option value="">All types</mat-option>
             <mat-option value="challenge">Challenges</mat-option>
             <mat-option value="proposal">Proposals</mat-option>
           </mat-select>

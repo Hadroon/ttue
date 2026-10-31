@@ -42,7 +42,8 @@ export class Challenges implements OnInit {
   searchTerm = signal('');
   fromDate = signal<Date | null>(null);
   toDate = signal<Date | null>(null);
-  typeFilter = signal<ChallengeType | null>(null);
+  // '' means "All types"; mat-select doesn't display an option whose value is null
+  typeFilter = signal<ChallengeType | ''>('');
   selectedTags = toSignal(
     this.route.queryParamMap.pipe(
       map(params => params.getAll('tag')),
@@ -75,7 +76,7 @@ export class Challenges implements OnInit {
       // Server treats `to` as exclusive, so send the start of the next day
       to: to ? new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1) : null,
       tags: this.selectedTags(),
-      type: this.typeFilter()
+      type: this.typeFilter() || null
     };
   });
 
