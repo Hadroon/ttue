@@ -458,7 +458,7 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
   const userId = authResult instanceof Response ? null : (authResult.user?.userId ?? null);
 
   try {
-    // Get the top 3 highest voted challenges with minimum 1 vote
+    // Top 3 by votes; unvoted challenges fill in, newest first
     const topChallenges = await db
       .select({
         ...getTableColumns(challenges),
@@ -466,14 +466,13 @@ export async function handleGetFeaturedChallenge(req: Request): Promise<Response
       })
       .from(challenges)
       .leftJoin(users, eq(challenges.creatorId, users.id))
-      .where(sql`${challenges.votes} >= 1`)
       .orderBy(desc(challenges.votes), desc(challenges.createdAt))
       .limit(3);
 
     if (topChallenges.length === 0) {
       return new Response(
-        JSON.stringify({ error: "No featured challenges available" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
+        JSON.stringify([]),
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
