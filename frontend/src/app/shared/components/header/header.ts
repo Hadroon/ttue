@@ -1,17 +1,24 @@
-import { Component, ElementRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, ElementRef, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { SigninModalComponent } from '../signin-modal/signin-modal';
+import { AuthService } from '../../services/auth.service';
+import { ShareButton } from '../share-button/share-button';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink],
+  imports: [RouterLink, CommonModule, ShareButton],
   templateUrl: './header.html',
   styleUrl: './header.css'
 })
 export class Header {
   private navOpen = false;
-
-  constructor(private elementRef: ElementRef) {}
-
+  private elementRef = inject(ElementRef);
+  private dialog = inject(MatDialog);
+  private router = inject(Router);
+  readonly authService = inject(AuthService);
+  // toggleNav
   toggleNav() {
     this.navOpen = !this.navOpen;
     if (this.navOpen) {
@@ -24,5 +31,31 @@ export class Header {
     if (toggle) {
       toggle.setAttribute('aria-expanded', String(this.navOpen));
     }
+  }
+
+  // The page's own headline and intro line become the shared title and summary
+  readonly pageShareContent = (): { title?: string; text?: string } => {
+    const read = (selector: string) =>
+      document.querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim() || undefined;
+    return {
+      title: read('h1.title') ?? read('main h1') ?? read('.title'),
+      text: read('.lead'),
+    };
+  };
+
+  openSignInModal() {
+    this.dialog.open(SigninModalComponent, {
+      width: '400px',
+      panelClass: 'signin-modal',
+      data: {
+        title: 'Sign In',
+        message: 'Sign in to participate in discussions and create proposals'
+      }
+    });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
   }
 }

@@ -1,0 +1,174 @@
+<!-- ===== Header ===== -->
+<app-header></app-header>
+
+<main id="main" role="main">
+  @if (isAuthenticated()) {
+    <section class="hero">
+      <div class="container page-head">
+        <div class="kicker">New challenge</div>
+        <h1>Name a problem. <span class="gradient-text">Let everyone solve it.</span></h1>
+        <p class="lead">
+          Every blueprint starts with a clearly described problem. Tell the community what is going wrong, who it affects and why it matters &mdash; then open it up for <strong>ideas, evidence and expert review</strong>.
+        </p>
+      </div>
+    </section>
+
+    <section class="challenge-form-section">
+      <div class="container form-layout">
+        <form class="form-card" (ngSubmit)="onSubmit()">
+          <div class="card-accent" aria-hidden="true"></div>
+
+          <fieldset class="form-group">
+            <legend class="group-title"><span class="group-icon" aria-hidden="true">📝</span>Basics</legend>
+            <p class="group-hint">The essentials people see first in the challenge list.</p>
+
+            <div class="type-options" role="radiogroup" aria-label="Type">
+              @for (option of typeOptions; track option.value) {
+                <label class="type-option" [class.selected]="challenge.type === option.value">
+                  <input type="radio" class="visually-hidden" name="type" [value]="option.value" [(ngModel)]="challenge.type">
+                  <span class="type-icon" [class.alt]="option.value === 'proposal'" aria-hidden="true">{{ option.icon }}</span>
+                  <span class="type-text">
+                    <span class="type-title">{{ option.label }}</span>
+                    <span class="type-desc">{{ option.description }}</span>
+                  </span>
+                  <span class="type-check" aria-hidden="true">✓</span>
+                </label>
+              }
+            </div>
+
+            <!-- Category and civic domain are hidden for now; defaults are sent from add-challenge.ts.
+            <div class="field-row two">
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <mat-select [(ngModel)]="challenge.category" name="category" required>
+                  @for (category of categories; track category) {
+                    <mat-option [value]="category">{{ category }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Civic domain</mat-label>
+                <mat-select [(ngModel)]="challenge.domainSlug" name="domainSlug" required [disabled]="domainsLoading()">
+                  @for (domain of domains(); track domain.slug) {
+                    <mat-option [value]="domain.slug">{{ domain.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            -->
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Title</mat-label>
+              <input matInput [(ngModel)]="challenge.title" name="title" required maxlength="200" placeholder="A clear, concise problem statement">
+                            @if (challenge.type === 'proposal') {
+                              <mat-hint>Name the change you propose &mdash; e.g. &ldquo;Run an hourly bus line to every rural village&rdquo;.</mat-hint>
+                            } @else {
+                              <mat-hint>Describe the problem, not the solution &mdash; e.g. &ldquo;Rural areas lack reliable public transport&rdquo;.</mat-hint>
+                            }
+            </mat-form-field>
+
+            <app-rich-text-editor
+              label="Description"
+              required
+              placeholder="Explain the context, who is affected, and why it matters"
+              [(ngModel)]="challenge.description"
+              name="description">
+            </app-rich-text-editor>
+          </fieldset>
+
+          <fieldset class="form-group">
+            <legend class="group-title"><span class="group-icon alt" aria-hidden="true">⚙️</span>Details <span class="optional">optional</span></legend>
+            <p class="group-hint">Help contributors prioritise: by when do you need answers?</p>
+
+            <div class="field-row three">
+              <!-- Urgency and reward pool are hidden for now; defaults are sent from add-challenge.ts.
+              <mat-form-field appearance="outline">
+                <mat-label>Urgency</mat-label>
+                <mat-select [(ngModel)]="challenge.urgency" name="urgency">
+                  @for (level of urgencyLevels; track level) {
+                    <mat-option [value]="level">{{ level }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Reward pool</mat-label>
+                <input matInput [(ngModel)]="challenge.rewardPool" name="rewardPool" maxlength="100" placeholder="e.g., $5,000">
+              </mat-form-field>
+                              -->
+              <mat-form-field appearance="outline">
+                <mat-label>Deadline</mat-label>
+                <input matInput [matDatepicker]="picker" [min]="minDeadline" [(ngModel)]="challenge.deadline" name="deadline">
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <div class="tags-section">
+              <mat-form-field appearance="outline" class="tag-input">
+                <mat-label>Tags</mat-label>
+                <input matInput [(ngModel)]="tagInput" name="tagInput" maxlength="50"
+                       (keydown.enter)="$event.preventDefault(); addTag()"
+                       placeholder="Type a tag and press Enter">
+                <mat-hint>Tags make your challenge easier to find.</mat-hint>
+              </mat-form-field>
+              <button type="button" class="btn secondary add-tag-btn" (click)="addTag()">Add</button>
+            </div>
+
+            @if (challenge.tags.length > 0) {
+              <mat-chip-set class="tag-chips">
+                @for (tag of challenge.tags; track tag) {
+                  <mat-chip (removed)="removeTag(tag)">
+                    {{ tag }}
+                    <button matChipRemove aria-label="Remove tag">✕</button>
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            }
+          </fieldset>
+
+          @if (errorMessage) {
+            <div class="error-message" role="alert">{{ errorMessage }}</div>
+          }
+
+          <div class="form-actions">
+            <button type="button" class="btn secondary" (click)="onCancel()" [disabled]="isSubmitting">Cancel</button>
+            <button type="submit" class="btn primary" [disabled]="isSubmitting">
+              {{ isSubmitting ? 'Creating...' : (challenge.type === 'proposal' ? 'Create Proposal' : 'Create Challenge') }}
+            </button>
+          </div>
+        </form>
+
+        <aside class="side" aria-label="Guidance">
+          <section class="side-card">
+            <div class="card-accent" aria-hidden="true"></div>
+            <h2><span aria-hidden="true">💡</span> What makes a strong challenge</h2>
+            <ul class="check-list">
+              <li><strong>Be specific.</strong> Name the place, group or system affected.</li>
+              <li><strong>Stick to facts.</strong> Link data, reports or lived experience where you can.</li>
+              <li><strong>Stay neutral.</strong> Frame the problem so people of any view can contribute.</li>
+              <li><strong>One problem at a time.</strong> Split big topics into separate challenges.</li>
+            </ul>
+          </section>
+
+          <section class="side-card alt">
+            <div class="card-accent" aria-hidden="true"></div>
+            <h2><span aria-hidden="true">🧭</span> What happens next</h2>
+            <ol class="next-list">
+              <li><span>1</span>Your challenge goes live and is open for community ideas.</li>
+              <li><span>2</span>Contributors add facts, evidence and draft solutions.</li>
+              <li><span>3</span>Experts review the strongest proposals before they refine into a blueprint.</li>
+            </ol>
+          </section>
+        </aside>
+      </div>
+    </section>
+  } @else {
+    <section class="challenge-form-section signed-out">
+      <div class="container">
+        <p>Please sign in to create a challenge...</p>
+      </div>
+    </section>
+  }
+</main>

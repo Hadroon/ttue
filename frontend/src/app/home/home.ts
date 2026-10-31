@@ -1,116 +1,155 @@
-import { Component, inject, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Header } from '../shared/components';
-import { ApiService } from '../shared/services/api.service';
+import { Header, ChallengeGrid2x2, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem, DemoCard } from '../shared/components';
+import { ApiService, FeaturedChallenge, Idea as ApiIdea, Comment as ApiComment } from '../shared/services/api.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-
-interface Challenge {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  urgency: 'Low' | 'Medium' | 'High' | 'Critical';
-  participantCount: number;
-  rewardPool?: string;
-  deadline?: Date;
-  tags: string[];
-}
-
-interface Idea {
-  id: string;
-  title: string;
-  description: string;
-  author: string;
-  votes: number;
-  category: string;
-  status: 'New' | 'Under Review' | 'In Development' | 'Implemented';
-  createdAt: Date;
-}
+import { Challenge, Idea, Comment } from '../shared/models/baseModels';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { AddChallengeModalComponent } from '../shared/components/add-challenge-modal/add-challenge-modal';
+import { DonationModalComponent } from '../shared/components/donation-modal/donation-modal';
+import { AuthGuardService } from '../shared/services/auth-guard.service';
+import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule],
+  imports: [RouterLink, Header, FormsModule, MatFormFieldModule, MatInputModule, ChallengeItem, MatIconModule, DemoCard],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
-export class Home {
+export class Home implements OnInit {
   environment = environment;
   apiService = inject(ApiService);
+  dialog = inject(MatDialog);
+  authGuard = inject(AuthGuardService);
+  authService = inject(AuthService);
   activeTab: 'challenges' | 'ideas' = 'challenges';
   welcome : WritableSignal<boolean> = signal(false);
   welcomePassword = '';
+  challenges = signal<Challenge[]>([]);
+  isLoadingChallenges = false;
+  featuredChallenges = signal<Challenge[]>([]);
+  featuredIdeasMap = signal<Map<number, Idea[]>>(new Map());
+  featuredIdeaCountMap = signal<Map<number, number>>(new Map());
+  featuredCommentsMap = signal<Map<number, Comment[]>>(new Map());
+  isLoadingFeatured = false;
 
-  challenges: Challenge[] = [
-    {
-      id: 'climate-adaptation',
-      category: 'Environment',
-      title: 'Climate Adaptation Strategies',
-      description: 'Develop comprehensive policy frameworks for cities to adapt to climate change impacts including flooding, heat waves, and extreme weather events.',
-      urgency: 'Critical',
-      participantCount: 347,
-      rewardPool: '$50,000',
-      deadline: new Date('2025-12-15'),
-      tags: ['climate', 'adaptation', 'urban-planning', 'emergency-response']
-    },
-    {
-      id: 'digital-equity',
-      category: 'Technology',
-      title: 'Digital Equity and Access',
-      description: 'Create policies ensuring equitable access to digital infrastructure, devices, and digital literacy programs for underserved communities.',
-      urgency: 'High',
-      participantCount: 892,
-      rewardPool: '$25,000',
-      deadline: new Date('2025-11-30'),
-      tags: ['digital-divide', 'accessibility', 'education', 'infrastructure']
-    },
-    {
-      id: 'affordable-housing',
-      category: 'Housing',
-      title: 'Affordable Housing Innovation',
-      description: 'Design innovative policy solutions to address the affordable housing crisis while promoting sustainable development.',
-      urgency: 'Critical',
-      participantCount: 1456,
-      rewardPool: '$75,000',
-      deadline: new Date('2026-01-31'),
-      tags: ['housing', 'affordability', 'zoning', 'sustainability']
-    }
-  ];
+  ngOnInit() {
+    let needWelcome = window.location.hostname?.toString().includes('localhost')
+    this.welcome.set(needWelcome);
+    this.loadFeaturedChallenge();
+    // Refresh voted state now that requests carry the auth token
+    this.authService.loginSuccess$.subscribe(() => this.loadFeaturedChallenge());
+  }
 
-  ideas: Idea[] = [
-    {
-      id: 'community-energy',
-      title: 'Community Energy Cooperatives',
-      description: 'Enable neighborhoods to form energy cooperatives for shared renewable energy systems with favorable regulatory frameworks.',
-      author: 'Dr. Sarah Chen',
-      votes: 234,
-      category: 'Energy',
-      status: 'Under Review',
-      createdAt: new Date('2025-08-15')
-    },
-    {
-      id: 'mobile-voting',
-      title: 'Secure Mobile Voting Platform',
-      description: 'Develop blockchain-based mobile voting system for local elections with enhanced security and accessibility features.',
-      author: 'Marcus Rodriguez',
-      votes: 189,
-      category: 'Democracy',
-      status: 'In Development',
-      createdAt: new Date('2025-07-22')
-    },
-    {
-      id: 'green-tax-incentives',
-      title: 'Progressive Green Tax Incentives',
-      description: 'Implement tiered tax incentives for businesses and individuals based on measurable environmental impact reductions.',
-      author: 'Prof. Elena Vasquez',
-      votes: 156,
-      category: 'Environment',
-      status: 'New',
-      createdAt: new Date('2025-09-01')
+  loadFeaturedChallenge() {
+    this.isLoadingFeatured = true;
+    this.apiService.getFeaturedChallenge().subscribe({
+      next: (featuredList) => {
+        console.log('Loaded featured challenges:', featuredList);
+        
+        const challengesList: Challenge[] = [];
+        const ideasMap = new Map<number, Idea[]>();
+        const ideaCountMap = new Map<number, number>();
+        const commentsMap = new Map<number, Comment[]>();
+        
+        // Process each featured challenge
+        featuredList.forEach(featured => {
+          // Convert API Challenge to component Challenge model
+          const challenge: Challenge = {
+            ...featured.challenge,
+            deadline: featured.challenge.deadline ? new Date(featured.challenge.deadline) : undefined
+          };
+          challengesList.push(challenge);
+          console.log('✅ Processed featured challenge:', challenge);
+          ideaCountMap.set(challenge.id, featured.ideaCount);
+          
+          // Convert API Idea to component Idea model
+          if (featured.topIdea) {
+            const idea: Idea = {
+              id: featured.topIdea.id.toString(),
+              title: featured.topIdea.title,
+              description: featured.topIdea.content,
+              author: featured.topIdea.authorDisplayName || featured.topIdea.authorUsername || 'Unknown',
+              authorUsername: featured.topIdea.authorUsername,
+              votes: featured.topIdea.score,
+              category: featured.challenge.category,
+              status: 'Under Review',
+              createdAt: new Date(featured.topIdea.createdAt || Date.now()),
+              challengeId: featured.challenge.id.toString(),
+              voted: featured.topIdea.voted || false
+            };
+            ideasMap.set(challenge.id, [idea]);
+            console.log('✅ Set idea for challenge', challenge.id, ':', [idea]);
+          } else {
+            ideasMap.set(challenge.id, []);
+            console.log('⚠️ No top idea found for challenge', challenge.id);
+          }
+          
+          // Convert API Comments to component Comment model
+          const comments: Comment[] = featured.comments.map((c: ApiComment) => ({
+            id: c.id.toString(),
+            author: c.authorDisplayName || c.authorUsername || 'Unknown',
+            authorUsername: c.authorUsername,
+            content: c.content,
+            createdAt: new Date(c.createdAt || Date.now()),
+            votes: c.score,
+            parentId: c.parentId?.toString(),
+            challengeId: c.challengeId?.toString(),
+            voted: c.voted || false
+          }));
+          commentsMap.set(challenge.id, comments);
+          console.log('✅ Set comments for challenge', challenge.id, ':', comments);
+        });
+        
+        this.featuredChallenges.set(challengesList);
+        this.featuredIdeasMap.set(ideasMap);
+        this.featuredIdeaCountMap.set(ideaCountMap);
+        this.featuredCommentsMap.set(commentsMap);
+        
+        this.isLoadingFeatured = false;
+      },
+      error: (error) => {
+        console.error('Error loading featured challenges:', error);
+        this.isLoadingFeatured = false;
+        // Set to empty on error
+        this.featuredChallenges.set([]);
+        this.featuredIdeasMap.set(new Map());
+        this.featuredIdeaCountMap.set(new Map());
+        this.featuredCommentsMap.set(new Map());
+      }
+    });
+  }
+
+  // getIdeasCount(challengeId: string): number {
+  //   return this.ideas.filter(i => i.challengeId === challengeId).length;
+  // }
+
+  onVoteChallenge(challengeId: number) {
+    if (!this.authGuard.requireAuth('vote on this challenge')) {
+      return;
     }
-  ];
+    this.apiService.voteChallenge(challengeId).subscribe({
+      next: (response: { message: string; voted: boolean }) => {
+        console.log('Vote response for challenge', challengeId, ':', response);
+        const voted = response.voted;
+        this.featuredChallenges.update(challenges => 
+          challenges.map(c => 
+            c.id === challengeId 
+              ? { ...c, votes: c.votes + (voted ? 1 : -1), voted }
+              : c
+          )
+        );
+      },
+      error: (error) => {
+        console.error('Error voting on challenge:', error);
+      }
+    });
+  }
 
   switchTab(tabName: 'challenges' | 'ideas') {
     this.activeTab = tabName;
@@ -150,10 +189,87 @@ export class Home {
   }
 
   onVoteIdea(ideaId: string) {
-    const idea = this.ideas.find(i => i.id === ideaId);
-    if (idea) {
-      idea.votes++;
+    if (!this.authGuard.requireAuth('vote on this idea')) {
+      return;
     }
+    console.log('Voting on idea:', ideaId);
+    const postId = parseInt(ideaId);
+    this.apiService.voteIdea(postId).subscribe({
+      next: (response: { message: string; score: number; voted: boolean }) => {
+        console.log('Vote response for idea', ideaId, ':', response);
+        const voted = response.voted;
+        this.featuredIdeasMap.update(ideasMap => {
+          const newMap = new Map(ideasMap);
+          newMap.forEach((ideas, challengeId) => {
+            const updatedIdeas = ideas.map(i => 
+              i.id === ideaId
+                ? { ...i, votes: i.votes + (voted ? 1 : -1), voted }
+                : i
+            );
+            newMap.set(challengeId, updatedIdeas);
+          });
+          return newMap;
+        });
+      },
+      error: (error: any) => {
+        console.error('Error voting on idea:', error);
+      }
+    });
+  }
+
+  onVoteComment(commentId: string) {
+    if (!this.authGuard.requireAuth('vote on this comment')) {
+      return;
+    }
+    const commentIdNum = parseInt(commentId);
+    this.apiService.voteComment(commentIdNum).subscribe({
+      next: (response: { message: string; score: number; voted: boolean }) => {
+        console.log('Vote response for comment', commentId, ':', response);
+        const voted = response.voted;
+        this.featuredCommentsMap.update(commentsMap => {
+          const newMap = new Map(commentsMap);
+          newMap.forEach((comments, challengeId) => {
+            const updatedComments = comments.map(c => 
+              c.id === commentId
+                ? { ...c, votes: c.votes + (voted ? 1 : -1), voted }
+                : c
+            );
+            newMap.set(challengeId, updatedComments);
+          });
+          return newMap;
+        });
+      },
+      error: (error) => {
+        console.error('Error voting on comment:', error);
+      }
+    });
+  }
+
+  getIdeasForChallenge(challengeId: number): Idea[] {
+    return this.featuredIdeasMap().get(challengeId) || [];
+  }
+
+  getIdeaCountForChallenge(challengeId: number): number {
+    return this.featuredIdeaCountMap().get(challengeId) ?? 0;
+  }
+
+  getCommentsForChallenge(challengeId: number): Comment[] {
+    return this.featuredCommentsMap().get(challengeId) || [];
+  }
+
+  onChallengeClick(challengeId: number) {
+    console.log('Challenge clicked:', challengeId);
+    // Navigate to challenge detail page or open modal
+  }
+
+  onIdeaClick(ideaId: string) {
+    console.log('Idea clicked:', ideaId);
+    // Navigate to idea detail page or open modal
+  }
+
+  onViewAllComments(challengeId: number) {
+    console.log('View all comments for challenge:', challengeId);
+    // Navigate to full discussion page
   }
 
   enterForum() {
@@ -169,6 +285,29 @@ export class Home {
       error: (error) => {
         console.error('Error checking welcome:', error);
         // Optionally show error message to user
+      }
+    });
+  }
+
+  openDonationModal() {
+    this.dialog.open(DonationModalComponent, {
+      width: '520px',
+      maxWidth: '90vw'
+    });
+  }
+
+  openAddChallengeModal() {
+    const dialogRef = this.dialog.open(AddChallengeModalComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      panelClass: 'add-challenge-modal'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.success) {
+        console.log('Challenge created:', result.challenge);
+        // Reload challenges to show the new one
+        this.loadFeaturedChallenge();
       }
     });
   }

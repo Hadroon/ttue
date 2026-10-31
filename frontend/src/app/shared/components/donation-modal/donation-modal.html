@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>Support our work</h2>
+
+<mat-dialog-content>
+  @switch (step()) {
+    @case ('loading') {
+      <p>Loading&hellip;</p>
+    }
+    @case ('unavailable') {
+      <p>Donations are not available right now. Please try again later.</p>
+    }
+    @case ('amount') {
+      @if (data.label) {
+        <p class="target">You are supporting: <strong>{{ data.label }}</strong></p>
+      }
+      <p>Choose any amount for a one-time donation. Thank you for keeping this platform independent!</p>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Amount ({{ currencyLabel }})</mat-label>
+        <input matInput type="number" inputmode="decimal" [min]="minMajor" [max]="maxMajor" step="1"
+               [(ngModel)]="amount" name="amount" (keydown.enter)="continue()">
+      </mat-form-field>
+    }
+    @case ('paying') {
+      <div id="checkout-form"></div>
+    }
+    @case ('done') {
+      @if (paid()) {
+        <p>Thank you for your support! ❤️</p>
+      } @else {
+        <p>Thank you! Your payment is being processed. It will be recorded as soon as Stripe confirms it.</p>
+      }
+    }
+  }
+  @if (error()) {
+    <div class="error-message" role="alert">{{ error() }}</div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="close()">{{ step() === 'done' ? 'Close' : 'Cancel' }}</button>
+  @if (step() === 'amount') {
+    <button mat-flat-button type="button" [disabled]="busy()" (click)="continue()">Continue</button>
+  }
+</mat-dialog-actions>

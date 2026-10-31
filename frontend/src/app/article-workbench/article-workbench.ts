@@ -1,0 +1,893 @@
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { AfterViewInit, Component, ElementRef, Inject, PLATFORM_ID, ViewChild, WritableSignal, signal, computed, effect, viewChild } from '@angular/core';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { MatTabsModule } from '@angular/material/tabs';
+import { Header } from '../shared/components';
+import { ApiService, Challenge, ChallengeDraft, ChallengeDraftRevision, ChallengeDraftProposal, ChallengeLink, DraftVoteSummary, Idea } from '../shared/services/api.service';
+import { AuthService } from '../shared/services/auth.service';
+import { AuthGuardService } from '../shared/services/auth-guard.service';
+import { ChallengeIdeas } from '../shared/components/challenge-ideas/challenge-ideas';
+import { Comments, CommentSort } from '../shared/components/comments/comments';
+import { ShareButton } from '../shared/components/share-button/share-button';
+import { Actions } from './actions/actions';
+import { ChallengeLinks } from './links/challenge-links';
+import { Idea as BaseIdea, Comment as BaseComment } from '../shared/models/baseModels';
+
+type DiffKind = 'added' | 'removed' | 'unchanged';
+
+interface DiffSegment {
+  kind: DiffKind;
+  text: string;
+}
+
+interface RevisionSnapshot {
+  id: number;
+  label: string;
+  summary: string;
+  createdAtLabel: string;
+}
+
+@Component({
+  selector: 'app-article-workbench',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink, MatTabsModule, Header, ChallengeIdeas, Comments, ShareButton, Actions, ChallengeLinks],
+  templateUrl: './article-workbench.html',
+  styleUrl: './article-workbench.css'
+})
+export class ArticleWorkbench implements AfterViewInit {
+  @ViewChild('editorArea') private editorArea?: ElementRef<HTMLDivElement>;
+
+  readonly isBrowser: boolean;
+  readonly isEditing: WritableSignal<boolean> = signal(false);
+  readonly activeSection: WritableSignal<string> = signal('challenge');
+
+  readonly previousDraft: WritableSignal<string> = signal('');
+  readonly draftHtml: WritableSignal<string> = signal('');
+  readonly noDraft: WritableSignal<boolean> = signal(false);
+
+  private readonly draftView = viewChild<ElementRef<HTMLDivElement>>('draftView');
+  readonly draftExpanded: WritableSignal<boolean> = signal(false);
+  readonly draftOverflows: WritableSignal<boolean> = signal(false);
+
+  readonly diffSegments = computed(() => this.createDiffSegments(
+    this.htmlToDiffText(this.previousDraft()),
+    this.htmlToDiffText(this.draftHtml())
+  ));
+
+  readonly diffStats = computed(() => {
+    const segments = this.diffSegments();
+    const added = this.countWordsForKind(segments, 'added');
+    const removed = this.countWordsForKind(segments, 'removed');
+    return { added, removed };
+  });
+
+  readonly revisions: WritableSignal<RevisionSnapshot[]> = signal([
+    {
+      id: 1,
+      label: 'Revision 3 - Equity focus',
+      summary: 'Elevated investment floor for frontline districts and added quarterly transparency metrics.',
+      createdAtLabel: 'Oct 22, 2025'
+    },
+    {
+      id: 2,
+      label: 'Revision 2 - Infrastructure map',
+      summary: 'Introduced mitigation timelines and procurement transparency requirements.',
+      createdAtLabel: 'Oct 12, 2025'
+    },
+    {
+      id: 3,
+      label: 'Revision 1 - Initial fund setup',
+      summary: 'Seeded the Climate Resilience Fund and defined advisory panel scope.',
+      createdAtLabel: 'Oct 1, 2025'
+    }
+  ]);
+
+  readonly challengeComments: WritableSignal<BaseComment[]> = signal([]);
+  readonly commentsLoading: WritableSignal<boolean> = signal(false);
+  readonly commentsLoadingMore: WritableSignal<boolean> = signal(false);
+  readonly commentsSort: WritableSignal<CommentSort> = signal('recent');
+  readonly commentsPage: WritableSignal<number> = signal(1);
+  readonly commentsTotal: WritableSignal<number> = signal(0);
+  readonly commentsHasMore: WritableSignal<boolean> = signal(false);
+
+  readonly supportVotes: WritableSignal<number> = signal(0);
+  readonly opposeVotes: WritableSignal<number> = signal(0);
+  readonly userVote: WritableSignal<'support' | 'oppose' | null> = signal(null);
+  readonly voteBusy: WritableSignal<boolean> = signal(false);
+  readonly voteError: WritableSignal<string | null> = signal(null);
+
+
+
+  readonly formattingActions = [
+    { icon: 'B', label: 'Bold', command: 'bold' },
+    { icon: 'I', label: 'Italic', command: 'italic' },
+    { icon: 'U', label: 'Underline', command: 'underline' },
+    { icon: 'UL', label: 'Bullets', command: 'insertUnorderedList' },
+    { icon: '1.', label: 'Numbered', command: 'insertOrderedList' }
+  ];
+
+  readonly challengeId: WritableSignal<number | null> = signal(null);
+  readonly challenge: WritableSignal<Challenge | null> = signal(null);
+  readonly loadingChallenge: WritableSignal<boolean> = signal(false);
+  readonly challengeError: WritableSignal<string | null> = signal(null);
+
+  // Ideas state
+  readonly ideas: WritableSignal<Idea[]> = signal([]);
+  readonly ideasLoading: WritableSignal<boolean> = signal(false);
+  readonly ideasError: WritableSignal<string | null> = signal(null);
+  readonly ideasPage: WritableSignal<number> = signal(1);
+  readonly ideasHasMore: WritableSignal<boolean> = signal(false);
+  readonly ideasLimit = 50;
+
+  // Links state
+  readonly links: WritableSignal<ChallengeLink[]> = signal([]);
+  readonly linksLoading: WritableSignal<boolean> = signal(false);
+  readonly linksError: WritableSignal<string | null> = signal(null);
+
+  readonly mappedIdeas = computed<BaseIdea[]>(() =>
+    this.ideas().map(idea => ({
+      id: String(idea.id),
+      title: idea.title,
+      description: idea.content || '',
+      author: idea.authorDisplayName || idea.authorUsername || 'Anonymous',
+      authorUsername: idea.authorUsername,
+      votes: idea.score,
+      voted: idea.voted,
+      status: 'New' as const,
+      isMarked: idea.isMarked,
+      createdAt: new Date(idea.createdAt || idea.created_at || Date.now()),
+      challengeId: String(this.challengeId() ?? idea.challengeId ?? ''),
+      category: ''
+    }))
+  );
+
+  // Backend draft state
+  readonly backendDraft: WritableSignal<ChallengeDraft | null> = signal(null);
+  readonly loadingDraft: WritableSignal<boolean> = signal(false);
+  readonly savingDraft: WritableSignal<boolean> = signal(false);
+  readonly draftError: WritableSignal<string | null> = signal(null);
+  readonly backendRevisions: WritableSignal<ChallengeDraftRevision[]> = signal([]);
+
+  // Proposal state
+  readonly proposals: WritableSignal<ChallengeDraftProposal[]> = signal([]);
+  readonly selectedProposal: WritableSignal<ChallengeDraftProposal | null> = signal(null);
+  readonly editingProposal: WritableSignal<boolean> = signal(false);
+  readonly editedProposalContent: WritableSignal<string> = signal('');
+  // Initial HTML for the proposal editor; not updated while typing so the caret isn't reset
+  readonly proposalEditSeed: WritableSignal<string> = signal('');
+  readonly loadingProposals: WritableSignal<boolean> = signal(false);
+
+  readonly listPreviewLimit = 5;
+  readonly showAllProposals: WritableSignal<boolean> = signal(false);
+  readonly showAllSnapshots: WritableSignal<boolean> = signal(false);
+
+  readonly visibleProposals = computed(() =>
+    this.showAllProposals() ? this.proposals() : this.proposals().slice(0, this.listPreviewLimit)
+  );
+
+  readonly visibleRevisions = computed(() =>
+    this.showAllSnapshots() ? this.revisions() : this.revisions().slice(0, this.listPreviewLimit)
+  );
+
+  readonly isDraftCreator = computed(() => {
+    const draft = this.backendDraft();
+    const user = this.authService.currentUser();
+    return draft !== null && user !== null && draft.creatorId === user.id;
+  });
+
+  readonly pendingProposals = computed(() =>
+    this.proposals().filter(p => p.status === 'pending')
+  );
+
+  readonly proposalDiffSegments = computed(() => {
+    const proposal = this.selectedProposal();
+    const draft = this.backendDraft();
+    if (!proposal || !draft) return [];
+    return this.createDiffSegments(
+      this.htmlToDiffText(draft.content),
+      this.htmlToDiffText(this.editedProposalContent())
+    );
+  });
+
+  readonly proposalDiffStats = computed(() => {
+    const segments = this.proposalDiffSegments();
+    const added = this.countWordsForKind(segments, 'added');
+    const removed = this.countWordsForKind(segments, 'removed');
+    return { added, removed };
+  });
+
+  constructor(
+    @Inject(PLATFORM_ID) private readonly platformId: object,
+    private route: ActivatedRoute,
+    private router: Router,
+    private apiService: ApiService,
+    private authService: AuthService,
+    private authGuard: AuthGuardService
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+
+    // Measure after the [innerHTML] binding has rendered
+    effect(() => {
+      const el = this.draftView()?.nativeElement;
+      this.draftHtml();
+      if (!el || !this.isBrowser || this.draftExpanded()) return;
+      requestAnimationFrame(() => this.draftOverflows.set(el.scrollHeight > el.clientHeight + 1));
+    });
+    
+    // Read challengeId from query parameters and fetch challenge
+    this.route.queryParams.subscribe(params => {
+      // Old ?section=comments links now land on the Challenge tab, which hosts its comments
+      const requested = params['section'];
+      const section = requested === 'diff' ? 'draft' : requested === 'comments' ? 'challenge' : requested;
+      if (['challenge', 'draft', 'ideas', 'links', 'actions'].includes(section)) {
+        this.activeSection.set(section);
+      }
+      const id = params['challengeId'];
+      // Section-only query param changes must not refetch the challenge
+      if (id && Number(id) !== this.challengeId()) {
+        const numericId = Number(id);
+        this.challengeId.set(numericId);
+        console.log('Article Workbench loaded with challengeId:', id);
+        this.fetchChallenge(numericId);
+      }
+    });
+
+    // Refetch ideas/comments so voted state reflects the logged-in user
+    this.authService.loginSuccess$.subscribe(() => {
+      const challengeId = this.challengeId();
+      if (challengeId == null) {
+        return;
+      }
+      this.loadIdeas();
+      this.loadChallengeComments(challengeId);
+      this.loadDraftVotes(challengeId);
+    });
+  }
+
+  private fetchChallenge(id: number): void {
+    this.loadingChallenge.set(true);
+    this.challengeError.set(null);
+    
+    this.apiService.getChallenge(id).subscribe({
+      next: (challenge) => {
+        this.challenge.set(challenge);
+        this.loadingChallenge.set(false);
+        console.log('Challenge loaded:', challenge);
+        // Load draft after challenge is loaded
+        this.loadDraft(id);
+        // Load ideas after challenge is loaded
+        this.loadIdeas();
+        // Load links for this challenge
+        this.loadLinks(id);
+        // Load comments for this challenge
+        this.loadChallengeComments(id);
+        this.loadDraftVotes(id);
+      },
+      error: (error) => {
+        console.error('Error loading challenge:', error);
+        this.challengeError.set('Failed to load challenge');
+        this.loadingChallenge.set(false);
+      }
+    });
+  }
+
+  private loadDraft(challengeId: number): void {
+    this.loadingDraft.set(true);
+    this.draftError.set(null);
+    this.noDraft.set(false);
+    
+    this.apiService.getChallengeDraft(challengeId).subscribe({
+      next: (draft: ChallengeDraft) => {
+        this.backendDraft.set(draft);
+        this.draftHtml.set(draft.content);
+        this.previousDraft.set(draft.content);
+        this.loadingDraft.set(false);
+        console.log('Draft loaded:', draft);
+        
+        // Update editor if it exists
+        if (this.editorArea) {
+          this.editorArea.nativeElement.innerHTML = draft.content;
+        }
+        
+        // Load revision history
+        this.loadRevisions(challengeId);
+        // Load proposals
+        this.loadProposals(challengeId);
+      },
+      error: (error: any) => {
+        this.loadingDraft.set(false);
+        if (error.status === 404) {
+          // No draft exists yet for this challenge
+          this.noDraft.set(true);
+          console.log('No draft exists for this challenge yet');
+        } else {
+          console.error('Error loading draft:', error);
+          this.draftError.set('Failed to load draft');
+        }
+      }
+    });
+  }
+
+  private loadRevisions(challengeId: number): void {
+    this.apiService.getChallengeDraftRevisions(challengeId).subscribe({
+      next: (revisions: ChallengeDraftRevision[]) => {
+        this.backendRevisions.set(revisions);
+        // Convert to local format for display
+        this.revisions.set(revisions.map((rev, index) => ({
+          id: rev.id,
+          label: `Revision ${revisions.length - index} by ${rev.editorUsername}`,
+          summary: this.makeSummary(this.stripHtml(rev.content)),
+          createdAtLabel: new Date(rev.createdAt).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        })));
+      },
+      error: (error: any) => {
+        console.error('Error loading revisions:', error);
+      }
+    });
+  }
+
+  openDraftTab(): void {
+    this.scrollToSection('draft');
+  }
+
+  ngAfterViewInit(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    setTimeout(() => this.scrollToSection(this.activeSection()), 0);
+
+    if (this.editorArea) {
+      this.editorArea.nativeElement.innerHTML = this.draftHtml();
+    }
+  }
+
+  onEditorInput(): void {
+    if (!this.editorArea) {
+      return;
+    }
+
+    this.draftHtml.set(this.editorArea.nativeElement.innerHTML);
+  }
+
+  toggleEditMode(): void {
+    this.isEditing.set(!this.isEditing());
+    if (this.isEditing()) {
+      // Sync content to DOM when entering edit mode
+      setTimeout(() => {
+        if (this.editorArea) {
+          this.editorArea.nativeElement.innerHTML = this.draftHtml();
+        }
+      }, 0);
+    }
+  }
+
+  scrollToSection(sectionId: string): void {
+    this.activeSection.set(sectionId);
+
+    if (!this.isBrowser) {
+      return;
+    }
+
+    if (this.route.snapshot.queryParamMap.get('section') !== sectionId) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { section: sectionId },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  applyFormatting(command: string): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    document.execCommand(command);
+    this.syncDraftFromEditor();
+  }
+
+  formatBlock(tagName: string): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    document.execCommand('formatBlock', false, tagName);
+    this.syncDraftFromEditor();
+  }
+
+  insertLink(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const selection = window.getSelection();
+    if (!selection || selection.toString().trim().length === 0) {
+      return;
+    }
+
+    const url = window.prompt('Enter link URL', 'https://');
+    if (!url) {
+      return;
+    }
+
+    document.execCommand('createLink', false, url);
+    this.syncDraftFromEditor();
+  }
+
+  clearFormatting(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    document.execCommand('removeFormat');
+    this.syncDraftFromEditor();
+  }
+
+  saveSnapshot(): void {
+    const challengeId = this.challengeId();
+    if (!challengeId) {
+      console.error('No challenge ID available');
+      return;
+    }
+
+    const content = this.draftHtml();
+    const draft = this.backendDraft();
+    
+    this.savingDraft.set(true);
+    this.draftError.set(null);
+
+    if (draft) {
+      // Update existing draft (or create proposal if non-creator)
+      this.apiService.updateChallengeDraft(challengeId, content).subscribe({
+        next: (response: any) => {
+          if (response.type === 'proposal') {
+            // Non-creator: a proposal was created instead
+            this.savingDraft.set(false);
+            console.log('Proposal submitted successfully');
+            // Reload proposals to show the new one
+            this.loadProposals(challengeId);
+            // Revert editor to current draft content (proposal doesn't change active draft)
+            this.draftHtml.set(this.previousDraft());
+            this.updateEditorContent();
+            this.isEditing.set(false);
+          } else {
+            // Creator: draft updated directly
+            const updatedDraft = response as ChallengeDraft;
+            this.backendDraft.set(updatedDraft);
+            this.previousDraft.set(content);
+            this.savingDraft.set(false);
+            console.log('Draft saved successfully');
+            // Reload revisions to show the new one
+            this.loadRevisions(challengeId);
+          }
+        },
+        error: (error: any) => {
+          console.error('Error saving draft:', error);
+          this.draftError.set('Failed to save draft');
+          this.savingDraft.set(false);
+        }
+      });
+    } else {
+      // Create new draft
+      this.apiService.createChallengeDraft(challengeId, content).subscribe({
+        next: (response: any) => {
+          const newDraft = 'data' in response ? response.data : response;
+          this.backendDraft.set(newDraft as ChallengeDraft);
+          this.previousDraft.set(content);
+          this.noDraft.set(false);
+          this.savingDraft.set(false);
+          console.log('Draft created successfully');
+        },
+        error: (error: any) => {
+          console.error('Error creating draft:', error);
+          this.draftError.set('Failed to create draft');
+          this.savingDraft.set(false);
+        }
+      });
+    }
+  }
+
+  private loadProposals(challengeId: number): void {
+    this.loadingProposals.set(true);
+    this.apiService.getDraftProposals(challengeId).subscribe({
+      next: (proposals: ChallengeDraftProposal[]) => {
+        this.proposals.set(proposals);
+        this.loadingProposals.set(false);
+      },
+      error: (error: any) => {
+        console.error('Error loading proposals:', error);
+        this.loadingProposals.set(false);
+      }
+    });
+  }
+
+  loadIdeas(page?: number): void {
+    const challengeId = this.challengeId();
+    const targetPage = page ?? this.ideasPage();
+    this.ideasLoading.set(true);
+    this.ideasError.set(null);
+    const offset = (targetPage - 1) * this.ideasLimit;
+    this.apiService.getIdeas({ challengeId: challengeId ?? undefined, limit: this.ideasLimit, offset }).subscribe({
+      next: (res) => {
+        this.ideas.set(res.ideas);
+        this.ideasHasMore.set(res.ideas.length === this.ideasLimit);
+        this.ideasPage.set(targetPage);
+        this.ideasLoading.set(false);
+      },
+      error: () => {
+        this.ideasError.set('Failed to load ideas');
+        this.ideasLoading.set(false);
+      }
+    });
+  }
+
+  private loadLinks(challengeId: number): void {
+    this.linksLoading.set(true);
+    this.linksError.set(null);
+    this.apiService.getChallengeLinks(challengeId).subscribe({
+      next: (links) => {
+        this.links.set(links);
+        this.linksLoading.set(false);
+      },
+      error: () => {
+        this.linksError.set('Failed to load links');
+        this.linksLoading.set(false);
+      }
+    });
+  }
+
+  nextIdeasPage(): void {
+    if (this.ideasHasMore()) {
+      this.loadIdeas(this.ideasPage() + 1);
+    }
+  }
+
+  prevIdeasPage(): void {
+    if (this.ideasPage() > 1) {
+      this.loadIdeas(this.ideasPage() - 1);
+    }
+  }
+
+  navigateToAddIdea(): void {
+    const challengeId = this.challengeId();
+    const extras = challengeId != null ? { queryParams: { challengeId } } : {};
+    this.router.navigate(['/add-idea'], extras);
+  }
+
+  onVoteIdea(ideaId: string): void {
+    if (!this.authGuard.requireAuth('vote on this idea')) {
+      return;
+    }
+    const numId = Number(ideaId);
+    this.apiService.voteIdea(numId).subscribe({
+      next: (res) => {
+        this.ideas.update(list =>
+          list.map(idea => idea.id === numId ? { ...idea, score: res.score, voted: res.voted } : idea)
+        );
+      },
+      error: () => {}
+    });
+  }
+
+  selectProposal(proposal: ChallengeDraftProposal): void {
+    this.selectedProposal.set(proposal);
+    this.editingProposal.set(false);
+    this.editedProposalContent.set(proposal.content);
+  }
+
+  clearProposalView(): void {
+    this.selectedProposal.set(null);
+    this.editingProposal.set(false);
+  }
+
+  toggleProposalEdit(): void {
+    if (!this.editingProposal()) {
+      this.proposalEditSeed.set(this.editedProposalContent());
+    }
+    this.editingProposal.set(!this.editingProposal());
+  }
+
+  onProposalEditInput(event: Event): void {
+    const target = event.target as HTMLElement;
+    this.editedProposalContent.set(target.innerHTML);
+  }
+
+  resolveProposal(action: 'accept' | 'reject'): void {
+    const proposal = this.selectedProposal();
+    const challengeId = this.challengeId();
+    if (!proposal || !challengeId) return;
+
+    const edited = this.editedProposalContent();
+    const editedContent = edited !== proposal.content ? edited : undefined;
+    this.apiService.resolveDraftProposal(challengeId, proposal.id, action, editedContent).subscribe({
+      next: (resolved: ChallengeDraftProposal) => {
+        console.log(`Proposal ${action}ed successfully`);
+        this.selectedProposal.set(null);
+        // Reload draft if accepted (content changed)
+        if (action === 'accept') {
+          this.loadDraft(challengeId);
+        }
+        // Reload proposals to update statuses
+        this.loadProposals(challengeId);
+      },
+      error: (error: any) => {
+        console.error(`Error ${action}ing proposal:`, error);
+        this.draftError.set(`Failed to ${action} proposal`);
+      }
+    });
+  }
+
+  revertToSnapshot(): void {
+    this.draftHtml.set(this.previousDraft());
+    this.updateEditorContent();
+  }
+
+  resetDraft(): void {
+    this.draftHtml.set('');
+    this.updateEditorContent();
+  }
+
+  publishDraft(): void {
+    // For now, save as snapshot (same as saveSnapshot)
+    // In future, this could publish to ideas/posts
+    this.saveSnapshot();
+  }
+
+  castVote(choice: 'support' | 'oppose'): void {
+    const challengeId = this.challengeId();
+    if (challengeId == null || this.voteBusy()) {
+      return;
+    }
+    if (!this.authGuard.requireAuth('vote on this draft')) {
+      return;
+    }
+
+    this.voteBusy.set(true);
+    this.voteError.set(null);
+    this.apiService.voteDraft(challengeId, choice).subscribe({
+      next: (summary) => {
+        this.applyDraftVotes(summary);
+        this.voteBusy.set(false);
+      },
+      error: (error: any) => {
+        this.voteError.set(error?.error?.error ?? 'Could not save your vote.');
+        this.voteBusy.set(false);
+      }
+    });
+  }
+
+  private loadDraftVotes(challengeId: number): void {
+    this.apiService.getDraftVotes(challengeId).subscribe({
+      next: (summary) => this.applyDraftVotes(summary),
+      error: (error: any) => console.error('Error loading draft votes:', error)
+    });
+  }
+
+  private applyDraftVotes(summary: DraftVoteSummary): void {
+    this.supportVotes.set(summary.support);
+    this.opposeVotes.set(summary.oppose);
+    this.userVote.set(summary.myVote);
+  }
+
+  submitComment(): void {
+  }
+
+  private loadChallengeComments(challengeId: number, page: number = 1): void {
+    const append = page > 1;
+    if (append) {
+      this.commentsLoadingMore.set(true);
+    } else if (this.challengeComments().length === 0) {
+      this.commentsLoading.set(true);
+    }
+    this.apiService.getChallengeComments(challengeId, { sort: this.commentsSort(), page }).subscribe({
+      next: (res) => {
+        const mapped: BaseComment[] = res.comments.map(c => ({
+          id: String(c.id),
+          author: c.authorDisplayName || c.authorUsername || 'Anonymous',
+          authorUsername: c.authorUsername,
+          content: c.content,
+          createdAt: new Date(c.createdAt || c.created_at || Date.now()),
+          votes: c.score,
+          voted: c.voted,
+          isMarked: c.isMarked,
+          parentId: c.parentId != null ? String(c.parentId) : undefined,
+          ideaId: c.ideaId != null ? String(c.ideaId) : undefined,
+          challengeId: String(challengeId),
+        }));
+        if (append) {
+          // Skip items already shown (e.g. shifted into this page by newly posted comments)
+          const existing = new Set(this.challengeComments().map(c => c.id));
+          this.challengeComments.update(list => [...list, ...mapped.filter(c => !existing.has(c.id))]);
+        } else {
+          this.challengeComments.set(mapped);
+        }
+        this.commentsPage.set(res.page);
+        this.commentsTotal.set(res.total);
+        this.commentsHasMore.set(res.hasNext);
+        this.commentsLoading.set(false);
+        this.commentsLoadingMore.set(false);
+      },
+      error: () => {
+        this.commentsLoading.set(false);
+        this.commentsLoadingMore.set(false);
+      }
+    });
+  }
+
+  onCommentsSortChange(sort: CommentSort): void {
+    const challengeId = this.challengeId();
+    if (challengeId == null) {
+      return;
+    }
+    this.commentsSort.set(sort);
+    this.loadChallengeComments(challengeId);
+  }
+
+  onLoadMoreComments(): void {
+    const challengeId = this.challengeId();
+    if (challengeId == null || this.commentsLoadingMore()) {
+      return;
+    }
+    this.loadChallengeComments(challengeId, this.commentsPage() + 1);
+  }
+
+  onVoteComment(commentId: string): void {
+    if (!this.authGuard.requireAuth('vote on this comment')) {
+      return;
+    }
+    this.apiService.voteComment(Number(commentId)).subscribe({
+      next: (res) => {
+        this.challengeComments.update(list =>
+          list.map(c => c.id === commentId ? { ...c, votes: res.score, voted: res.voted } : c)
+        );
+      },
+      error: () => {}
+    });
+  }
+
+  private syncDraftFromEditor(): void {
+    if (!this.editorArea) {
+      return;
+    }
+
+    this.draftHtml.set(this.editorArea.nativeElement.innerHTML);
+  }
+
+  private updateEditorContent(): void {
+    if (!this.editorArea) {
+      return;
+    }
+
+    this.editorArea.nativeElement.innerHTML = this.draftHtml();
+  }
+
+  stripHtml(html: string): string {
+    const text = html.replace(/<[^>]+>/g, ' ');
+    return this.decodeEntities(text).replace(/\s+/g, ' ').trim();
+  }
+
+  private htmlToDiffText(html: string): string {
+    const text = html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/?(p|div|h[1-6]|li|ul|ol|blockquote|pre)\b[^>]*>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ');
+    return this.decodeEntities(text)
+      .replace(/[^\S\n]+/g, ' ')
+      .replace(/\s*\n\s*/g, '\n')
+      .trim();
+  }
+
+  private decodeEntities(text: string): string {
+    const named: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+    return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code: string) => {
+      if (code[0] === '#') {
+        const num = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+        return Number.isFinite(num) && num <= 0x10ffff ? String.fromCodePoint(num) : match;
+      }
+      return named[code.toLowerCase()] ?? match;
+    });
+  }
+
+  private countWordsForKind(segments: DiffSegment[], kind: DiffKind): number {
+    return segments
+      .filter((segment) => segment.kind === kind)
+      .reduce((total, segment) => {
+        const words = segment.text.split(/\s+/).filter(Boolean);
+        return total + words.length;
+      }, 0);
+  }
+
+  private createDiffSegments(previousText: string, currentText: string): DiffSegment[] {
+    // Implements a lightweight LCS-based diff so the UI can highlight added and removed words.
+    if (!previousText && !currentText) {
+      return [];
+    }
+
+    // Line breaks are kept as their own tokens so the diff can render them
+    const oldWords = previousText.match(/\n|\S+/g) ?? [];
+    const newWords = currentText.match(/\n|\S+/g) ?? [];
+    const m = oldWords.length;
+    const n = newWords.length;
+
+    const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+    for (let i = m - 1; i >= 0; i--) {
+      for (let j = n - 1; j >= 0; j--) {
+        if (oldWords[i] === newWords[j]) {
+          dp[i][j] = dp[i + 1][j + 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+    }
+
+    const segments: DiffSegment[] = [];
+    let currentSegment: DiffSegment | null = null;
+
+    const pushSegment = (kind: DiffKind, word: string) => {
+      if (!currentSegment || currentSegment.kind !== kind) {
+        if (currentSegment) {
+          segments.push(currentSegment);
+        }
+
+        currentSegment = { kind, text: word };
+      } else {
+        const joiner = word === '\n' || currentSegment.text.endsWith('\n') ? '' : ' ';
+        currentSegment.text += joiner + word;
+      }
+    };
+
+    let i = 0;
+    let j = 0;
+
+    while (i < m && j < n) {
+      if (oldWords[i] === newWords[j]) {
+        pushSegment('unchanged', newWords[j]);
+        i += 1;
+        j += 1;
+      } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+        pushSegment('removed', oldWords[i]);
+        i += 1;
+      } else {
+        pushSegment('added', newWords[j]);
+        j += 1;
+      }
+    }
+
+    while (i < m) {
+      pushSegment('removed', oldWords[i]);
+      i += 1;
+    }
+
+    while (j < n) {
+      pushSegment('added', newWords[j]);
+      j += 1;
+    }
+
+    if (currentSegment) {
+      segments.push(currentSegment);
+    }
+
+    return segments;
+  }
+
+  makeSummary(text: string): string {
+    if (!text) {
+      return 'Draft submitted with structural changes.';
+    }
+
+    const summary = text.slice(0, 140).trim();
+  return summary.length < text.length ? summary + '...' : summary;
+  }
+}

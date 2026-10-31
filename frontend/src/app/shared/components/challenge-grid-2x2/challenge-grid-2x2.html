@@ -1,0 +1,166 @@
+<div class="grid-2x2-container">
+  <!-- Top-Left: Challenge Card -->
+  <article class="grid-cell challenge-cell" (click)="onChallengeClick()">
+    @if (challenge) {
+      <div class="challenge-header">
+        <div class="challenge-meta">
+          <span class="chip">{{ challenge.category }}</span>
+          <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
+            {{ challenge.urgency }}
+          </span>
+        </div>
+        @if (challenge.rewardPool) {
+          <div class="reward-pool">{{ challenge.rewardPool }}</div>
+        }
+      </div>
+
+      <div class="challenge-body">
+        <h3>{{ challenge.title }}</h3>
+        <p class="challenge-description">{{ challenge.description }}</p>
+
+        <div class="challenge-stats">
+          <div class="stat-item">
+            <span class="stat-icon">👥</span>
+            <span>{{ challenge.participantCount }} participants</span>
+          </div>
+          @if (challenge.deadline) {
+            <div class="stat-item">
+              <span class="stat-icon">⏱️</span>
+              <span>{{ formatDeadline(challenge.deadline) }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="challenge-tags">
+          @for (tag of challenge.tags; track tag) {
+            <span class="tag">#{{ tag }}</span>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="empty-icon">🎯</div>
+        <p>No challenge selected</p>
+      </div>
+    }
+  </article>
+
+  <!-- Top-Right: First Idea -->
+  <article class="grid-cell idea-cell" [class.clickable]="filteredIdeas[0]" (click)="filteredIdeas[0] && onIdeaClick(filteredIdeas[0].id)">
+    @if (filteredIdeas[0]; as idea) {
+      <div class="idea-header">
+        <div class="idea-meta">
+          <span class="chip">{{ idea.category }}</span>
+          <span class="status-badge" [class]="getStatusClass(idea.status)">
+            {{ idea.status }}
+          </span>
+        </div>
+        <div class="idea-votes">
+          <button class="vote-btn" (click)="onVoteIdea(idea.id, $event)" [attr.aria-label]="'Vote for ' + idea.title">
+            <span class="vote-icon">⬆</span>
+            <span class="vote-count">{{ idea.votes }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="idea-body">
+        <h3>{{ idea.title }}</h3>
+        <p class="idea-description">{{ idea.description }}</p>
+
+        <div class="idea-author">
+          <span>by {{ idea.author }}</span>
+          <time [dateTime]="idea.createdAt.toISOString()">
+            {{ idea.createdAt.toLocaleDateString() }}
+          </time>
+        </div>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="empty-icon">💡</div>
+        <p>No ideas yet</p>
+        <small>Be the first to share an idea</small>
+      </div>
+    }
+  </article>
+
+  <!-- Bottom-Left: Second Idea -->
+  <article class="grid-cell idea-cell" [class.clickable]="filteredIdeas[1]" (click)="filteredIdeas[1] && onIdeaClick(filteredIdeas[1].id)">
+    @if (filteredIdeas[1]; as idea) {
+      <div class="idea-header">
+        <div class="idea-meta">
+          <span class="chip">{{ idea.category }}</span>
+          <span class="status-badge" [class]="getStatusClass(idea.status)">
+            {{ idea.status }}
+          </span>
+        </div>
+        <div class="idea-votes">
+          <button class="vote-btn" (click)="onVoteIdea(idea.id, $event)" [attr.aria-label]="'Vote for ' + idea.title">
+            <span class="vote-icon">⬆</span>
+            <span class="vote-count">{{ idea.votes }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="idea-body">
+        <h3>{{ idea.title }}</h3>
+        <p class="idea-description">{{ idea.description }}</p>
+
+        <div class="idea-author">
+          <span>by {{ idea.author }}</span>
+          <time [dateTime]="idea.createdAt.toISOString()">
+            {{ idea.createdAt.toLocaleDateString() }}
+          </time>
+        </div>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="empty-icon">💡</div>
+        <p>Share another idea</p>
+      </div>
+    }
+  </article>
+
+  <!-- Bottom-Right: Comments Preview -->
+  <article class="grid-cell comments-cell">
+    <div class="comments-header">
+      <h3>Discussion ({{ totalComments }})</h3>
+    </div>
+
+    <div class="comments-body">
+      @if (previewComments.length > 0) {
+        @for (comment of previewComments; track comment.id) {
+          <div class="comment-item">
+            <div class="comment-header">
+              <strong>{{ comment.author }}</strong>
+              @if (comment.authorRole) {
+                <span class="role-badge">{{ comment.authorRole }}</span>
+              }
+            </div>
+            <p class="comment-content">{{ comment.content }}</p>
+            <div class="comment-footer">
+              <button class="vote-btn-small" (click)="onVoteComment(comment.id, $event)">
+                <span class="vote-icon">⬆</span>
+                <span>{{ comment.votes }}</span>
+              </button>
+              <time [dateTime]="comment.createdAt.toISOString()">
+                {{ comment.createdAt.toLocaleDateString() }}
+              </time>
+            </div>
+          </div>
+        }
+        
+        @if (totalComments > maxComments) {
+          <button class="view-all-btn" (click)="onViewAllComments()">
+            View all {{ totalComments }} comments →
+          </button>
+        }
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <p>No comments yet</p>
+          <small>Start the discussion</small>
+        </div>
+      }
+    </div>
+  </article>
+</div>

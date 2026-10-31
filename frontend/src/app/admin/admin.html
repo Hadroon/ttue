@@ -1,0 +1,559 @@
+<div class="admin-page">
+  <div class="admin-header">
+    <h1>Admin Panel</h1>
+    <a routerLink="/" class="back-link">← Back to site</a>
+  </div>
+
+  @if (error()) {
+    <div class="admin-error">{{ error() }}</div>
+  }
+
+  <nav class="admin-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'dashboard'"
+      (click)="setTab('dashboard')">
+      Dashboard
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'users'"
+      (click)="setTab('users')">
+      Users
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'content'"
+      (click)="setTab('content')">
+      Content
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'flags'"
+      (click)="setTab('flags')">
+      Flags
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'actions'"
+      (click)="setTab('actions')">
+      Actions
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'cases'"
+      (click)="setTab('cases')">
+      Approvals
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'donations'"
+      (click)="setTab('donations')">
+      Donations
+    </button>
+  </nav>
+
+  <div class="admin-body">
+
+    <!-- Dashboard Tab -->
+    @if (activeTab() === 'dashboard') {
+      @if (loading()) {
+        <div class="loading">Loading stats…</div>
+      } @else if (stats()) {
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.userCount }}</span>
+            <span class="stat-label">Total Users</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.ideaCount }}</span>
+            <span class="stat-label">Total Ideas</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.commentCount }}</span>
+            <span class="stat-label">Total Comments</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ stats()!.challengeCount }}</span>
+            <span class="stat-label">Total Challenges</span>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Users Tab -->
+    @if (activeTab() === 'users') {
+      @if (loading()) {
+        <div class="loading">Loading users…</div>
+      } @else {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Reputation</th>
+              <th>Admin</th>
+              <th>Joined</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.id) {
+              <tr [class.is-admin]="user.isAdmin">
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.reputation }}</td>
+                <td>
+                  <span class="badge" [class.badge-admin]="user.isAdmin" [class.badge-user]="!user.isAdmin">
+                    {{ user.isAdmin ? 'Admin' : 'User' }}
+                  </span>
+                </td>
+                <td>{{ user.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button
+                    class="action-btn"
+                    [class.revoke]="user.isAdmin"
+                    (click)="toggleAdmin(user)">
+                    {{ user.isAdmin ? 'Revoke admin' : 'Make admin' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-row">No users found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Content Tab -->
+    @if (activeTab() === 'content') {
+      <nav class="content-tabs">
+        <button
+          class="content-tab-btn"
+          [class.active]="activeContentTab() === 'ideas'"
+          (click)="setContentTab('ideas')">
+          Ideas
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="activeContentTab() === 'comments'"
+          (click)="setContentTab('comments')">
+          Comments
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="activeContentTab() === 'challenges'"
+          (click)="setContentTab('challenges')">
+          Challenges
+        </button>
+      </nav>
+
+      @if (loading()) {
+        <div class="loading">Loading…</div>
+      }
+
+      <!-- Ideas -->
+      @if (activeContentTab() === 'ideas' && !loading()) {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Score</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (idea of ideas(); track idea.id) {
+              <tr>
+                <td>{{ idea.id }}</td>
+                <td>{{ truncate(idea.title) }}</td>
+                <td>{{ idea.authorUsername }}</td>
+                <td>{{ idea.score }}</td>
+                <td>{{ idea.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button class="action-btn delete" (click)="deleteIdea(idea.id)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty-row">No ideas found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <!-- Comments -->
+      @if (activeContentTab() === 'comments' && !loading()) {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Content</th>
+              <th>Author</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (comment of comments(); track comment.id) {
+              <tr>
+                <td>{{ comment.id }}</td>
+                <td>{{ truncate(comment.content) }}</td>
+                <td>{{ comment.authorUsername }}</td>
+                <td>{{ comment.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button class="action-btn delete" (click)="deleteComment(comment.id)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="empty-row">No comments found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <!-- Challenges -->
+      @if (activeContentTab() === 'challenges' && !loading()) {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Urgency</th>
+              <th>Votes</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (challenge of challenges(); track challenge.id) {
+              <tr>
+                <td>{{ challenge.id }}</td>
+                <td>{{ truncate(challenge.title) }}</td>
+                <td>{{ challenge.category }}</td>
+                <td>
+                  <span class="badge urgency-{{ challenge.urgency.toLowerCase() }}">{{ challenge.urgency }}</span>
+                </td>
+                <td>{{ challenge.votes }}</td>
+                <td>{{ challenge.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <button class="action-btn delete" (click)="deleteChallenge(challenge.id)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-row">No challenges found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Flags Tab -->
+    @if (activeTab() === 'flags') {
+      <nav class="content-tabs">
+        <button
+          class="content-tab-btn"
+          [class.active]="flagStatusFilter() === 'pending'"
+          (click)="setFlagFilter('pending')">
+          Pending
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="flagStatusFilter() === 'marked'"
+          (click)="setFlagFilter('marked')">
+          Marked
+        </button>
+        <button
+          class="content-tab-btn"
+          [class.active]="flagStatusFilter() === 'all'"
+          (click)="setFlagFilter('all')">
+          All
+        </button>
+      </nav>
+
+      @if (loading()) {
+        <div class="loading">Loading flags…</div>
+      } @else {
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Reporter</th>
+              <th>Type</th>
+              <th>Content</th>
+              <th>Reason</th>
+              <th>Reported</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (flag of flags(); track flag.id) {
+              <tr>
+                <td>{{ flag.id }}</td>
+                <td>{{ flag.reporterUsername }}</td>
+                <td>
+                  <span class="badge badge-user">{{ flag.contentType }}</span>
+                </td>
+                <td class="content-cell">
+                  @if (flag.contentType === 'challenge') {
+                    <a [routerLink]="['/article-workbench']"
+                       [queryParams]="{challengeId: flag.contentId}"
+                       class="content-link"
+                       target="_blank">
+                      {{ truncate(flag.contentTitle ?? '(untitled)', 60) }}
+                      <span class="content-id">#{{ flag.contentId }}</span>
+                    </a>
+                  } @else {
+                    <span class="content-preview">
+                      {{ truncate(flag.contentTitle ?? '(no preview)', 80) }}
+                      <span class="content-id">#{{ flag.contentId }}</span>
+                    </span>
+                  }
+                </td>
+                <td>{{ truncate(flag.reason, 100) }}</td>
+                <td>{{ flag.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'badge-user': flag.status === 'pending',
+                    'badge-mark': flag.status === 'marked',
+                    'badge-admin': flag.status === 'reviewed' || flag.status === 'dismissed'
+                  }">{{ flag.status }}</span>
+                </td>
+                <td class="flag-actions">
+                  @if (flag.status === 'pending') {
+                    <button class="action-btn mark" (click)="markContent(flag)">Mark</button>
+                    <button class="action-btn" (click)="resolveFlag(flag.id, 'reviewed')">Reviewed</button>
+                    <button class="action-btn revoke" (click)="resolveFlag(flag.id, 'dismissed')">Dismiss</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="empty-row">No flags found.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Actions Tab -->
+    @if (activeTab() === 'actions') {
+      @if (loading()) {
+        <div class="loading">Loading action recommendations…</div>
+      } @else {
+        <div class="donation-summary">
+          @for (f of ['pending', 'approved', 'all']; track f) {
+            <button class="tab-btn" [class.active]="recommendationFilter() === f"
+                    (click)="recommendationFilter.set($any(f))">{{ f }}</button>
+          }
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Challenge</th>
+              <th>Action</th>
+              <th>Recommendations</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of visibleRecommendations(); track r.challengeId + ':' + r.actionKey) {
+              <tr>
+                <td class="content-cell">
+                  <a [routerLink]="['/article-workbench']"
+                     [queryParams]="{ challengeId: r.challengeId, section: 'actions' }"
+                     class="content-link"
+                     target="_blank">
+                    {{ truncate(r.challengeTitle, 60) }}
+                    <span class="content-id">#{{ r.challengeId }}</span>
+                  </a>
+                </td>
+                <td>{{ actionLabel(r.actionKey) }}</td>
+                <td><strong>{{ r.votes }}</strong></td>
+                <td>
+                  @if (r.activatedAt) {
+                    <span class="badge badge-admin">Approved {{ r.activatedAt | date:'mediumDate' }}</span>
+                  } @else {
+                    <span class="badge badge-user">Pending</span>
+                  }
+                </td>
+                <td>
+                  <button class="tab-btn" [disabled]="busyRecommendation() === r.challengeId + ':' + r.actionKey"
+                          (click)="toggleApproval(r)">
+                    {{ r.activatedAt ? 'Revoke' : 'Approve' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="empty-row">No {{ recommendationFilter() === 'all' ? '' : recommendationFilter() }} recommendations yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Approvals Tab -->
+    @if (activeTab() === 'cases') {
+      @if (loading()) {
+        <div class="loading">Loading approvals…</div>
+      } @else {
+        <div class="donation-summary">
+          @for (f of ['Pending', 'Approved', 'all']; track f) {
+            <button class="tab-btn" [class.active]="approvalFilter() === f"
+                    (click)="approvalFilter.set($any(f))">{{ f }}</button>
+          }
+        </div>
+        <p class="donation-summary">Legal cases and bounty-board tasks can receive donations only after you approve them. Donations arrive through Stripe and also appear under Donations.</p>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Entry</th>
+              <th>Challenge</th>
+              <th>Submitted by</th>
+              <th>Donated</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of visibleApprovals(); track a.id) {
+              <tr>
+                <td class="content-cell">
+                  @if (a.kind === 'case') {
+                    <span class="badge badge-user">Legal case</span>
+                    <strong>{{ truncate(a.data['target'], 60) }}</strong>
+                    <div class="content-id">{{ a.data['jurisdiction'] }} · {{ a.data['basis'] }}</div>
+                    <div class="content-id">retainer target {{ a.data['budget'] | number }}@if (a.data['lead']) { · lead {{ a.data['lead'] }} }</div>
+                  } @else {
+                    <span class="badge badge-user">Task</span>
+                    <strong>{{ truncate(a.data['title'], 60) }}</strong>
+                    @if (a.data['location']) { <div class="content-id">📍 {{ a.data['location'] }}</div> }
+                    <div class="content-id">cost {{ a.data['cost'] | number }} · {{ a.data['status'] }}</div>
+                  }
+                </td>
+                <td class="content-cell">
+                  <a [routerLink]="['/article-workbench']"
+                     [queryParams]="{ challengeId: a.challengeId, section: 'actions' }"
+                     class="content-link"
+                     target="_blank">
+                    {{ truncate(a.challengeTitle, 50) }}
+                    <span class="content-id">#{{ a.challengeId }}</span>
+                  </a>
+                </td>
+                <td>
+                  @if (a.authorUsername) {
+                    <a [routerLink]="['/profile', a.authorUsername]" class="content-link">{{ a.authorUsername }}</a>
+                  } @else {
+                    <span class="content-id">—</span>
+                  }
+                  <div class="content-id">{{ a.createdAt | date:'medium' }}</div>
+                </td>
+                <td>{{ a.donated / 100 | number:'1.0-2' }}</td>
+                <td>
+                  @if (a.status === 'Approved') {
+                    <span class="badge badge-admin">Approved</span>
+                  } @else {
+                    <span class="badge badge-user">Pending</span>
+                  }
+                </td>
+                <td>
+                  <button class="tab-btn" [disabled]="busyApproval() === a.id" (click)="toggleCaseApproval(a)">
+                    {{ a.status === 'Approved' ? 'Revoke' : 'Approve' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty-row">No {{ approvalFilter() === 'all' ? '' : approvalFilter().toLowerCase() }} entries yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- Donations Tab -->
+    @if (activeTab() === 'donations') {
+      @if (loading()) {
+        <div class="loading">Loading donations…</div>
+      } @else {
+        <p class="donation-summary">
+          {{ donations().length }} paid donation{{ donations().length === 1 ? '' : 's' }}, confirmed by Stripe
+          @for (t of donationTotals(); track t.currency) {
+            <span class="badge badge-admin">{{ t.total | currency: t.currency }}</span>
+          }
+        </p>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Paid</th>
+              <th>Amount</th>
+              <th>Donor</th>
+              <th>Challenge</th>
+              <th>Action</th>
+              <th>Target</th>
+              <th>Stripe</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of donations(); track d.id) {
+              <tr>
+                <td>{{ d.paidAt | date:'medium' }}</td>
+                <td>
+                  <strong>{{ d.amount / 100 | currency: d.currency.toUpperCase() }}</strong>
+                  @if (!d.livemode) { <span class="badge badge-user">test</span> }
+                </td>
+                <td>
+                  @if (d.donorUsername) {
+                    <a [routerLink]="['/profile', d.donorUsername]" class="content-link">{{ d.donorUsername }}</a>
+                  }
+                  @if (d.donorName || d.donorEmail) {
+                    <div class="content-id">{{ d.donorName }} {{ d.donorEmail }}</div>
+                  }
+                </td>
+                <td class="content-cell">
+                  @if (d.challengeId) {
+                    <a [routerLink]="['/article-workbench']"
+                       [queryParams]="{ challengeId: d.challengeId, section: 'actions' }"
+                       class="content-link"
+                       target="_blank">
+                      {{ truncate(d.challengeTitle ?? '(untitled)', 60) }}
+                      <span class="content-id">#{{ d.challengeId }}</span>
+                    </a>
+                  } @else if (d.challengeTitle) {
+                    {{ truncate(d.challengeTitle, 60) }} <span class="content-id">(deleted)</span>
+                  } @else {
+                    <span class="content-id">—</span>
+                  }
+                </td>
+                <td>{{ actionLabel(d.actionKey) }}</td>
+                <td>
+                  @if (d.targetTitle || d.targetId) {
+                    {{ truncate(d.targetTitle ?? '(untitled)', 60) }}
+                    @if (d.targetLocation) { <div class="content-id">📍 {{ d.targetLocation }}</div> }
+                    @if (d.targetId) { <div class="content-id">id {{ d.targetId }}</div> }
+                  } @else {
+                    <span class="content-id">—</span>
+                  }
+                </td>
+                <td>
+                  @if (stripeUrl(d); as url) {
+                    <a [href]="url" target="_blank" rel="noopener" class="content-link">View</a>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-row">No donations yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+  </div>
+</div>

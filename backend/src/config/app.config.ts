@@ -20,10 +20,25 @@ export interface AppConfig {
     rateLimitWindowMs: number;
     rateLimitMaxRequests: number;
   };
+  google: {
+    clientId?: string;
+    clientSecret?: string;
+  };
+  stripe: {
+    secretKey?: string;
+    publishableKey?: string;
+    webhookSecret?: string;
+    currency: string;
+    domain?: string;
+  };
   features: {
     registration: boolean;
     passwordReset: boolean;
     emailVerification: boolean;
+  };
+  adminEmails: string[];
+  devLogin: {
+    enabled: boolean;
   };
 }
 
@@ -52,10 +67,26 @@ function getConfig(): AppConfig {
       rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
       rateLimitMaxRequests: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
     },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+    stripe: {
+      secretKey: process.env.STRIPE_SECRET_KEY,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+      currency: (process.env.STRIPE_CURRENCY || 'usd').toLowerCase(),
+      domain: process.env.DOMAIN,
+    },
     features: {
       registration: process.env.FEATURE_REGISTRATION !== 'false',
       passwordReset: process.env.FEATURE_PASSWORD_RESET !== 'false',
       emailVerification: process.env.FEATURE_EMAIL_VERIFICATION !== 'false',
+    },
+    adminEmails: process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(Boolean) ?? [],
+    // Passwordless mock-user login for local testing; requires an explicit opt-in AND NODE_ENV=development
+    devLogin: {
+      enabled: process.env.DEV_LOGIN === 'true' && process.env.NODE_ENV === 'development',
     },
   };
 
@@ -85,6 +116,11 @@ export function logConfig() {
     security: {
       ...config.security,
       jwtSecret: config.security.jwtSecret ? '[REDACTED]' : undefined,
+    },
+    stripe: {
+      ...config.stripe,
+      secretKey: config.stripe.secretKey ? '[REDACTED]' : undefined,
+      webhookSecret: config.stripe.webhookSecret ? '[REDACTED]' : undefined,
     },
     database: {
       ...config.database,

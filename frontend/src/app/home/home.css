@@ -2,6 +2,12 @@
 
 /* Hero Section */
 
+.title {
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
 .welcome-form {
   position: fixed;
   top: 50%;
@@ -50,7 +56,7 @@
 }
 
 .enter-btn {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: var(--logo-blue-dark);
   color: white;
   border: none;
   border-radius: 8px;
@@ -59,13 +65,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(11, 153, 213, 0.3);
 }
 
 .enter-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  background: var(--logo-blue-darker);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 12px rgba(11, 153, 213, 0.4);
 }
 
 .enter-btn:disabled {
@@ -106,7 +112,16 @@
 .lead {
   color: var(--muted);
   font-size: 18px;
-  max-width: 60ch;
+  max-width: 85%;
+  margin-top: 1.5rem;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #059669, #0284c7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .hero-actions {
@@ -135,15 +150,175 @@
   color: var(--muted);
 }
 
-/* Demo Card */
-.demo-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
+/* Hero engagement cards */
+.engagement-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
+.engagement-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  min-width: 0;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.engagement-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.1);
+}
+
+.engagement-card-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+}
+
+.engagement-card-feedback .engagement-card-accent {
+  background: linear-gradient(to right, #14b8a6, #2563eb);
+}
+
+.engagement-card-support .engagement-card-accent {
+  background: linear-gradient(to right, #2563eb, #f59e0b);
+}
+
+.engagement-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.engagement-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.engagement-card-icon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid;
+  border-radius: 12px;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.engagement-card:hover .engagement-card-icon {
+  transform: scale(1.05);
+}
+
+.engagement-card-feedback .engagement-card-icon,
+.engagement-card-feedback .engagement-card-badge {
+  color: #0f766e;
+  background: #f0fdfa;
+  border-color: #ccfbf1;
+}
+
+.engagement-card-support .engagement-card-icon,
+.engagement-card-support .engagement-card-badge {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #dbeafe;
+}
+
+.engagement-card-badge {
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.engagement-card h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.375;
+  transition: color 0.2s ease;
+}
+
+.engagement-card-feedback:hover h3 {
+  color: #0d9488;
+}
+
+.engagement-card-support:hover h3 {
+  color: #2563eb;
+}
+
+.engagement-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 16px;
+  line-height: 1.625;
+}
+
+.engagement-card-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 8px 12px;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+.engagement-card-feedback .engagement-card-button {
+  background: var(--logo-green-dark);
+}
+
+.engagement-card-feedback .engagement-card-button:hover {
+  background: var(--logo-green-darker);
+}
+
+.engagement-card-support .engagement-card-button {
+  background: var(--logo-blue-dark);
+}
+
+.engagement-card-support .engagement-card-button:hover {
+  background: var(--logo-blue-darker);
+}
+
+.engagement-card-button:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .engagement-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Demo Card */
 .demo-head {
   display: flex;
   justify-content: space-between;
@@ -159,10 +334,6 @@
   border: 1px solid var(--border);
   background: rgba(110, 168, 255, 0.3);
   font-size: 12px;
-}
-
-.demo-body {
-  padding: 16px;
 }
 
 .demo-checks {
@@ -307,9 +478,22 @@
 /* Challenges Styles */
 .challenges-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-template-columns: 1fr;
   gap: 24px;
   margin-top: 24px;
+}
+
+.challenges-grid ::ng-deep .ideas-grid .idea-card-mini,
+.challenges-grid ::ng-deep .ideas-grid .idea-card-mini:hover {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transform: none;
+  transition: none;
+}
+
+.challenges-grid ::ng-deep .ideas-header {
+  display: none;
 }
 
 .challenge-card {
@@ -656,6 +840,25 @@
   }
 }
 
+.section-head-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .section-head-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 640px) {
   .steps {
     grid-template-columns: 1fr;
@@ -698,5 +901,189 @@
 
   .separator {
     display: none;
+  }
+}
+/* ===== Visual hierarchy ===== */
+/* Level 1: hero headline */
+.title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.02;
+}
+
+.lead {
+  font-size: 17px;
+  line-height: 1.65;
+  max-width: 62ch;
+}
+
+/* Hero actions: one primary, one secondary, one tertiary text link */
+.hero-actions {
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.hero-actions .btn.primary {
+  padding: 14px 26px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.text-link {
+  color: var(--brand-600);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.stat-list {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.stat {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+/* Side cards support the hero, so they sit one step lower */
+.engagement-card h3 {
+  font-size: 16px;
+}
+
+.engagement-card p {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* Level 2: section headings (eyebrow, h2, subtitle) */
+.eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--brand-600);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.section h2,
+.how-teaser h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.section-subtitle {
+  margin: 0;
+}
+
+/* Static headers: the larger heading would eat too much of a sticky bar */
+.section-head {
+  position: static;
+  margin: 0 0 24px;
+  padding: 0;
+  align-items: flex-end;
+  background: transparent;
+}
+
+.section-head .link {
+  font-weight: 600;
+}
+
+/* Level 3: item titles share one size */
+.card h3,
+.idea-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.trust .container {
+  text-align: center;
+}
+
+.cta h2 {
+  font-size: 2.5rem;
+}
+
+.cta p {
+  font-size: 18px;
+}
+
+/* How it works teaser */
+.how-teaser {
+  padding: 8px 0 40px;
+  background: var(--bg);
+}
+
+.how-teaser-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  overflow: hidden;
+  padding: 28px 28px 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.how-teaser-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(to right, #14b8a6, #2563eb);
+}
+
+.how-teaser-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.how-teaser h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+
+.how-teaser p {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--muted);
+}
+
+.how-teaser .btn {
+  display: inline-block;
+  margin-top: 16px;
+  white-space: nowrap;
+}
+
+.how-teaser-logo {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(37, 99, 235, 0.25));
+}
+
+@media (max-width: 700px) {
+  .how-teaser-logo {
+    width: 72px;
+    height: 72px;
   }
 }

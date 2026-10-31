@@ -1,0 +1,134 @@
+:host { display: grid; gap: 20px; }
+
+.feature {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.feature > header { display: grid; gap: 2px; }
+.feature h4 { margin: 0; font-size: 16px; font-weight: 700; color: var(--text); }
+.feature p { margin: 0; }
+.muted { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+.notice {
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, #f59e0b 45%, var(--border));
+  border-left: 3px solid #f59e0b;
+  border-radius: 8px;
+  background: color-mix(in srgb, #f59e0b 8%, var(--card));
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notice.danger {
+  border-color: color-mix(in srgb, #ef4444 45%, var(--border));
+  border-left-color: #ef4444;
+  background: color-mix(in srgb, #ef4444 8%, var(--card));
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.form-grid .wide { grid-column: 1 / -1; }
+
+label.field { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+
+label.field input,
+label.field select,
+label.field textarea,
+.plain-input {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  min-width: 0;
+}
+
+label.field textarea { resize: vertical; line-height: 1.5; }
+
+label.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text); }
+label.check input { margin-top: 3px; }
+
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.abtn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.abtn:hover:not(:disabled) { border-color: var(--brand); }
+.abtn:disabled { opacity: .5; cursor: not-allowed; }
+.abtn.primary { background: var(--logo-blue-dark); border-color: var(--logo-blue-dark); color: #fff; }
+.abtn.quiet { border-color: transparent; background: transparent; color: var(--muted); text-decoration: underline; padding-inline: 6px; }
+.abtn.sm { padding: 4px 10px; font-size: 12px; }
+
+.progress { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--muted) 18%, transparent); overflow: hidden; }
+.progress > span { display: block; height: 100%; background: linear-gradient(to right, #14b8a6, #2563eb); }
+
+.list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+.item {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 14px;
+}
+
+.item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.item-title { font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 10%, var(--card));
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag.good { background: color-mix(in srgb, var(--accent) 18%, var(--card)); }
+.tag.warn { background: color-mix(in srgb, #f59e0b 20%, var(--card)); }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.empty { padding: 14px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); font-size: 13px; text-align: center; }
+
+.stats { display: flex; flex-wrap: wrap; gap: 12px; }
+.stat-box { flex: 1 1 130px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+.stat-box strong { display: block; font-size: 22px; letter-spacing: -.02em; color: var(--text); }
+.stat-box span { font-size: 12px; color: var(--muted); }
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; color: var(--muted); }
+
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+
+@media (max-width: 640px) {
+  .feature { padding: 14px; }
+}

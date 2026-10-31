@@ -1,0 +1,188 @@
+<!-- ===== Header ===== -->
+<!-- @if(!environment.production || welcome()) { -->
+<app-header></app-header>
+<main id="main" role="main">
+  <!-- ===== Filter bar ===== -->
+  <section>
+    <!-- Here comes the filter bar -->
+  </section>
+  <!-- ===== Ideas & Challenges ===== -->
+  <section class="ideas-challenges" id="ideas-challenges">
+    <div class="container">
+      
+      <div class="section-head">
+        <h2>Challenges & Ideas</h2>
+        <p class="section-subtitle">Collaborate on solving pressing policy problems and share innovative ideas</p>
+      </div>
+      <mat-toolbar class="challenges-toolbar">
+        <span>Challenges</span>
+        <span class="toolbar-spacer"></span>
+        <mat-form-field class="toolbar-search" appearance="outline" subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput type="text" placeholder="Search challenges" aria-label="Search challenges"
+            [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)">
+          @if (searchTerm()) {
+            <button matIconButton matSuffix type="button" aria-label="Clear search" (click)="searchTerm.set('')">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+        <mat-form-field class="toolbar-type" appearance="outline" subscriptSizing="dynamic">
+          <mat-select aria-label="Filter by type" [value]="typeFilter()" (selectionChange)="typeFilter.set($event.value)">
+            <mat-option value="">All types</mat-option>
+            <mat-option value="challenge">Challenges</mat-option>
+            <mat-option value="proposal">Proposals</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="toolbar-date" appearance="outline" subscriptSizing="dynamic">
+          <mat-date-range-input [rangePicker]="rangePicker" aria-label="Created between">
+            <input matStartDate placeholder="From" [value]="fromDate()" (dateChange)="fromDate.set($event.value)">
+            <input matEndDate placeholder="To" [value]="toDate()" (dateChange)="toDate.set($event.value)">
+          </mat-date-range-input>
+          @if (fromDate() || toDate()) {
+            <button matIconButton matSuffix type="button" aria-label="Clear dates" (click)="fromDate.set(null); toDate.set(null)">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+          <mat-datepicker-toggle matSuffix [for]="rangePicker"></mat-datepicker-toggle>
+          <mat-date-range-picker #rangePicker></mat-date-range-picker>
+        </mat-form-field>
+        <mat-form-field class="toolbar-tags" appearance="outline" subscriptSizing="dynamic">
+          <input #tagInput matInput placeholder="Tags" aria-label="Search tags"
+            [matAutocomplete]="tagAuto" (input)="tagSearch.set(tagInput.value)">
+          <mat-autocomplete #tagAuto (optionSelected)="addTag($event.option.value, tagInput)">
+            @for (tag of tagOptions(); track tag) {
+              <mat-option [value]="tag">{{ tag }}</mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+      </mat-toolbar>
+      @if (selectedTags().length) {
+        <mat-chip-set class="selected-tags" aria-label="Selected tags">
+          @for (tag of selectedTags(); track tag) {
+            <mat-chip (removed)="removeTag(tag)">
+              {{ tag }}
+              <button matChipRemove [attr.aria-label]="'Remove ' + tag">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          }
+        </mat-chip-set>
+      }
+
+      @if (total() > 0) {
+        <mat-paginator
+          [length]="total()"
+          [pageIndex]="pageIndex()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoading()"
+          showFirstLastButtons
+          aria-label="Select challenges page (top)"
+          (page)="onPage($event)">
+        </mat-paginator>
+      }
+
+      <!-- Challenges Tab -->
+        <div class="challenges-grid">
+          <!-- Debug info -->
+          <div style="display: none;">
+            Data count: {{ challengesData().length }} | 
+            Computed count: {{ challenges().length }} |
+            Loading: {{ isLoading() }}
+          </div>
+          
+          @for (item of challenges(); track item.challenge.id) {
+            <app-challenge-item 
+              [challenge]="item.challenge" 
+              [allIdeas]="item.ideas"
+              [ideaCount]="item.ideaCount"
+              [allComments]="item.comments"
+              (voteChallenge)="onVoteChallenge($event)"
+              (voteIdea)="onVoteIdea($event)"
+              (voteComment)="onVoteComment($event)">
+            </app-challenge-item>
+          }
+          
+          @if (challenges().length === 0 && !isLoading()) {
+            <div class="empty-state">
+              <p>No challenges yet. Be the first to create one!</p>
+            </div>
+          }
+        </div>
+        
+        @if (loadError()) {
+          <div class="error-message">
+            <p>{{ loadError() }}</p>
+            <button class="btn secondary" (click)="retry()">Retry</button>
+          </div>
+        }
+        
+        @if (isLoading()) {
+          <div class="loading-indicator">
+            <p>Loading challenges...</p>
+          </div>
+        }
+        
+        @if (total() > 0) {
+          <mat-paginator
+            [length]="total()"
+            [pageIndex]="pageIndex()"
+            [pageSize]="pageSize()"
+            [pageSizeOptions]="pageSizeOptions"
+            [disabled]="isLoading()"
+            showFirstLastButtons
+            aria-label="Select challenges page"
+            (page)="onPage($event)">
+          </mat-paginator>
+        }
+    </div>
+  </section>
+
+  <!-- ===== Trust & safeguards ===== -->
+  <section class="section trust" id="safeguards">
+    <div class="container">
+      <h2>Quality & safeguards</h2>
+      <ul class="badges" role="list">
+        <li class="badge">✅ Identity verification</li>
+        <li class="badge">🔎 Evidence transparency</li>
+        <li class="badge">🎓 Expertise weighting</li>
+        <li class="badge">🤝 Reputation & civility</li>
+        <li class="badge">🛡️ AI moderation assist</li>
+        <li class="badge">🔐 Privacy by design</li>
+      </ul>
+      <p class="fineprint">Designed to elevate thoughtful contributions — not volume.</p>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="section cta" id="cta">
+    <div class="container cta-inner">
+      <h2>Ready to propose something better?</h2>
+      <p>Draft a law in minutes with guidance and real-time feedback.</p>
+      <div>
+        <a class="btn primary lg" href="#create">Create proposal</a>
+        <a class="btn secondary lg" href="#learn">Learn more</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== Footer ===== -->
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-inner">
+    <div>
+      <a class="brand" routerLink="/">
+        <span class="brand-logo" aria-hidden="true">⚖️</span>
+        <span class="brand-text">Time to unite Earth</span>
+      </a>
+      <p class="fineprint">An open, nonpartisan civic project for high-quality participation.</p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="#terms">Terms</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#impressum">Impressum</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</footer>

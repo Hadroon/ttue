@@ -1,0 +1,442 @@
+<app-header></app-header>
+
+<main class="workbench" id="main" role="main">
+  <section class="section workspace">
+  <div class="container workspace-grid" [class.draft-layout]="activeSection() === 'draft'">
+  <div class="content-card">
+    @if (challenge()) {
+      <header class="challenge-header">
+        <div class="share-row">
+          <span class="category-badge">{{ challenge()!.type === 'proposal' ? 'Proposal' : 'Challenge' }} • {{ challenge()!.category }}</span>
+          <app-share-button
+            [title]="challenge()!.title"
+            [text]="challenge()!.description"
+            path="/article-workbench"
+            [queryParams]="{ challengeId: challengeId(), section: 'challenge' }"
+            label="Share"
+            ariaLabel="Share this challenge">
+          </app-share-button>
+        </div>
+        <h1 class="document-title">{{ challenge()!.title }}</h1>
+      </header>
+    }
+    <div class="page-nav">
+    <nav mat-tab-nav-bar
+         class="page-nav-tabs"
+         [tabPanel]="pageNavPanel"
+         aria-label="In-page navigation">
+      <a mat-tab-link
+         [active]="activeSection() === 'challenge'"
+         (click)="scrollToSection('challenge')">Challenge
+        @if (commentsTotal() > 0) {<span class="tab-count" [attr.aria-label]="commentsTotal() + ' comments'">{{ commentsTotal() }}</span>}
+      </a>
+      <a mat-tab-link
+         [active]="activeSection() === 'draft'"
+         (click)="scrollToSection('draft')">Draft bill
+        @if (revisions().length > 0) {<span class="tab-count">v{{ revisions().length }}</span>}
+        @if (pendingProposals().length > 0) {<span class="tab-count" [attr.aria-label]="pendingProposals().length + ' pending proposals'">{{ pendingProposals().length }}</span>}
+      </a>
+      <a mat-tab-link
+         [active]="activeSection() === 'ideas'"
+         (click)="scrollToSection('ideas')">Ideas
+        @if (ideas().length > 0) {<span class="tab-count">{{ ideas().length }}</span>}
+      </a>
+      <a mat-tab-link
+         [active]="activeSection() === 'links'"
+         (click)="scrollToSection('links')">Links
+        @if (links().length > 0) {<span class="tab-count">{{ links().length }}</span>}
+      </a>
+      <a mat-tab-link
+         [active]="activeSection() === 'actions'"
+         (click)="scrollToSection('actions')">Actions</a>
+    </nav>
+    </div>
+  <mat-tab-nav-panel #pageNavPanel></mat-tab-nav-panel>
+
+  @if (activeSection() === 'challenge') {
+      <article class="card-body" id="challenge">
+        @if (challenge()) {
+          <div class="document-body rich-text" [innerHTML]="challenge()!.description"></div>
+        } @else if (loadingChallenge()) {
+          <p class="document-body">Loading challenge...</p>
+        } @else if (challengeError()) {
+          <p class="document-body" style="color: var(--color-error, red);">{{ challengeError() }}</p>
+        } @else {
+          <h1 class="document-title">Compose long-form proposals with precision.</h1>
+          <p class="document-body">Use the workbench to craft evidence-rich drafts, compare revisions, and prepare your article for expert review before it reaches the community feed.</p>
+        }
+
+        <div class="editor-controls">
+          <div class="action-buttons">
+            <button type="button" class="btn primary" (click)="publishDraft()" [disabled]="savingDraft()">
+              {{ savingDraft() ? 'Publishing...' : 'Publish current draft' }}
+            </button>
+            <button type="button" class="btn secondary" (click)="saveSnapshot()" [disabled]="savingDraft()">
+              {{ savingDraft() ? 'Saving...' : 'Save snapshot' }}
+            </button>
+          </div>
+          @if (draftError()) {
+            <p style="color: var(--color-error, red);">{{ draftError() }}</p>
+          }
+          <ul class="revision-stats" aria-label="Draft metrics">
+            <li class="stat-item"><span aria-hidden="true">📝</span> {{ diffStats().added }} words added vs last snapshot</li>
+            <li class="stat-item"><span aria-hidden="true">✂️</span> {{ diffStats().removed }} words trimmed</li>
+            <li class="stat-item"><span aria-hidden="true">🕒</span> {{ revisions().length }} tracked revisions</li>
+          </ul>
+        </div>
+      </article>
+
+      @if (challengeId() != null) {
+        <div class="card-body comments-container" id="comments">
+          @if (commentsLoading()) {
+            <p class="muted-note" style="text-align:center; padding: 2rem 0;">Loading comments...</p>
+          } @else {
+            <app-comments
+              [entityId]="challengeId()!"
+              entityType="challenge"
+              [shareChallengeId]="challengeId() ?? undefined"
+              [allComments]="challengeComments()"
+              [parentIsMarked]="!!challenge()?.isMarked"
+              [serverPaging]="true"
+              [totalCount]="commentsTotal()"
+              [hasMore]="commentsHasMore()"
+              [loadingMore]="commentsLoadingMore()"
+              (sortChange)="onCommentsSortChange($event)"
+              (loadMore)="onLoadMoreComments()"
+              (voteComment)="onVoteComment($event)">
+            </app-comments>
+          }
+        </div>
+      }
+  }
+
+  @if (activeSection() === 'draft') {
+  <div class="card-body compose-board" id="draft">
+      @if (activeSection() === 'draft') {
+      <article class="editor-panel" id="editor" aria-label="Editor panel">
+        <header class="panel-head">
+          <div>
+            <h2>Draft workspace</h2>
+            <p>Format content, cite evidence, and refine your narrative for publication.</p>
+            @if (backendDraft()) {
+              <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                Created by {{ backendDraft()!.creatorUsername }} • Last updated {{ backendDraft()!.updatedAt | date:'short' }}
+              </p>
+            }
+          </div>
+          <div class="panel-actions">
+            <app-share-button
+              [title]="'Draft bill: ' + (challenge()?.title ?? '')"
+              [text]="backendDraft()?.content ?? challenge()?.description ?? ''"
+              path="/article-workbench"
+              [queryParams]="{ challengeId: challengeId(), section: 'draft' }"
+              label="Share"
+              ariaLabel="Share this draft bill">
+            </app-share-button>
+            <button type="button" class="btn" [class.primary]="!isEditing()" (click)="toggleEditMode()" [disabled]="loadingDraft()">
+              {{ isEditing() ? 'Done Editing' : 'Edit' }}
+            </button>
+            @if (isEditing()) {
+            <button type="button" class="link-btn" (click)="formatBlock('H2')">H2</button>
+            <button type="button" class="link-btn" (click)="formatBlock('P')">Paragraph</button>
+            <button type="button" class="link-btn" (click)="formatBlock('BLOCKQUOTE')">Quote</button>
+            }
+          </div>
+        </header>
+
+        @if (loadingDraft()) {
+        <div style="padding: 3rem; text-align: center; color: #6b7280;">
+          <p>Loading draft...</p>
+        </div>
+        } @else if (noDraft() && !isEditing()) {
+        <div style="padding: 3rem; text-align: center; color: #6b7280;">
+          <p style="font-size: 1.125rem; margin-bottom: 0.75rem;">No draft has been created for this challenge yet.</p>
+          <p>Click <strong>Edit</strong> to start writing the first draft, or <strong>Save snapshot</strong> to persist your work.</p>
+        </div>
+        } @else if (isEditing()) {
+        <div class="editor-toolbar" role="toolbar" aria-label="Formatting controls">
+          @for (action of formattingActions; track action.command) {
+          <button type="button"
+                  class="tool-btn"
+                  [attr.aria-label]="action.label"
+                  (click)="applyFormatting(action.command)">{{ action.icon }}</button>
+          }
+          <div class="toolbar-divider" aria-hidden="true"></div>
+          <button type="button" class="tool-btn" aria-label="Insert link" (click)="insertLink()">Link</button>
+          <button type="button" class="tool-btn" aria-label="Clear formatting" (click)="clearFormatting()">Clear</button>
+        </div>
+
+        <div class="editor-surface" #editorArea contenteditable="true" spellcheck="true" (input)="onEditorInput()" aria-label="Article editor" data-placeholder="Start drafting your article...">
+        </div>
+        } @else {
+        <div class="editor-view" #draftView [class.collapsed]="!draftExpanded()" [innerHTML]="draftHtml()" aria-label="Article preview"></div>
+        @if (draftOverflows()) {
+          <button type="button" class="link-btn draft-toggle" [attr.aria-expanded]="draftExpanded()" (click)="draftExpanded.set(!draftExpanded())">
+            {{ draftExpanded() ? 'Show less' : 'Show more' }}
+          </button>
+        }
+        }
+
+        @if (isEditing()) {
+        <footer class="panel-footer">
+          <div class="footer-actions">
+            <button type="button" class="btn primary" (click)="saveSnapshot()" [disabled]="savingDraft()">
+              {{ savingDraft() ? 'Saving...' : (backendDraft() && !isDraftCreator() ? 'Submit as proposal' : 'Save changes') }}
+            </button>
+            <button type="button" class="btn secondary" (click)="revertToSnapshot()">Revert to snapshot</button>
+            <button type="button" class="btn ghost" (click)="resetDraft()">Reset to template</button>
+          </div>
+          @if (draftError()) {
+            <p style="color: var(--color-error, red);">{{ draftError() }}</p>
+          }
+          <small class="muted-note">Snapshots capture the exact markup for legal auditing and change logs.</small>
+        </footer>
+        }
+      </article>
+      }
+  </div>
+  }
+
+  <!-- rendered in the aside while on the Draft tab -->
+  <ng-template #diffPanel>
+      <article class="diff-panel" id="diff" aria-label="Diff panel">
+        @if (isEditing()) {
+
+        <header class="panel-head">
+          <div>
+            <h2>Live diff</h2>
+            <p>Inspect how the draft diverges from the last saved snapshot.</p>
+          </div>
+          @if (pendingProposals().length > 0) {
+            <div class="proposal-badge">
+              {{ pendingProposals().length }} pending proposal{{ pendingProposals().length > 1 ? 's' : '' }}
+            </div>
+          }
+        </header>
+      }
+
+        <!-- Proposal diff view (when a proposal is selected) -->
+        @if (selectedProposal()) {
+        <section class="diff-body proposal-diff-view">
+          <div class="proposal-header">
+            <div class="proposal-info">
+              <h3>Proposal by {{ selectedProposal()!.proposerUsername }}</h3>
+              <span class="proposal-date">{{ selectedProposal()!.createdAt | date:'medium' }}</span>
+            </div>
+            <button type="button" class="btn secondary sm" (click)="clearProposalView()">Back to diff</button>
+          </div>
+          <div class="diff-legend">
+            <span class="legend-item added">Additions</span>
+            <span class="legend-item removed">Removals</span>
+            <span class="legend-item unchanged">Unchanged</span>
+            <span class="proposal-diff-stats">
+              +{{ proposalDiffStats().added }} / -{{ proposalDiffStats().removed }} words
+            </span>
+          </div>
+          <div class="diff-content" aria-live="polite">
+            @if (editingProposal()) {
+              <div class="proposal-edit-area"
+                   contenteditable="true"
+                   spellcheck="true"
+                   aria-label="Edit proposal before accepting"
+                   [innerHTML]="proposalEditSeed()"
+                   (input)="onProposalEditInput($event)"></div>
+            } @else if (proposalDiffSegments().length === 0) {
+              <p class="muted-note">No differences between proposal and current draft.</p>
+            } @else {
+              @for (segment of proposalDiffSegments(); track $index) {
+                <span class="diff-piece"
+                      [class.diff-added]="segment.kind === 'added'"
+                      [class.diff-removed]="segment.kind === 'removed'"
+                      >{{ segment.text }}</span>
+              }
+            }
+          </div>
+          @if (isDraftCreator()) {
+          <div class="proposal-actions">
+            <button type="button" class="btn secondary" (click)="toggleProposalEdit()">
+              {{ editingProposal() ? 'Preview diff' : 'Edit before accept' }}
+            </button>
+            <button type="button" class="btn primary" (click)="resolveProposal('accept')">Accept & merge</button>
+            <button type="button" class="btn ghost" (click)="resolveProposal('reject')">Reject</button>
+          </div>
+          }
+        </section>
+        } @else if (isEditing()) {
+
+        <!-- Normal diff view -->
+        <section class="diff-body">
+          <div class="diff-legend">
+            <span class="legend-item added">Additions</span>
+            <span class="legend-item removed">Removals</span>
+            <span class="legend-item unchanged">Unchanged</span>
+          </div>
+          <div class="diff-content" aria-live="polite">
+            @if(diffSegments().length === 0) {
+              <p class="muted-note">No differences detected. Make edits in the draft to see changes.</p>
+            }
+            @else {
+              @for (segment of diffSegments(); track $index) {
+                <span class="diff-piece"
+                      [class.diff-added]="segment.kind === 'added'"
+                      [class.diff-removed]="segment.kind === 'removed'"
+                      >{{ segment.text }}</span>
+              }
+            }
+          </div>
+        </section>
+        }
+
+        <footer class="panel-footer">
+          <!-- Proposals section -->
+          @if (proposals().length > 0) {
+          <h3 class="snapshot-title">Proposals</h3>
+          <ul class="snapshot-list proposal-list">
+            @for (proposal of visibleProposals(); track proposal.id) {
+            <li class="proposal-item" [class.pending]="proposal.status === 'pending'" [class.accepted]="proposal.status === 'accepted'" [class.rejected]="proposal.status === 'rejected'">
+              <div class="snapshot-label">
+                {{ proposal.proposerUsername }}
+                <span class="proposal-status-badge" [class]="proposal.status">{{ proposal.status }}</span>
+              </div>
+              <div class="snapshot-summary">{{ makeSummary(stripHtml(proposal.content)) }}</div>
+              <div class="snapshot-date">{{ proposal.createdAt | date:'medium' }}</div>
+              @if (proposal.status === 'pending') {
+                <button type="button" class="link-btn" (click)="selectProposal(proposal)">View diff</button>
+              }
+            </li>
+            }
+          </ul>
+          @if (proposals().length > listPreviewLimit) {
+            <button type="button" class="link-btn" [attr.aria-expanded]="showAllProposals()" (click)="showAllProposals.set(!showAllProposals())">
+              {{ showAllProposals() ? 'Show less' : 'Show all ' + proposals().length }}
+            </button>
+          }
+          }
+
+          <h3 class="snapshot-title">Snapshots</h3>
+          <ul class="snapshot-list">
+            @for (revision of visibleRevisions(); track revision.id) {
+            <li>
+              <div class="snapshot-label">{{ revision.label }}</div>
+              <div class="snapshot-summary">{{ revision.summary }}</div>
+              <div class="snapshot-date">{{ revision.createdAtLabel }}</div>
+            </li>
+            }
+          </ul>
+          @if (revisions().length > listPreviewLimit) {
+            <button type="button" class="link-btn" [attr.aria-expanded]="showAllSnapshots()" (click)="showAllSnapshots.set(!showAllSnapshots())">
+              {{ showAllSnapshots() ? 'Show less' : 'Show all ' + revisions().length }}
+            </button>
+          }
+        </footer>
+      </article>
+  </ng-template>
+
+  @if (activeSection() === 'ideas') {
+    <div class="card-body ideas-container" id="ideas">
+      <header class="section-head ideas-head">
+        <div class="ideas-head-text">
+          <span class="head-icon" aria-hidden="true">💡</span>
+          <div>
+            <h2>Ideas</h2>
+            <p class="section-subtitle">Community-submitted ideas for this challenge, ranked by votes.</p>
+          </div>
+        </div>
+        <button type="button" class="btn primary" (click)="navigateToAddIdea()">Add Idea</button>
+      </header>
+
+      @if (ideasLoading()) {
+        <p class="muted-note" style="text-align:center; padding: 2rem 0;">Loading ideas...</p>
+      } @else if (ideasError()) {
+        <p style="color: var(--color-error, red); text-align:center; padding: 2rem 0;">{{ ideasError() }}</p>
+      } @else {
+        <app-challenge-ideas
+          [challengeId]="challengeId() ?? ''"
+          [allIdeas]="mappedIdeas()"
+          [compact]="false"
+          (voteIdea)="onVoteIdea($event)">
+        </app-challenge-ideas>
+      }
+    </div>
+  }
+
+  @if (activeSection() === 'links') {
+    <div class="card-body links-container" id="links">
+      <app-challenge-links [challengeId]="challengeId()" [(links)]="links" [loading]="linksLoading()" [loadError]="linksError()"></app-challenge-links>
+    </div>
+  }
+
+  @if (activeSection() === 'actions') {
+    <div class="card-body actions-container" id="actions">
+      <app-actions [challengeId]="challengeId()" [challengeTitle]="challenge()?.title ?? ''" (openDraft)="openDraftTab()"></app-actions>
+    </div>
+  }
+  </div>
+
+      @if (activeSection() === 'draft') {
+      <aside class="sidebar-sticky draft-vote" aria-label="Community mood">
+        <div class="voting-card">
+          <span class="voting-header">Community preview</span>
+          <h3 class="voting-title">Would you support this article?</h3>
+          <p class="voting-description">Vote to signal readiness for public deliberation. You can change your mind anytime before publication.</p>
+          <div class="tally-grid">
+            <div class="tally-box">
+              <div class="tally-value">{{ supportVotes() }}</div>
+              <div class="tally-label">Support</div>
+            </div>
+            <div class="tally-box">
+              <div class="tally-value">{{ opposeVotes() }}</div>
+              <div class="tally-label">Oppose</div>
+            </div>
+          </div>
+          <div class="vote-actions">
+            <button type="button"
+                    class="vote-btn positive"
+                    [class.active]="userVote() === 'support'"
+                    [attr.aria-pressed]="userVote() === 'support'"
+                    (click)="castVote('support')">✓ Support</button>
+            <button type="button"
+                    class="vote-btn negative"
+                    [class.active]="userVote() === 'oppose'"
+                    [attr.aria-pressed]="userVote() === 'oppose'"
+                    (click)="castVote('oppose')">✕ Oppose</button>
+          </div>
+          <p class="voting-footer">Voting tallies refresh in real time for collaborators with edit access.</p>
+          @if (voteError()) {
+            <p class="voting-footer" style="color: var(--color-error, red);">{{ voteError() }}</p>
+          }
+        </div>
+      </aside>
+      }
+
+      @if (activeSection() === 'draft' && backendDraft(); as draft) {
+          <app-comments [entityId]="draft.id" entityType="draft" [autoLoad]="true" [shareChallengeId]="challengeId() ?? undefined" shareSection="draft"></app-comments>
+      }
+
+      @if (activeSection() === 'draft') {
+      <aside class="sidebar-sticky" aria-label="Draft diff">
+        <div class="voting-card diff-card">
+          <ng-container *ngTemplateOutlet="diffPanel"></ng-container>
+        </div>
+      </aside>
+      }
+  </div>
+  </section>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div>
+        <a class="brand" routerLink="/">
+          <span class="brand-logo" aria-hidden="true">⚖️</span>
+          <span class="brand-text">Time to unite Earth</span>
+        </a>
+        <p class="fineprint">Collaborative drafting tools for accountable civic legislation.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="#guides">Guides</a>
+        <a href="#policies">Policies</a>
+        <a href="#support">Support</a>
+      </nav>
+    </div>
+  </footer>
+</main>

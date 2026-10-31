@@ -1,0 +1,76 @@
+<article class="challenge-card" [class.is-marked]="challenge().isMarked">
+  @if (challenge().isMarked) {
+  <div class="marked-banner">⚠ Reviewed by moderator</div>
+  }
+  <!-- <div class="challenge-vote">
+    <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
+      [disabled]="challenge().isMarked" [attr.aria-label]="'Vote for ' + challenge().title">
+      <span class="vote-icon">▲</span>
+      <span class="vote-count">{{ challenge().votes }}</span>
+    </button>
+  </div> -->
+  <div class="challenge-content">
+    <div class="challenge-header">
+      <!-- <div class="challenge-meta">
+        <span class="chip">{{ challenge.category }}</span>
+        <span class="urgency-badge" [class]="getUrgencyClass(challenge.urgency)">
+          {{ challenge.urgency }}
+        </span>
+      </div>
+      <div class="challenge-header-right">
+        @if (challenge.rewardPool) {
+        <div class="reward-pool">{{ challenge.rewardPool }}</div>
+        }
+      </div> -->
+    </div>
+
+    <div class="challenge-body">
+      <div class="challenge-step-row">
+        <span class="step-badge">1. {{ challenge().type === 'proposal' ? 'Proposal' : 'Challenge' }}</span>
+        <span class="share-tools">
+          <app-share-button [title]="challenge().title" [text]="challenge().description" path="/article-workbench"
+            [queryParams]="{ challengeId: challenge().id }" ariaLabel="Share this challenge">
+          </app-share-button>
+          <app-content-actions-menu contentType="challenge" [contentId]="challenge().id"
+            [contentLabel]="challenge().title">
+          </app-content-actions-menu>
+        </span>
+      </div>
+      <div class="challenge-vote">
+        <button class="vote-btn-large" [class.voted]="challenge().voted" (click)="onVote()"
+          [disabled]="challenge().isMarked" [attr.aria-label]="'Vote for ' + challenge().title">
+          <span class="vote-icon">▲</span>
+          <span class="vote-count">{{ challenge().votes }}</span>
+        </button>
+        <h3>
+          <a class="challenge-title-link" [routerLink]="['/article-workbench']"
+            [queryParams]="{ challengeId: challenge().id }">
+            {{ challenge().title }}
+          </a>
+        </h3>
+      </div>
+      <div class="challenge-description rich-text" [innerHTML]="challenge().description"></div>
+      <div class="challenge-tags">
+        @for (tag of challenge().tags; track tag) {
+        <button type="button" class="tag" (click)="onTagClick(tag)">#{{ tag }}</button>
+        }
+      </div>
+    </div>
+    <div class="challenge-actions">
+      <div class="challenge-actions-left">
+        <span class="challenge-proposer">
+          Proposed by
+          @if (challenge().creatorUsername; as username) {
+            <a class="challenge-proposer-link" [routerLink]="['/profile', username]">{{ username }}</a>
+          } @else {
+            Unknown
+          }
+        </span>
+      </div>
+      <div class="challenge-actions-right">
+          <button class="btn secondary sm" (click)="navigateToWorkbench()" [disabled]="challenge().isMarked">Explore
+            Challenge</button>
+        </div>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,148 @@
+<div class="challenge-ideas-container" [class.expanded]="isExpanded" [class.full]="!compact">
+  @if (filteredIdeas.length === 0) {
+    <div class="empty-state">
+      <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon>
+      <p class="empty-message">No ideas submitted yet</p>
+      <p class="empty-submessage">Be the first to propose a solution for this challenge!</p>
+      <a class="btn primary sm" href="#submit-idea">Submit your idea</a>
+    </div>
+  } @else {
+    <div class="ideas-header">
+      <div class="ideas-count">
+        <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon>
+        <span class="count-text">
+          Ideas emerging from this challenge · {{ totalCount ?? filteredIdeas.length }}
+        </span>
+      </div>
+      
+      @if (!compact) {
+        <div class="ideas-controls">
+          <div class="control-group">
+            <label for="filter-status-{{ challengeId }}">Status:</label>
+            <select id="filter-status-{{ challengeId }}" (change)="onFilterChange($event)" [(ngModel)]="filterStatus">
+              <option value="all">All</option>
+              <option value="New">New</option>
+              <option value="Under Review">Under Review</option>
+              <option value="In Development">In Development</option>
+              <option value="Implemented">Implemented</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="sort-ideas-{{ challengeId }}">Sort:</label>
+            <select id="sort-ideas-{{ challengeId }}" (change)="onSortChange($event)" [(ngModel)]="sortBy">
+              <option value="votes">Most voted</option>
+              <option value="recent">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="title">Alphabetical</option>
+            </select>
+          </div>
+        </div>
+      }
+      
+      @if (compact && filteredIdeas.length > 3) {
+        <button class="toggle-btn" (click)="toggleExpand()" [attr.aria-expanded]="isExpanded">
+          {{ isExpanded ? 'Show less' : 'Show all ' + filteredIdeas.length }}
+          <span class="toggle-icon">{{ isExpanded ? '▲' : '▼' }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="ideas-grid" [class.compact]="!isExpanded">
+      @for (idea of displayedIdeas; track idea.id) {
+        <article class="idea-card-mini" [id]="'idea-' + idea.id" [class.is-marked]="idea.isMarked" [class.fragment-target]="highlightedId() === 'idea-' + idea.id">
+          @if (idea.isMarked) {
+            <div class="marked-banner">⚠ Reviewed by moderator</div>
+          }
+          <div class="idea-card-header">
+            <span class="step-badge-solution">2. Leading Solution</span>
+            <span class="share-tools">
+              <app-share-button
+                [title]="idea.title"
+                [text]="idea.description"
+                path="/article-workbench"
+                [queryParams]="{ challengeId: challengeId, section: 'ideas' }"
+                [fragment]="'idea-' + idea.id"
+                ariaLabel="Share this idea">
+              </app-share-button>
+              <app-content-actions-menu
+                contentType="idea"
+                [contentId]="idea.id"
+                [contentLabel]="idea.title">
+              </app-content-actions-menu>
+            </span>
+          </div>
+
+          <div class="idea-card-body">
+            <div class="idea-vote-row">
+              <button class="vote-btn-mini" [class.voted]="idea.voted" (click)="onVoteIdea(idea.id)"
+                [disabled]="idea.isMarked"
+                [attr.aria-label]="'Vote for ' + idea.title">
+                <span class="vote-icon">▲</span>
+                <span class="vote-count">{{ idea.votes }}</span>
+              </button>
+              <h3 class="idea-title">
+                <a class="idea-title-link" [routerLink]="['/article-workbench']"
+                  [queryParams]="{ challengeId: challengeId, section: 'ideas' }">{{ idea.title }}</a>
+              </h3>
+            </div>
+            <p class="idea-description-mini">{{ idea.description }}</p>
+
+            <div class="idea-footer">
+              <span class="idea-author-mini">by
+                @if (idea.authorUsername; as username) {
+                  <a class="idea-author-link" [routerLink]="['/profile', username]">{{ idea.author }}</a>
+                } @else {
+                  {{ idea.author }}
+                }
+              </span>
+              <time class="idea-date" [dateTime]="idea.createdAt.toISOString()">
+                {{ idea.createdAt.toLocaleDateString() }}
+              </time>
+            </div>
+          </div>
+
+          @if (isExpanded) {
+            <div class="idea-card-actions">
+              <a class="btn-link" [href]="'#idea-' + idea.id">View details →</a>
+            </div>
+          }
+
+          @if (!compact) {
+            <div class="idea-card-actions">
+              <button type="button" class="btn-link" (click)="toggleComments(idea.id)"
+                [attr.aria-expanded]="openComments.has(idea.id)">
+                {{ openComments.has(idea.id) ? 'Hide comments' : 'Comments' }}
+              </button>
+            </div>
+            @if (openComments.has(idea.id)) {
+              <app-comments [entityId]="idea.id" entityType="idea" [autoLoad]="true"
+                [parentIsMarked]="!!idea.isMarked" [shareChallengeId]="challengeId" shareSection="ideas"
+                [shareFragment]="'idea-' + idea.id"></app-comments>
+            }
+          }
+        </article>
+      }
+    </div>
+
+    @if (!compact || isExpanded) {
+      <div class="ideas-pagination" role="navigation" aria-label="Ideas pagination">
+        <button class="page-btn nav-btn" (click)="prevPage()" [disabled]="currentPage === 1" aria-label="Previous page">
+          &#8592;
+        </button>
+        @for (page of visiblePageNumbers; track page) {
+          @if (page < 0) {
+            <span class="page-ellipsis">&hellip;</span>
+          } @else {
+            <button class="page-btn" [class.active]="page === currentPage" (click)="goToPage(page)" [attr.aria-label]="'Page ' + page" [attr.aria-current]="page === currentPage ? 'page' : null">
+              {{ page }}
+            </button>
+          }
+        }
+        <button class="page-btn nav-btn" (click)="nextPage()" [disabled]="currentPage === totalPages" aria-label="Next page">
+          &#8594;
+        </button>
+        <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+      </div>
+    }
+  }
+</div>

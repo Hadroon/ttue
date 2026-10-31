@@ -1,0 +1,206 @@
+<div class="comments-container">
+  <div class="comments-header">
+    <div class="comments-count">
+      <!-- <span class="count-icon">💬</span> -->
+      <mat-icon class="material-symbols-outlined">comment</mat-icon>
+      <span class="count-text">{{ commentCount }} comment{{ commentCount !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <div class="comments-controls">
+      @if(!compact) {
+      <div class="control-group">
+        <label for="sort-comments-{{ entityId }}">Sort:</label>
+        <select id="sort-comments-{{ entityId }}" (change)="onSortChange($event)" [value]="sortBy()">
+          <option value="recent">Most recent</option>
+          <option value="votes">Most voted</option>
+          <option value="oldest">Oldest first</option>
+          <option value="replies">Most replied</option>
+        </select>
+      </div>
+    }
+      @if (!hideAddCommentButton) {
+        <a class="btn primary" (click)="toggleCommentBox()" [class.disabled]="parentIsMarked" [attr.disabled]="parentIsMarked ? true : null">
+          {{ showCommentBox() ? 'Cancel' : 'Add comment' }}
+        </a>
+      }
+    </div>
+  </div>
+
+  @if (showCommentBox()) {
+    <div class="comment-input-box">
+      <textarea 
+        [ngModel]="newCommentText()"
+        (ngModelChange)="newCommentText.set($event)"
+        placeholder="Share your thoughts, questions, or suggestions..."
+        rows="3"
+        maxlength="2000"
+        class="comment-textarea"></textarea>
+      <div class="comment-actions">
+        <button class="btn ghost sm" (click)="toggleCommentBox()">Cancel</button>
+        <button class="btn primary sm" (click)="submitComment()" [disabled]="!newCommentText().trim()">
+          Post comment
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="empty-submessage">Loading comments...</p>
+  } @else if (filteredComments().length === 0) {
+    <div class="empty-state">
+      <!-- <div class="empty-icon">💬</div> -->
+      <p class="empty-message">No comments yet</p>
+      <p class="empty-submessage">Be the first to share your thoughts!</p>
+    </div>
+  } @else {
+    <div class="comments-list">
+      @for (comment of displayedComments(); track comment.id) {
+        <article class="comment-card" [id]="'comment-' + comment.id" [class.is-marked]="comment.isMarked" [class.fragment-target]="highlightedId() === 'comment-' + comment.id">
+          @if (comment.isMarked) {
+            <div class="marked-banner">⚠ Reviewed by moderator</div>
+          }
+          <div class="comment-content">
+            <div class="comment-header">
+              <div class="comment-author">
+                @if (comment.authorUsername; as username) {
+                  <a class="author-name author-link" [routerLink]="['/profile', username]">{{ comment.author }}</a>
+                } @else {
+                  <span class="author-name">{{ comment.author }}</span>
+                }
+                @if (comment.authorRole) {
+                  <span class="author-role">{{ comment.authorRole }}</span>
+                }
+                <span class="comment-time">{{ formatTimeAgo(comment.createdAt) }}</span>
+              </div>
+              <span class="share-tools">
+                <app-share-button
+                  [title]="'Comment by ' + comment.author"
+                  [text]="comment.content"
+                  path="/article-workbench"
+                  [queryParams]="{ challengeId: shareChallengeIdValue ?? comment.challengeId, section: shareSection }"
+                  [fragment]="shareFragment ?? 'comment-' + comment.id"
+                  ariaLabel="Share this comment">
+                </app-share-button>
+                <app-content-actions-menu
+                  contentType="comment"
+                  [contentId]="comment.id"
+                  [contentLabel]="'comment by ' + comment.author">
+                </app-content-actions-menu>
+              </span>
+            </div>
+
+            <div class="comment-main">
+              <div class="comment-vote">
+                <button class="vote-btn-comment" [class.voted]="comment.voted" (click)="onVoteComment(comment.id)"
+                  [disabled]="comment.isMarked">
+                  <span class="vote-icon">▲</span>
+                  <span class="vote-count">{{ comment.votes }}</span>
+                </button>
+              </div>
+              <div class="comment-body">
+                <p>{{ comment.content }}</p>
+              </div>
+            </div>
+
+            <div class="comment-footer">
+              <div class="comment-footer-left">
+                @if (comment.replies && comment.replies.length > 0) {
+                  <button type="button" class="btn-text replies-count" (click)="toggleReplies(comment.id)"
+                    [attr.aria-expanded]="expandedReplies().has(comment.id)">
+                    {{ expandedReplies().has(comment.id) ? 'Hide' : '' }}
+                    {{ comment.replies.length }} {{ comment.replies.length === 1 ? 'reply' : 'replies' }}
+                  </button>
+                }
+              </div>
+              <div class="comment-footer-right">
+                <button class="btn-text" (click)="startReply(comment.id)">
+                  Reply
+                </button>
+              </div>
+            </div>
+
+            @if (replyToId() === comment.id) {
+              <div class="reply-input-box">
+                <textarea 
+                  [ngModel]="replyText()"
+                  (ngModelChange)="replyText.set($event)"
+                  placeholder="Write your reply..."
+                  rows="2"
+                  maxlength="2000"
+                  appAutofocus
+                  class="comment-textarea"></textarea>
+                <div class="comment-actions">
+                  <button class="btn ghost sm" (click)="cancelReply()">Cancel</button>
+                  <button class="btn primary sm" (click)="submitReply(comment.id)" [disabled]="!replyText().trim()">
+                    Post reply
+                  </button>
+                </div>
+              </div>
+            }
+
+            @if (comment.replies && comment.replies.length > 0 && expandedReplies().has(comment.id)) {
+              <div class="replies-list">
+                @for (reply of comment.replies; track reply.id) {
+                  <article class="reply-card" [id]="'comment-' + reply.id" [class.fragment-target]="highlightedId() === 'comment-' + reply.id">
+                    <div class="comment-content">
+                      <div class="comment-header">
+                        <div class="comment-author">
+                          @if (reply.authorUsername; as username) {
+                            <a class="author-name author-link" [routerLink]="['/profile', username]">{{ reply.author }}</a>
+                          } @else {
+                            <span class="author-name">{{ reply.author }}</span>
+                          }
+                          @if (reply.authorRole) {
+                            <span class="author-role">{{ reply.authorRole }}</span>
+                          }
+                          <span class="comment-time">{{ formatTimeAgo(reply.createdAt) }}</span>
+                        </div>
+                        <app-share-button
+                          [title]="'Reply by ' + reply.author"
+                          [text]="reply.content"
+                          path="/article-workbench"
+                          [queryParams]="{ challengeId: shareChallengeIdValue ?? reply.challengeId, section: shareSection }"
+                          [fragment]="shareFragment ?? 'comment-' + reply.id"
+                          ariaLabel="Share this reply">
+                        </app-share-button>
+                      </div>
+
+                      <div class="comment-main">
+                        <div class="comment-vote">
+                          <button class="vote-btn-comment sm" [class.voted]="reply.voted" (click)="onVoteComment(reply.id)"
+                            [disabled]="reply.isMarked">
+                            <span class="vote-icon">▲</span>
+                            <span class="vote-count">{{ reply.votes }}</span>
+                          </button>
+                        </div>
+                        <div class="comment-body">
+                          <p>{{ reply.content }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                }
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (!compact && !isServerPaged && filteredComments().length > displayedComments().length) {
+      <div class="show-more">
+        <a class="btn ghost sm" href="#view-all-comments">
+          View all {{ filteredComments().length }} comments
+        </a>
+      </div>
+    }
+
+    @if (isServerPaged && hasMore) {
+      <div class="show-more">
+        <button class="btn ghost sm" (click)="onLoadMore()" [disabled]="loadingMore">
+          {{ loadingMore ? 'Loading...' : 'Load more comments' }}
+        </button>
+      </div>
+    }
+  }
+</div>

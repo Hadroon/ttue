@@ -1,0 +1,120 @@
+import { Injectable, signal, computed } from '@angular/core';
+import { Subject } from 'rxjs';
+import { ApiService, User } from './api.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private readonly _currentUser = signal<User | null>(null);
+  private readonly _isLoading = signal(false);
+  private readonly _error = signal<string | null>(null);
+  private readonly _loginSuccess$ = new Subject<User>();
+
+  // Read-only signals for components
+  readonly currentUser = this._currentUser.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly error = this._error.asReadonly();
+  readonly isLoggedIn = computed(() => this._currentUser() !== null);
+  readonly isAdmin = computed(() => this._currentUser()?.isAdmin === true);
+  // Emits after a successful login so views can refresh vote state
+  readonly loginSuccess$ = this._loginSuccess$.asObservable();
+
+  constructor(private apiService: ApiService) {
+    this.initializeAuth();
+  }
+
+  /**
+   * Initialize auth from localStorage token if available
+   */
+  private initializeAuth() {
+    const token = localStorage.getItem('auth_token');
+    if (token && this.isTokenExpired(token)) {
+      this.logout();
+      return;
+    }
+    if (token) {
+      // Token exists, could verify it here or just mark as logged in
+      // For now, we'll rely on the token being valid
+      const userJson = localStorage.getItem('current_user');
+      if (userJson) {
+        try {
+          this._currentUser.set(JSON.parse(userJson));
+        } catch {
+          this.logout();
+        }
+      }
+    }
+  }
+
+  /**
+   * Handle successful login
+   */
+  setLoggedInUser(user: User, token: string) {
+    this._currentUser.set(user);
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('current_user', JSON.stringify(user));
+    this._error.set(null);
+    this._loginSuccess$.next(user);
+  }
+
+  /**
+   * Handle logout
+   */
+  logout() {
+    this._currentUser.set(null);
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('current_user');
+    this._error.set(null);
+  }
+
+  /**
+   * Set error message
+   */
+  setError(error: string) {
+    this._error.set(error);
+  }
+
+  /**
+   * Clear error message
+   */
+  clearError() {
+    this._error.set(null);
+  }
+
+  /**
+   * Set loading state
+   */
+  setLoading(loading: boolean) {
+    this._isLoading.set(loading);
+  }
+
+  /**
+   * Get current auth token
+   */
+  getToken(): string | null {
+    return localStorage.getItem('auth_token');
+  }
+
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    if (token && this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+    return token !== null && this._currentUser() !== null;
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const { exp } = JSON.parse(atob(payload));
+      return typeof exp === 'number' && exp * 1000 <= Date.now();
+    } catch {
+      return true;
+    }
+  }
+}
