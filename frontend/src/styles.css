@@ -48,19 +48,18 @@
 --border: #e5e7eb;
 --chip: #eef2ff;  */
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f7f9ff;
-    --panel: #fff;
-    --card: #fff;
-    --text: #0b1020;
-    --muted: #3b405a;
-    --brand: #2a66ff;
-    --brand-600: #1e54dd;
-    --accent: #0bb87b;
-    --border: rgba(0, 0, 0, .08);
-    --shadow: 0 8px 30px rgba(0, 0, 0, .08);
-  }
+/* Light theme only (dark mode disabled) */
+:root {
+  --bg: #f7f9ff;
+  --panel: #fff;
+  --card: #fff;
+  --text: #0b1020;
+  --muted: #3b405a;
+  --brand: #2a66ff;
+  --brand-600: #1e54dd;
+  --accent: #0bb87b;
+  --border: rgba(0, 0, 0, .08);
+  --shadow: 0 8px 30px rgba(0, 0, 0, .08);
 }
 
 /* ===== Base Global Styles ===== */

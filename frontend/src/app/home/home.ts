@@ -39,8 +39,8 @@ export class Home implements OnInit {
   isLoadingFeatured = false;
 
   ngOnInit() {
-    let needWelcome = window.location.hostname?.toString().includes('localhost')
-    this.welcome.set(needWelcome);
+    const isLocalhost = window.location.hostname?.toString().includes('localhost');
+    this.welcome.set(isLocalhost || localStorage.getItem('safeUser') === 'true');
     this.loadFeaturedChallenge();
     // Refresh voted state now that requests carry the auth token
     this.authService.loginSuccess$.subscribe(() => this.loadFeaturedChallenge());
@@ -276,6 +276,7 @@ export class Home implements OnInit {
     this.apiService.checkWelcome(this.welcomePassword).subscribe({
       next: (response) => {
         if (response.success && response.data) {
+          localStorage.setItem('safeUser', 'true');
           this.welcome.set(true);
         } else {
           console.error('Welcome check failed:', response.error || response.message);

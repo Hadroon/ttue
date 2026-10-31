@@ -723,17 +723,7 @@ button.btn-link {
 
 /* Connector adjustments on smaller screens - none needed now */
 
-/* Dark/Light Mode Support */
-@media (prefers-color-scheme: light) {
-  /* .challenge-ideas-container {
-    background: rgba(0, 0, 0, 0.02);
-  } */
-
-  .challenge-ideas-container.expanded {
-    background: rgba(0, 0, 0, 0.04);
-  }
-
-  /* .idea-card-mini:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  } */
+/* Light theme only */
+.challenge-ideas-container.expanded {
+  background: rgba(0, 0, 0, 0.04);
 }
