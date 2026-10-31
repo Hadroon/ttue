@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres:18
     container_name: earth-forum-postgres
     environment:
       POSTGRES_DB: ttue_dev
