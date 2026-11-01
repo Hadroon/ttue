@@ -62,26 +62,7 @@ export class ArticleWorkbench implements AfterViewInit {
     return { added, removed };
   });
 
-  readonly revisions: WritableSignal<RevisionSnapshot[]> = signal([
-    {
-      id: 1,
-      label: 'Revision 3 - Equity focus',
-      summary: 'Elevated investment floor for frontline districts and added quarterly transparency metrics.',
-      createdAtLabel: 'Oct 22, 2025'
-    },
-    {
-      id: 2,
-      label: 'Revision 2 - Infrastructure map',
-      summary: 'Introduced mitigation timelines and procurement transparency requirements.',
-      createdAtLabel: 'Oct 12, 2025'
-    },
-    {
-      id: 3,
-      label: 'Revision 1 - Initial fund setup',
-      summary: 'Seeded the Climate Resilience Fund and defined advisory panel scope.',
-      createdAtLabel: 'Oct 1, 2025'
-    }
-  ]);
+  readonly revisions: WritableSignal<RevisionSnapshot[]> =   signal([]);
 
   readonly challengeComments: WritableSignal<BaseComment[]> = signal([]);
   readonly commentsLoading: WritableSignal<boolean> = signal(false);
