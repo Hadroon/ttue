@@ -143,6 +143,9 @@
   display: block;
   font-weight: 800;
   font-size: 22px;
+  font-weight: 800;
+  font-size: 22px;
+  text-align: right;
 }
 
 .stat-label {

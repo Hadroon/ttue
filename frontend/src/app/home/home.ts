@@ -37,8 +37,13 @@ export class Home implements OnInit {
   featuredIdeaCountMap = signal<Map<number, number>>(new Map());
   featuredCommentsMap = signal<Map<number, Comment[]>>(new Map());
   isLoadingFeatured = false;
+  stats = signal({ challenges: 0, ideas: 0, actions: 0 });
 
   ngOnInit() {
+    this.apiService.getPublicStats().subscribe({
+      next: (s) => this.stats.set(s),
+      error: (e) => console.error('Error loading stats:', e)
+    });
     const isLocalhost = window.location.hostname?.toString().includes('localhost');
     this.welcome.set(isLocalhost || localStorage.getItem('safeUser') === 'true');
     this.loadFeaturedChallenge();
