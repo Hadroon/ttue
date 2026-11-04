@@ -1,6 +1,6 @@
 import { Component, signal, inject, OnInit, computed, linkedSignal, DestroyRef, Injector } from '@angular/core';
 import { toSignal, toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map, debounceTime, distinctUntilChanged, switchMap, tap, catchError, of } from 'rxjs';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -21,7 +21,7 @@ import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-challenges',
-  imports: [Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule, MatSelectModule, MatPaginatorModule],
+  imports: [RouterLink, Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule, MatSelectModule, MatPaginatorModule],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })

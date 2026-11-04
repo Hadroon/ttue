@@ -1,11 +1,12 @@
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HealthResponse, HealthService } from './shared/services/health.service';
+import { CookieBanner } from './shared/components/cookie-banner/cookie-banner';
 import { DonationReturnService } from './shared/services/donation-return.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CookieBanner],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

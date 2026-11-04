@@ -1,0 +1,13 @@
+@if (consent.bannerVisible()) {
+  <div class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent">
+    <p>
+      We use strictly necessary browser storage to keep you signed in and remember your
+      preferences. With your permission we would also use optional analytics to improve the
+      site. You can change your choice at any time.
+    </p>
+    <div class="actions">
+      <button type="button" class="reject" (click)="consent.rejectOptional()">Necessary only</button>
+      <button type="button" class="accept" (click)="consent.acceptAll()">Accept all</button>
+    </div>
+  </div>
+}
