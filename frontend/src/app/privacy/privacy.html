@@ -1,0 +1,146 @@
+<app-header></app-header>
+
+<main id="main" role="main">
+  <section class="hero">
+    <div class="container narrow">
+      <div class="kicker">Legal</div>
+      <h1>Privacy <span class="gradient-text">Policy</span></h1>
+      <p class="lead">What we collect, why, and what we never do with it: we do not sell or share your personal information.</p>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="container narrow terms-grid">
+      <nav class="toc card" aria-label="Sections">
+        <div class="card-accent" aria-hidden="true"></div>
+        <div class="toc-title">Sections</div>
+        <a href="#p1" (click)="jumpTo($event, 'p1')">1. Our promise</a>
+        <a href="#p2" (click)="jumpTo($event, 'p2')">2. Who is responsible</a>
+        <a href="#p3" (click)="jumpTo($event, 'p3')">3. What we collect</a>
+        <a href="#p4" (click)="jumpTo($event, 'p4')">4. Why we use it</a>
+        <a href="#p5" (click)="jumpTo($event, 'p5')">5. Who handles data for us</a>
+        <a href="#p6" (click)="jumpTo($event, 'p6')">6. What is public</a>
+        <a href="#p7" (click)="jumpTo($event, 'p7')">7. Cookies and browser storage</a>
+        <a href="#p8" (click)="jumpTo($event, 'p8')">8. How long we keep data</a>
+        <a href="#p9" (click)="jumpTo($event, 'p9')">9. Security</a>
+        <a href="#p10" (click)="jumpTo($event, 'p10')">10. Your rights</a>
+        <a href="#p11" (click)="jumpTo($event, 'p11')">11. Children</a>
+        <a href="#p12" (click)="jumpTo($event, 'p12')">12. International transfers</a>
+        <a href="#p13" (click)="jumpTo($event, 'p13')">13. Changes</a>
+        <a href="#p14" (click)="jumpTo($event, 'p14')">14. Contact</a>
+      </nav>
+
+      <article class="terms card">
+        <div class="card-accent" aria-hidden="true"></div>
+
+        <p><strong>Time to unite Earth (Earth Forum)</strong></p>
+        <p><strong>Last updated:</strong> [EFFECTIVE DATE]</p>
+
+        <h2 id="p1">1. Our promise</h2>
+        <p><strong>We never sell your personal information, and we never share it with anyone for their own purposes.</strong> We do not run advertising, we do not sell or rent data, and we do not give your details to data brokers, advertisers or other organizations to use for themselves.</p>
+        <p>To be precise about the few cases where data does leave our own systems, so that this promise is not misleading:</p>
+        <ul>
+          <li>The companies that run the Service for us (hosting, sign-in, payments) handle data only to provide their service to us. They are listed in Section 5.</li>
+          <li>What you choose to post publicly is public (Section 6).</li>
+          <li>We may disclose data if the law or a valid legal request requires it, or where necessary to protect people from serious harm. Where lawful, we will tell you.</li>
+        </ul>
+
+        <h2 id="p2">2. Who is responsible</h2>
+        <p>The controller of your personal data is <strong>[OPERATOR LEGAL NAME]</strong>, [REGISTERED ADDRESS] ("we", "us"). You can contact us at <strong>[CONTACT EMAIL]</strong>. This policy applies to the Time to unite Earth website, web application and related services (the "Service") and forms part of our <a routerLink="/terms">Terms of Use</a>.</p>
+
+        <h2 id="p3">3. What we collect</h2>
+        <p><strong>3.1 Account data.</strong> When you sign in with Google we receive your Google account ID, verified email address, name and profile picture. If you register with email, we collect your username, email address, optional display name and a password, which we store only as a salted hash and never in readable form. You can add an optional bio, location, website and avatar to your profile. We also record when you created your account and your last two login times, and whether you are an administrator.</p>
+        <p><strong>3.2 Content and activity.</strong> What you create and do on the Service: challenges, proposals, ideas, comments, draft texts and edits, proposed changes, reference links, votes, recommendations for actions, follows, reports you file, and entries you submit in the action tools (for example legal cases and filings, evidence records, boycott targets and pledges, bounty-board tasks, applications and proofs, bill drafts, lists of representatives, media items, shareholder resolutions and protest events). Some entries are private to you and others are shared; the form tells you which. We also keep a log of reputation changes and which content caused them.</p>
+        <p><strong>3.3 Evidence records.</strong> For evidence you list in the legal-action tool we store the file name, size, SHA-256 hash, confidentiality level, capture time, and the location and device you enter. We do not store the files themselves.</p>
+        <p><strong>3.4 Donations.</strong> Card and other payment details are entered directly into Stripe's form and <strong>we never receive or store them</strong>. We receive and keep a record of each paid donation: the amount and currency, date, Stripe session and payment IDs, whether it was a live or test payment, the name and email you gave Stripe, your account ID if you were signed in, and what you designated (challenge, action, and task or case title, location and ID). These records are visible only to administrators.</p>
+        <p><strong>3.5 Technical data.</strong> Like any website, our servers and hosting platform process your IP address, browser and device type, and the pages and API calls you request, to deliver the Service, to limit abuse (for example rate limiting), and to find and fix errors. We keep an in-memory counter of requests per IP address for rate limiting.</p>
+        <p><strong>3.6 What we do not collect.</strong> We do not collect your precise device location, contacts, microphone or camera, and we do not build advertising profiles. Posting a location or an address in your content is your choice and is shown as you wrote it.</p>
+        <p><strong>3.7 Communications.</strong> If you email us, we keep the message and our reply so we can help you and keep a record.</p>
+
+        <h2 id="p4">4. Why we use it, and our legal bases</h2>
+        <ul>
+          <li><strong>To provide the Service</strong> (create and secure your account, show and moderate content, count votes and reputation, process donations): performance of our contract with you.</li>
+          <li><strong>To keep the Service safe and fair</strong> (prevent abuse, spam and fraud, handle reports, enforce our Terms, keep the rate limits working): our legitimate interests.</li>
+          <li><strong>To meet legal obligations</strong> (accounting and tax records for donations, responding to lawful requests): legal obligation.</li>
+          <li><strong>To improve the Service</strong> with analytics: only with your consent, see Section 7. At the time of writing no analytics tool is active.</li>
+          <li><strong>To communicate with you</strong> about your account or a request you made: contract or legitimate interests.</li>
+        </ul>
+        <p>We do not make decisions about you based solely on automated processing that have legal or similarly significant effects. Votes, reputation and ranking are automated signals that affect how content is displayed, and administrators can review and correct them.</p>
+
+        <h2 id="p5">5. Who handles data for us</h2>
+        <p>We use a small number of service providers that act on our instructions and only to deliver their service to us. They do not use your data for their own marketing.</p>
+        <ul>
+          <li><strong>DigitalOcean</strong>: hosts the application and database.</li>
+          <li><strong>Google</strong>: provides Google Sign-In, which runs when you choose to sign in with it. Your browser also loads web fonts and icons from Google Fonts, which means Google receives your IP address when a page loads. Google's own privacy policy applies to these.</li>
+          <li><strong>Stripe</strong>: processes donations. Stripe is an independent controller for payment, anti-fraud and legal-compliance data it collects from you, and its privacy policy applies to that data.</li>
+        </ul>
+        <p>We do not otherwise disclose personal data to third parties, and we will update this list before we add a provider that handles personal data.</p>
+
+        <h2 id="p6">6. What is public</h2>
+        <p>The Service is a public forum. The following is visible to anyone, including people who are not signed in and search engines: your username, display name, avatar, bio, location and website if you add them, your reputation, public content you post, your votes where the Service displays them, follower connections, and shared action entries including protest and organizer details you enter. <strong>Your email address is shown only to you.</strong> Do not put information in public fields that you want to keep private, and be careful about the personal data of others. Once something is public, others may copy it, and we cannot recall copies.</p>
+
+        <h2 id="p7">7. Cookies and browser storage</h2>
+        <p>We do not set advertising or tracking cookies. We use your browser's local storage for the following:</p>
+        <ul>
+          <li><strong>auth_token</strong> and <strong>current_user</strong>: keep you signed in (the token is valid for 7 days) and remember who you are in the app. Strictly necessary.</li>
+          <li><strong>cookie_consent</strong>: remembers your choice in the banner. Strictly necessary.</li>
+          <li><strong>safeUser</strong>: remembers that you have passed the welcome notice. Strictly necessary.</li>
+        </ul>
+        <p>You can delete these in your browser settings, or sign out, which removes the sign-in items. Strictly necessary storage does not need consent. <strong>Optional analytics</strong> would only run if you accept them in the banner. You can change your choice at any time, and "Necessary only" keeps analytics off. Google Sign-In and Stripe may set their own cookies or storage while you use them, under their own policies.</p>
+
+        <h2 id="p8">8. How long we keep data</h2>
+        <ul>
+          <li><strong>Account data</strong>: while your account is open, and deleted or anonymized after you close it, except where we must keep some of it (below).</li>
+          <li><strong>Public content and shared drafts</strong>: until you or moderators remove it. Contributions others have built on, revision history and reputation logs may be kept in anonymized or deleted-user form so that shared work stays intact.</li>
+          <li><strong>Donation records</strong>: as long as accounting, tax and fraud-prevention law requires, generally <strong>[7–10] years</strong>.</li>
+          <li><strong>Reports and moderation records</strong>: as long as needed to handle the report, prevent repeat abuse and meet legal duties.</li>
+          <li><strong>Server and hosting logs</strong>: for a limited time, normally <strong>[30–90 days]</strong>.</li>
+          <li><strong>Backups</strong>: deleted data can remain in encrypted backups for up to <strong>[30–90 days]</strong> before it is overwritten.</li>
+        </ul>
+
+        <h2 id="p9">9. Security</h2>
+        <p>We use industry-standard measures: encrypted connections (HTTPS), passwords stored as salted hashes, signed session tokens that expire, restricted administrator access, input validation and rate limiting. No system is perfectly secure. If a breach is likely to put your rights at risk, we will notify you and the authorities as the law requires.</p>
+
+        <h2 id="p10">10. Your rights</h2>
+        <p>Depending on where you live (for example under the EU/UK GDPR, or in California and other US states), you may have the right to:</p>
+        <ul>
+          <li><strong>access</strong> the personal data we hold about you and get a copy;</li>
+          <li><strong>correct</strong> inaccurate data (you can edit your profile yourself);</li>
+          <li><strong>delete</strong> your data and close your account;</li>
+          <li><strong>restrict</strong> or <strong>object</strong> to certain processing, including processing based on our legitimate interests;</li>
+          <li><strong>receive your data</strong> in a portable format;</li>
+          <li><strong>withdraw consent</strong> at any time, for example for analytics, without affecting earlier processing; and</li>
+          <li><strong>complain</strong> to your data protection authority.</li>
+        </ul>
+        <p>There is no self-service account deletion yet. To use any of these rights, email <strong>[CONTACT EMAIL]</strong> from the address on your account. We will verify it is you and respond within one month (or the period required by your law). We do not discriminate against anyone for exercising their rights. We do not sell or share personal information, as those terms are used in US state privacy laws.</p>
+
+        <h2 id="p11">11. Children</h2>
+        <p>The Service is not for anyone under <strong>16</strong>, and we do not knowingly collect their data. If you believe a child has given us personal data, contact us and we will delete it.</p>
+
+        <h2 id="p12">12. International transfers</h2>
+        <p>Our providers may process data in countries outside your own, including outside the EU/UK. Where this happens we rely on lawful transfer mechanisms such as the EU-US Data Privacy Framework or Standard Contractual Clauses, as applicable to the provider. Our hosting region is <strong>[HOSTING REGION]</strong>.</p>
+
+        <h2 id="p13">13. Changes</h2>
+        <p>We may update this policy, for example when we add a feature or a provider. We will post the new version with a new date and, for material changes, notify you in the Service or by email before they take effect. If we ever want to use your data in a way that needs your consent, we will ask first.</p>
+
+        <h2 id="p14">14. Contact</h2>
+        <p><strong>[OPERATOR LEGAL NAME]</strong><br>[REGISTERED ADDRESS]<br>Email: <strong>[CONTACT EMAIL]</strong><br>[Data protection officer or EU/UK representative, if you are required to appoint one.]</p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-inner">
+    <div>
+      <a class="brand" routerLink="/"><span aria-hidden="true">⚖️</span> Time to unite Earth</a>
+      <p class="fineprint">An open, nonpartisan civic project for high-quality participation.</p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <a routerLink="/terms">Terms</a>
+      <a routerLink="/privacy">Privacy</a>
+      <a href="#impressum">Impressum</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</footer>

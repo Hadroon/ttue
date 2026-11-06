@@ -20,7 +20,7 @@ We operate the website and web application available at **[WEBSITE URL]**, known
 - earn **reputation** within civic domains; and
 - make **one-time donations** to support the platform or specific community efforts.
 
-By creating an account, signing in, accessing or using the Service, or making a donation, you agree to this Agreement and to our **Privacy Policy** and **Cookie Policy** (together the **"Policies"**). If you do not agree, do not use the Service.
+By creating an account, signing in, accessing or using the Service, or making a donation, you agree to this Agreement and to our **Privacy Policy** (the **"Policies"**, which also covers cookies and browser storage). If you do not agree, do not use the Service.
 
 If you use the Service on behalf of an organization, you confirm that you have authority to bind it, and "you" includes that organization.
 
@@ -180,7 +180,7 @@ We may take enforcement action as described in Section 6 and Section 15. In seri
 
 ## 11. Privacy, cookies and analytics
 
-Our **Privacy Policy** explains what personal data we collect and why: for example your username, email, display name, bio, location, website, avatar, Google ID, login timestamps, content you create, votes, reports, and Donation records, as well as technical data needed to run the Service. Our **Cookie Policy** explains our use of strictly necessary browser storage (to keep you signed in and remember your preferences) and our **optional analytics**, which we only use if you opt in using the consent banner. You can change your choice at any time. Information you post publicly (including your username, display name, bio, avatar, reputation, public profile and public contributions) may be visible to anyone and may be copied by others.
+Our **Privacy Policy** explains what personal data we collect and why: for example your username, email, display name, bio, location, website, avatar, Google ID, login timestamps, content you create, votes, reports, and Donation records, as well as technical data needed to run the Service. We never sell or share your personal information. Section 7 of the Privacy Policy explains our use of strictly necessary browser storage (to keep you signed in and remember your preferences) and our **optional analytics**, which we only use if you opt in using the consent banner. You can change your choice at any time. Information you post publicly (including your username, display name, bio, avatar, reputation, public profile and public contributions) may be visible to anyone and may be copied by others.
 
 ## 12. Disclaimer of warranties
 
