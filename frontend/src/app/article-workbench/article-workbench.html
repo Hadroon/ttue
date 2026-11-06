@@ -313,6 +313,7 @@
           }
           }
 
+          @if (revisions().length > 0) {
           <h3 class="snapshot-title">Snapshots</h3>
           <ul class="snapshot-list">
             @for (revision of visibleRevisions(); track revision.id) {
@@ -328,7 +329,8 @@
               {{ showAllSnapshots() ? 'Show less' : 'Show all ' + revisions().length }}
             </button>
           }
-        </footer>
+                        }
+                      </footer>
       </article>
   </ng-template>
 

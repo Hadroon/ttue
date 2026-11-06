@@ -1,7 +1,21 @@
 <app-header></app-header>
 
 <main id="main" role="main">
-  @if (isAuthenticated()) {
+  @if (submitted()) {
+    <section class="hero">
+      <div class="container page-head">
+        <div class="kicker">Idea submitted</div>
+        <h1>Thank you! <span class="gradient-text">Your idea is in.</span></h1>
+        <p class="lead">
+          The community can now discuss, improve and vote on your idea.
+        </p>
+        <div class="form-actions">
+          <button type="button" class="btn secondary" (click)="backToChallenges()">Back to challenge</button>
+          <button type="button" class="btn primary" (click)="backToIdeas()">Back to ideas</button>
+        </div>
+      </div>
+    </section>
+  } @else if (isAuthenticated()) {
     <section class="hero">
       <div class="container page-head">
         <div class="kicker">New idea</div>

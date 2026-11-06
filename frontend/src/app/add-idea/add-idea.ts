@@ -34,6 +34,7 @@ export class AddIdea implements OnInit {
   route = inject(ActivatedRoute);
 
   readonly isAuthenticated = signal(false);
+  readonly submitted = signal(false);
   isSubmitting = false;
   errorMessage = '';
   challengeId: number | null = null;
@@ -98,7 +99,8 @@ export class AddIdea implements OnInit {
 
     this.apiService.createIdea(ideaData).subscribe({
       next: () => {
-        this.navigateBack();
+        this.isSubmitting = false;
+        this.submitted.set(true);
       },
       error: (error: any) => {
         this.isSubmitting = false;
@@ -109,6 +111,22 @@ export class AddIdea implements OnInit {
 
   onCancel() {
     this.navigateBack();
+  }
+
+  backToChallenges() {
+    if (this.challengeId != null) {
+      this.router.navigate(['/article-workbench'], { queryParams: { challengeId: this.challengeId, section: 'challenge' } });
+    } else {
+      this.router.navigate(['/challenges']);
+    }
+  }
+
+  backToIdeas() {
+    if (this.challengeId != null) {
+      this.router.navigate(['/article-workbench'], { queryParams: { challengeId: this.challengeId, section: 'ideas' } });
+    } else {
+      this.router.navigate(['/challenges']);
+    }
   }
 
   private navigateBack() {

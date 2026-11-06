@@ -1,4 +1,7 @@
 import { verifyToken, extractToken } from "../utils/auth";
+import { db } from "../db";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -21,6 +24,15 @@ export async function authenticate(req: Request): Promise<{ user: { userId: numb
 
   const user = verifyToken(token);
   if (!user) {
+    return new Response(
+      JSON.stringify({ error: "Invalid or expired token" }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // A valid token may reference a user that no longer exists (e.g. after a DB reset)
+  const [row] = await db.select({ id: users.id }).from(users).where(eq(users.id, user.userId)).limit(1);
+  if (!row) {
     return new Response(
       JSON.stringify({ error: "Invalid or expired token" }),
       { status: 401, headers: { "Content-Type": "application/json" } }

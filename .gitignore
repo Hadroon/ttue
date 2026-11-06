@@ -4,3 +4,5 @@ notes.txt
 .env
 !.env.example
 .env.*
+.mcp.*
+mcp.*

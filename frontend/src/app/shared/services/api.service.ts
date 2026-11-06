@@ -969,6 +969,10 @@ export class ApiService {
     return this.http.get<FeaturedChallenge[]>(`${this.baseUrl}/challenges/featured`);
   }
 
+  getPublicStats(): Observable<{ challenges: number; ideas: number; actions: number }> {
+    return this.http.get<{ challenges: number; ideas: number; actions: number }>(`${this.baseUrl}/stats`);
+  }
+
   // Challenge draft methods
 
   /**

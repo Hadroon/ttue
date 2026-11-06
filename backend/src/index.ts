@@ -19,6 +19,7 @@ import { handleGetActionItems, handleCreateActionItem, handleUpdateActionItem, h
 import { handleAdminStats, handleAdminGetUsers, handleAdminUpdateUser, handleAdminGetIdeas, handleAdminDeleteIdea, handleAdminGetComments, handleAdminDeleteComment, handleAdminGetChallenges, handleAdminDeleteChallenge, handleAdminGetFlags, handleAdminResolveFlag, handleAdminMarkContent, handleAdminGetDonations, handleAdminGetActionRecommendations, handleAdminGetApprovals, handleAdminSetApproval } from "./routes/admin";
 import { handleCreateFlag, handleDeleteFlag, handleCheckFlag } from "./routes/flags";
 import { handleFollowUser, handleGetCivicProfile, handleGetDomains, handleGetFollowingUpdates, handleGetUserActivity, handleGetUserReputation, handleUnfollowUser } from "./routes/profiles";
+import { handleGetPublicStats } from "./routes/stats";
 import { injectSocialMeta } from "./utils/social-meta";
 
 // Log configuration on startup
@@ -224,6 +225,9 @@ serve({
       }
       
       // Challenges routes
+      if (url.pathname === "/api/stats" && req.method === "GET") {
+        return handleGetPublicStats();
+      }
       if (url.pathname === "/api/challenges" && req.method === "GET") {
         return handleGetChallenges(req);
       }
