@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Header } from '../shared/components';
+import { Header, Footer } from '../shared/components';
 
 @Component({
   selector: 'app-privacy',
-  imports: [RouterLink, Header],
+  imports: [RouterLink, Header, Footer],
   templateUrl: './privacy.html',
   styleUrl: './privacy.css'
 })

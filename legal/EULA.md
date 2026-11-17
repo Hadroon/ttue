@@ -2,17 +2,15 @@
 
 **Time to unite Earth (Earth Forum)**
 
-**Last updated:** [EFFECTIVE DATE]
-
-> **Drafting note (delete before publishing).** Text in `[SQUARE BRACKETS]` is a placeholder you must fill in. This draft is written around what the code does today (Google and email sign-in, user-generated challenges / ideas / comments / draft bills, six "action" tools, one-time Stripe donations, admin moderation). Re-check it whenever those features change, in particular when donation payouts or escrow go live. It is a template, not legal advice. Have a lawyer in your jurisdiction review it, especially Sections 9, 12, 16 and 17.
+**Last updated:** 17 November 2026
 
 ---
 
 ## 1. Who we are and what this agreement covers
 
-This End User License Agreement and Terms of Use (the **"Agreement"**) is a legal agreement between you and **[OPERATOR LEGAL NAME]**, [legal form, e.g. sole proprietor / association / company], registered at **[REGISTERED ADDRESS]** (**"we"**, **"us"**, **"our"**).
+This End User License Agreement and Terms of Use (the **"Agreement"**) is a legal agreement between you and **Wnagru Ltd.**, a limited company registered in Hungary, registered at **1057 Budapest, Magyar str. 52, Hungary** (**"we"**, **"us"**, **"our"**).
 
-We operate the website and web application available at **[WEBSITE URL]**, known as **Time to unite Earth** or **Earth Forum**, together with its application programming interfaces, features, content and any related services (the **"Service"**). The Service is a civic collaboration platform where people can:
+We operate the website and web application available at **https://timetounite.earth/**, known as **Time to unite Earth** or **Earth Forum**, together with its application programming interfaces, features, content and any related services (the **"Service"**). The Service is a civic collaboration platform where people can:
 
 - post **challenges** and **proposals**, share **ideas**, and **comment** and **vote**;
 - collaboratively write and revise **draft texts** (for example draft bills or blueprints), with revision history;
@@ -30,7 +28,7 @@ If you use the Service on behalf of an organization, you confirm that you have a
 
 **2.2 Registration.** You can sign up with an email address, username and password, or with **Google Sign-In**. When you use Google Sign-In we receive your Google account identifier, verified email address, name and profile picture, and we link them to your account. You agree to provide accurate information and to keep it up to date.
 
-**2.3 Security.** You are responsible for activity under your account and for keeping your credentials secure. Tell us promptly at **[CONTACT EMAIL]** if you suspect unauthorized access. We are not liable for loss caused by someone else using your account unless caused by our breach of this Agreement or applicable law.
+**2.3 Security.** You are responsible for activity under your account and for keeping your credentials secure. Tell us promptly at **timetouniteearth@gmail.com** if you suspect unauthorized access. We are not liable for loss caused by someone else using your account unless caused by our breach of this Agreement or applicable law.
 
 **2.4 One person, one account.** Each person may maintain one account. You may not create accounts to manipulate votes, reputation, flags or donation targets (see Section 8).
 
@@ -66,10 +64,7 @@ All rights not expressly granted are reserved. The Service itself (our software,
 - other users may view, quote, discuss, vote on, and (for drafts) edit, propose changes to and build on your contribution as the Service allows; and
 - you agree that your contribution may be accepted, rejected, merged, rewritten or combined with others' work, and that revision history, accepted and rejected proposals, and attribution records may remain visible.
 
-**[CHOOSE ONE and delete the other.]**
-
-- *Option A (recommended for civic drafts):* Unless you mark it otherwise, you license **text you contribute to shared drafts and public challenges** to everyone under the **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)** license, so the community and the public can reuse blueprints and proposals with attribution. This is in addition to the license in Section 5.3.
-- *Option B:* You do not grant a public license beyond using the Service as it is designed. Other users may only view and use your contribution on the Service.
+Unless you mark it otherwise, you license **text you contribute to shared drafts and public challenges** to everyone under the **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)** license, so the community and the public can reuse blueprints and proposals with attribution. This is in addition to the license in Section 5.3.
 
 **5.5 Media library and license field.** When you add material to the information-campaign media library, you may specify a license for it. You promise that the license you state is accurate and that you have the right to offer the material on those terms. We do not verify license claims.
 
@@ -96,9 +91,9 @@ All rights not expressly granted are reserved. The Service itself (our software,
 
 **6.3 No obligation to monitor.** We do not pre-screen user content and have no general duty to monitor it. A decision not to act on content does not mean the content is permitted or endorsed.
 
-**6.4 Notices and appeals.** Where required by law (for example the EU Digital Services Act), when we remove or restrict your content or account we will tell you the reason and how to contest the decision. You can ask us to reconsider by writing to **[CONTACT EMAIL]** with the subject "Moderation appeal". We will review appeals in good faith, but our decision is final to the extent permitted by law.
+**6.4 Notices and appeals.** Where required by law (for example the EU Digital Services Act), when we remove or restrict your content or account we will tell you the reason and how to contest the decision. You can ask us to reconsider by writing to **timetouniteearth@gmail.com** with the subject "Moderation appeal". We will review appeals in good faith, but our decision is final to the extent permitted by law.
 
-**6.5 Reporting illegal content and copyright.** To report content you believe is unlawful, or to submit a notice of alleged copyright infringement, email **[CONTACT EMAIL]** with: (a) a description and the location (URL) of the content; (b) why it is unlawful or infringing; (c) your name and contact details; (d) for copyright, a statement that you hold or represent the rights and that the information is accurate; and (e) a statement of good faith belief. We may remove content and may terminate the accounts of repeat infringers. Counter-notices can be sent to the same address.
+**6.5 Reporting illegal content and copyright.** To report content you believe is unlawful, or to submit a notice of alleged copyright infringement, email **timetouniteearth@gmail.com** with: (a) a description and the location (URL) of the content; (b) why it is unlawful or infringing; (c) your name and contact details; (d) for copyright, a statement that you hold or represent the rights and that the information is accurate; and (e) a statement of good faith belief. We may remove content and may terminate the accounts of repeat infringers. Counter-notices can be sent to the same address.
 
 ## 7. Reputation, votes and rankings
 
@@ -136,7 +131,7 @@ We may take enforcement action as described in Section 6 and Section 15. In seri
 
 ## 9. Donations
 
-**9.1 What a donation is.** A "**Donation**" is a voluntary, one-time payment you choose to make through the Service to support the platform or a specific community effort. You can enter any amount within the limits the Service shows (currently between **1.00 and 1,000.00 [CURRENCY, currently set to USD unless configured otherwise]** per transaction). A Donation is a gift. It is **not**:
+**9.1 What a donation is.** A "**Donation**" is a voluntary, one-time payment you choose to make through the Service to support the platform or a specific community effort. You can enter any amount within the limits the Service shows (currently between **1.00 and 1,000.00 USD** per transaction). A Donation is a gift. It is **not**:
 
 - a purchase of goods or services;
 - an investment, loan, deposit, equity, membership, license, voting right or any ownership or revenue share in us or in any project;
@@ -156,9 +151,9 @@ We may take enforcement action as described in Section 6 and Section 15. In seri
 
 **9.5 Contributors are independent.** People who apply for or complete bounty-board tasks, who volunteer as legal leads or lawyers, or who organize actions are independent third parties. They are not our employees, agents or partners, and we do not supervise, insure, license or guarantee them or their work. You and they are responsible for compliance with all laws, for obtaining any licenses or permits, for the safety of tasks, for taxes on any amounts they receive, and for insurance. We are not responsible for any injury, loss or damage arising from tasks, cases, protests or other activities organized through the Service.
 
-**9.6 Refunds and chargebacks.** **Donations are final and non-refundable**, except (a) where required by applicable law; (b) for duplicate or clearly erroneous charges, or charges made without your authorization, if you contact us at **[CONTACT EMAIL]** within **[30] days** of the payment, giving the date, amount and Stripe receipt; or (c) where we choose to refund under Section 9.3. Before disputing a payment with your bank, please contact us first so we can try to resolve it quickly. We may suspend accounts and block future Donations in the case of abusive chargebacks or suspected fraud. We will not treat a Donation as a consumer purchase with a right of withdrawal unless a mandatory law says otherwise.
+**9.6 Refunds and chargebacks.** **Donations are final and non-refundable**, except (a) where required by applicable law; (b) for duplicate or clearly erroneous charges, or charges made without your authorization, if you contact us at **timetouniteearth@gmail.com** within **[30] days** of the payment, giving the date, amount and Stripe receipt; or (c) where we choose to refund under Section 9.3. Before disputing a payment with your bank, please contact us first so we can try to resolve it quickly. We may suspend accounts and block future Donations in the case of abusive chargebacks or suspected fraud. We will not treat a Donation as a consumer purchase with a right of withdrawal unless a mandatory law says otherwise.
 
-**9.7 Taxes; no tax-deductibility.** Unless we state otherwise in writing in your receipt, **[we are not a registered charity or tax-exempt organization]**, and **Donations are not tax-deductible**. You are responsible for any taxes that arise from your Donation under the laws of your country. We do not provide tax advice. [If you are a registered non-profit or have a charitable status, replace this paragraph with the correct statement and include your registration number.]
+**9.7 Taxes; no tax-deductibility.** Unless we state otherwise in writing in your receipt, we are not a registered charity or tax-exempt organization, and **Donations are not tax-deductible**. You are responsible for any taxes that arise from your Donation under the laws of your country. We do not provide tax advice.
 
 **9.8 Donor representations.** By donating you confirm that: you are at least 16 and have legal capacity; you are using your own payment method or are authorized to use it; the funds are lawfully obtained; you are not subject to sanctions or located in an embargoed jurisdiction; you are not donating on behalf of a political party, candidate or government to influence an election or policy in a manner prohibited by law; and you expect nothing in return.
 
@@ -196,7 +191,7 @@ TO THE FULLEST EXTENT PERMITTED BY LAW:
 
 (b) WE ARE NOT RESPONSIBLE FOR THE CONDUCT, CONTENT OR ACTIVITIES OF USERS OR THIRD PARTIES, INCLUDING ANY INJURY, ARREST, PROPERTY DAMAGE, LEGAL LIABILITY OR OTHER HARM ARISING FROM PROTESTS, TASKS, CAMPAIGNS, BOYCOTTS, COMPLAINTS, FILINGS OR OTHER ACTIVITIES ORGANIZED OR DISCUSSED THROUGH THE SERVICE; AND
 
-(c) OUR TOTAL AGGREGATE LIABILITY FOR ALL CLAIMS RELATING TO THE SERVICE WILL NOT EXCEED THE GREATER OF (i) THE AMOUNT YOU DONATED TO US IN THE **12 MONTHS** BEFORE THE EVENT GIVING RISE TO THE CLAIM AND (ii) **[EUR/USD 100]**.
+(c) OUR TOTAL AGGREGATE LIABILITY FOR ALL CLAIMS RELATING TO THE SERVICE WILL NOT EXCEED THE GREATER OF (i) THE AMOUNT YOU DONATED TO US IN THE **12 MONTHS** BEFORE THE EVENT GIVING RISE TO THE CLAIM AND (ii) **EUR 100**.
 
 **These limits do not apply to liability that cannot lawfully be limited**, including liability for death or personal injury caused by our negligence, for fraud or fraudulent misrepresentation, for willful misconduct or gross negligence (where required by law), or for any other liability that mandatory law does not allow us to exclude. If you are a consumer, you also keep the mandatory rights you have under the law of your country of residence.
 
@@ -206,7 +201,7 @@ To the extent permitted by law, you agree to **defend, indemnify and hold harmle
 
 ## 15. Term, suspension and termination
 
-**15.1 By you.** You may stop using the Service and close your account at any time (in the Service if available, or by emailing **[CONTACT EMAIL]**). Closing your account does not entitle you to a refund of any Donation.
+**15.1 By you.** You may stop using the Service and close your account at any time (in the Service if available, or by emailing **timetouniteearth@gmail.com**). Closing your account does not entitle you to a refund of any Donation.
 
 **15.2 By us.** We may suspend, restrict or terminate your access and account, remove content, or discontinue any part of the Service: (a) if you breach this Agreement or the law; (b) if required by law or authority; (c) if your use harms or creates risk for us, other users or third parties; (d) if your account is inactive for a long period; or (e) if we stop operating the Service. Where practical, we will give notice and reasons, except where doing so could cause harm or is prohibited.
 
@@ -214,15 +209,14 @@ To the extent permitted by law, you agree to **defend, indemnify and hold harmle
 
 ## 16. Governing law and disputes
 
-**16.1 Governing law.** This Agreement and any dispute arising out of it are governed by the laws of **[COUNTRY / STATE]**, without regard to its conflict-of-laws rules. If you are a consumer, you also benefit from any mandatory consumer protections of the country where you live.
+**16.1 Governing law.** This Agreement and any dispute arising out of it are governed by the laws of **Hungary**, without regard to its conflict-of-laws rules. If you are a consumer, you also benefit from any mandatory consumer protections of the country where you live.
 
-**16.2 Informal resolution.** Before starting a formal proceeding, please contact **[CONTACT EMAIL]** and give us **30 days** to try to resolve the matter.
+**16.2 Informal resolution.** Before starting a formal proceeding, please contact **timetouniteearth@gmail.com** and give us **30 days** to try to resolve the matter.
 
-**16.3 Courts.** Subject to any mandatory rights you have, the courts of **[CITY, COUNTRY]** have exclusive jurisdiction. If you are a consumer in the European Union or another place where mandatory law gives you the right to sue or be sued in the courts of your home country, nothing here removes that right.
+**16.3 Courts.** Subject to any mandatory rights you have, the courts of **Budapest, Hungary** have exclusive jurisdiction. If you are a consumer in the European Union or another place where mandatory law gives you the right to sue or be sued in the courts of your home country, nothing here removes that right.
 
-**16.4 EU online dispute resolution.** [If you serve EU consumers:] The European Commission's online dispute resolution platform is available at https://ec.europa.eu/consumers/odr. We are [willing / not obliged] to participate in alternative dispute resolution.
+**16.4 Consumer dispute bodies.** If you are a consumer, you can also turn to the conciliation board competent for your place of residence (in Hungary, for example, the Budapest Conciliation Board, *Budapesti Békéltető Testület*) or to the dispute-resolution body of your own country, and we will cooperate with it where the law requires.
 
-**16.5 [OPTIONAL, for US users: arbitration and class-action waiver.]** [Only add this after legal advice. If included: disputes with US users are resolved by individual binding arbitration under [RULES], and you waive class actions and jury trials, with an opt-out window of 30 days.]
 
 ## 17. Changes to this Agreement and to the Service
 
@@ -250,11 +244,12 @@ We may update this Agreement from time to time, for example when features change
 
 ## 19. Contact
 
-**[OPERATOR LEGAL NAME]**
-[REGISTERED ADDRESS]
-Email: **[CONTACT EMAIL]**
-Website: **[WEBSITE URL]**
-[Company or association registration number, VAT number and the responsible person, where the law of your country (for example an *Impressum* requirement) requires it.]
+**Wnagru Ltd.**
+1057 Budapest, Magyar str. 52, Hungary
+Email: **timetouniteearth@gmail.com**
+Website: **https://timetounite.earth/**
+Company registration number: 01-09-922070
+Tax number: 14831887-2-42
 
 ---
 

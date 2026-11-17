@@ -1,6 +1,6 @@
 import { Component, signal, inject, OnInit, computed, linkedSignal, DestroyRef, Injector } from '@angular/core';
 import { toSignal, toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { map, debounceTime, distinctUntilChanged, switchMap, tap, catchError, of } from 'rxjs';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -13,7 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import { Header, ChallengeItem } from '../shared/components';
+import { Header, Footer, ChallengeItem } from '../shared/components';
 import { ApiService, ChallengeType, FeaturedChallenge } from '../shared/services/api.service';
 import { Idea, Comment as BaseComment } from '../shared/models/baseModels';
 import { AuthGuardService } from '../shared/services/auth-guard.service';
@@ -21,7 +21,7 @@ import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-challenges',
-  imports: [RouterLink, Header, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule, MatSelectModule, MatPaginatorModule],
+  imports: [Header, Footer, ChallengeItem, MatToolbarModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatAutocompleteModule, MatButtonModule, MatSelectModule, MatPaginatorModule],
   templateUrl: './challenges.html',
   styleUrl: './challenges.css'
 })
