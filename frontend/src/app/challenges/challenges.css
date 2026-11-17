@@ -614,6 +614,14 @@ mat-paginator ::ng-deep .mat-mdc-paginator-container {
   background: var(--panel);
 }
 
+.trust .container {
+  text-align: center;
+}
+
+.trust .badges {
+  justify-content: center;
+}
+
 /* CTA Section */
 .cta {
   background: radial-gradient(600px 400px at 20% -10%, rgba(122, 240, 184, 0.25), transparent), var(--bg);
