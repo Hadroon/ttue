@@ -63,40 +63,6 @@ serve({
           headers: { "Content-Type": "application/json" },
         });
       }
-      if (url.pathname === "/api/welcome" && req.method === "POST") {
-        try {
-          console.log("Received /api/welcome request");
-          const { password } = await req.json();
-          if (password === "csigga") {
-            return new Response(JSON.stringify({ 
-              success: true,
-              data: true,
-              message: "Welcome! Access granted."
-            }), {
-              headers: { "Content-Type": "application/json" },
-            });
-          } else {
-            return new Response(JSON.stringify({ 
-              success: false,
-              data: false,
-              error: "Invalid password"
-            }), {
-              status: 401,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-        } catch (error) {
-          return new Response(JSON.stringify({ 
-            success: false,
-            data: false,
-            error: "Invalid request format"
-          }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      }
-      
       // Auth routes
       if (url.pathname === "/api/auth/register" && req.method === "POST") {
         return handleRegister(req);

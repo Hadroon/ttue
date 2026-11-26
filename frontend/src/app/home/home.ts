@@ -1,12 +1,9 @@
-import { Component, inject, OnInit, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Header, Footer, ChallengeGrid2x2, ChallengeCard, ChallengeIdeas, Comments, ChallengeItem, DemoCard } from '../shared/components';
 import { ApiService, FeaturedChallenge, Idea as ApiIdea, Comment as ApiComment } from '../shared/services/api.service';
-import { FormsModule } from '@angular/forms';
 import { environment } from '../shared/environments/environment';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { Challenge, Idea, Comment } from '../shared/models/baseModels';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
@@ -17,7 +14,7 @@ import { AuthService } from '../shared/services/auth.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Header, Footer, FormsModule, MatFormFieldModule, MatInputModule, ChallengeItem, MatIconModule, DemoCard],
+  imports: [RouterLink, Header, Footer, ChallengeItem, MatIconModule, DemoCard],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -28,8 +25,6 @@ export class Home implements OnInit {
   authGuard = inject(AuthGuardService);
   authService = inject(AuthService);
   activeTab: 'challenges' | 'ideas' = 'challenges';
-  welcome : WritableSignal<boolean> = signal(false);
-  welcomePassword = '';
   challenges = signal<Challenge[]>([]);
   isLoadingChallenges = false;
   featuredChallenges = signal<Challenge[]>([]);
@@ -44,8 +39,6 @@ export class Home implements OnInit {
       next: (s) => this.stats.set(s),
       error: (e) => console.error('Error loading stats:', e)
     });
-    const isLocalhost = window.location.hostname?.toString().includes('localhost');
-    this.welcome.set(isLocalhost || localStorage.getItem('safeUser') === 'true');
     this.loadFeaturedChallenge();
     // Refresh voted state now that requests carry the auth token
     this.authService.loginSuccess$.subscribe(() => this.loadFeaturedChallenge());
@@ -275,24 +268,6 @@ export class Home implements OnInit {
   onViewAllComments(challengeId: number) {
     console.log('View all comments for challenge:', challengeId);
     // Navigate to full discussion page
-  }
-
-  enterForum() {
-    this.apiService.checkWelcome(this.welcomePassword).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          localStorage.setItem('safeUser', 'true');
-          this.welcome.set(true);
-        } else {
-          console.error('Welcome check failed:', response.error || response.message);
-          // Optionally show error message to user
-        }
-      },
-      error: (error) => {
-        console.error('Error checking welcome:', error);
-        // Optionally show error message to user
-      }
-    });
   }
 
   openDonationModal() {

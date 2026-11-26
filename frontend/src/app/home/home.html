@@ -1,6 +1,4 @@
 <!-- ===== Header ===== -->
-<!-- @if(!environment.production || welcome()) { -->
-@if(welcome()) {
 <app-header></app-header>
 <main id="main" role="main">
   <!-- ===== Hero ===== -->
@@ -284,38 +282,3 @@
 </main>
 
 <app-footer />
-}
-@else {
-<div class="welcome-form">
-  <div class="welcome-header">
-    <h2>🚧 Under Construction</h2>
-    <div style="text-align: left;">
-
-      <p class="welcome-subtitle">Welcome to the site, a platform for civic engagement and participation.</p>
-      <p style="margin-top: 16px;" class="welcome-subtitle">If you want to enter, please provide the passcode.</p>
-    </div>
-  </div>
-  
-  <form class="example-form">
-    <mat-form-field class="example-full-width">
-      <mat-label>Enter Passcode</mat-label>
-      <input matInput 
-             type="password"
-             [(ngModel)]="welcomePassword" 
-             (keydown.enter)="enterForum()"
-             placeholder="Passcode">
-    </mat-form-field>
-    
-    <button type="button" 
-            class="enter-btn" 
-            (click)="enterForum()"
-            [disabled]="!welcomePassword">
-      Enter Site
-    </button>
-  </form>
-</div>
-<!-- <p>Welcome to New Democracy, a platform for civic engagement and participation.</p>
-<p>Would you like to reach the forum?</p>
-<input type="text" [(ngModel)]="welcomePassword" placeholder="Password" />
-<button (click)="enterForum()">Enter</button> -->
-}

@@ -413,10 +413,6 @@ export class ApiService {
   readonly currentUser$ = this.userSubject.asObservable();
 
 
-  checkWelcome(password: string): Observable<ApiResponse<boolean>> {
-    console.log("Checking welcome with password:", password, this.baseUrl);
-    return this.http.post<ApiResponse<boolean>>(`${this.baseUrl}/welcome`, { password });
-  }
   /**
    * Load ideas with pagination
    */
