@@ -4,7 +4,7 @@
       <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon>
       <p class="empty-message">No ideas submitted yet</p>
       <p class="empty-submessage">Be the first to propose a solution for this challenge!</p>
-      <a class="btn primary sm" href="#submit-idea">Submit your idea</a>
+      <a class="btn primary sm" routerLink="/add-idea" [queryParams]="{ challengeId: challengeId }">Add Idea</a>
     </div>
   } @else {
     <div class="ideas-header">

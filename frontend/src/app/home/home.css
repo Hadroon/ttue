@@ -1012,12 +1012,24 @@
   text-align: center;
 }
 
+.trust .badges {
+  justify-content: center;
+}
+
 .cta h2 {
   font-size: 2.5rem;
 }
 
 .cta p {
   font-size: 18px;
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
 }
 
 /* How it works teaser */

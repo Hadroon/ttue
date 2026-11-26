@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { ideas, users, ideaVotes, ideaTags, tags } from "../db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { authenticate, optionalAuth } from "../middleware/auth";
 import { TEXT_LIMITS, checkTextLimits, checkTagList, lengthError } from "../utils/text-limits";
 
@@ -83,6 +83,9 @@ export async function handleCreateIdea(req: Request): Promise<Response> {
 
 // Get all ideas
 export async function handleGetIdeas(req: Request): Promise<Response> {
+  const authResult = await optionalAuth(req);
+  const userId = authResult instanceof Response ? null : (authResult.user?.userId ?? null);
+
   try {
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get("limit") || "20");
@@ -95,18 +98,18 @@ export async function handleGetIdeas(req: Request): Promise<Response> {
         id: ideas.id,
         title: ideas.title,
         content: ideas.content,
+        authorId: ideas.authorId,
+        challengeId: ideas.challengeId,
         score: ideas.score,
         viewCount: ideas.viewCount,
         isPinned: ideas.isPinned,
         isClosed: ideas.isClosed,
+        isMarked: ideas.isMarked,
         createdAt: ideas.createdAt,
         updatedAt: ideas.updatedAt,
-        author: {
-          id: users.id,
-          username: users.username,
-          displayName: users.displayName,
-          reputation: users.reputation,
-        },
+        authorUsername: users.username,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
       })
       .from(ideas)
       .leftJoin(users, eq(ideas.authorId, users.id))
@@ -115,8 +118,19 @@ export async function handleGetIdeas(req: Request): Promise<Response> {
       .limit(limit)
       .offset(offset);
 
+    let votedIdeaIds = new Set<number>();
+    if (userId && allIdeas.length > 0) {
+      const votes = await db
+        .select({ ideaId: ideaVotes.ideaId })
+        .from(ideaVotes)
+        .where(and(eq(ideaVotes.userId, userId), inArray(ideaVotes.ideaId, allIdeas.map(i => i.id))));
+      votedIdeaIds = new Set(votes.map(v => v.ideaId));
+    }
+
+    const ideasWithVotes = allIdeas.map(idea => ({ ...idea, voted: votedIdeaIds.has(idea.id) }));
+
     return new Response(
-      JSON.stringify({ ideas: allIdeas, limit, offset }),
+      JSON.stringify({ ideas: ideasWithVotes, limit, offset }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {

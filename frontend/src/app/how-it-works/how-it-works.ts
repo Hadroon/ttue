@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Header } from '../shared/components';
+import { Header, Footer } from '../shared/components';
 
 interface Step { id: string; icon: string; title: string; duration: string; desc: string; rows: { k: string; v: string }[]; }
 
 @Component({
   selector: 'app-how-it-works',
-  imports: [RouterLink, Header],
+  imports: [RouterLink, Header, Footer],
   templateUrl: './how-it-works.html',
   styleUrl: './how-it-works.css'
 })
