@@ -9,19 +9,21 @@
         <p class="lead">Start with a real-world problem. Move through collaborative drafting, expert review, and civic refinement — until a blueprint is ready for the world to adopt.</p>
         <div class="hero-actions">
           <a class="btn primary lg" routerLink="/challenges">Join challenges</a>
-          <a class="btn secondary lg" routerLink="/proposals">Explore proposals</a>
+          <a class="btn secondary lg" href="#demo" (click)="jumpTo($event, 'demo')">▶ Try the demo</a>
         </div>
       </div>
-      <nav class="step-index card" aria-label="Steps">
+      <!-- <nav class="step-index card" aria-label="Steps">
         <div class="card-accent" aria-hidden="true"></div>
         <div class="index-title">Jump to a step</div>
         @for (s of steps; track s.id; let i = $index) {
           <a [href]="'#' + s.id" (click)="jumpTo($event, s.id)"><span class="idx">{{ i + 1 }}</span>{{ s.title }}<i aria-hidden="true">{{ s.icon }}</i></a>
         }
-      </nav>
+      </nav> -->
     </div>
   </section>
 
+  <app-how-it-works-demo id="demo" />
+<!-- 
   <section class="steps-section">
     <div class="container main-grid">
       <div class="timeline">
@@ -76,7 +78,7 @@
         }
       </div>
     </div>
-  </section>
+  </section> -->
 
   <section class="cta">
     <div class="container">

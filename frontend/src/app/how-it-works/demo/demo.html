@@ -1,0 +1,254 @@
+<section class="demo-section" aria-labelledby="demo-title">
+  <div class="container">
+    <div class="demo-head">
+      <div>
+        <div class="kicker">Interactive demo</div>
+        <h2 id="demo-title">Try it: take one challenge from problem to action</h2>
+        <p class="muted">A sandbox that follows the same rules as the real platform. Nothing here is saved.</p>
+      </div>
+      <button type="button" class="btn secondary" (click)="reset()">↺ Reset demo</button>
+    </div>
+
+    <div class="progress" role="progressbar" aria-label="Demo progress" aria-valuemin="0"
+         [attr.aria-valuemax]="stages.length" [attr.aria-valuenow]="doneCount()">
+      <span [style.width.%]="doneCount() / stages.length * 100"></span>
+    </div>
+
+    <ol class="stepper">
+      @for (s of stages; track s.id; let i = $index) {
+        <li>
+          <button type="button" [class.current]="i === stageIndex()" [class.done]="completed()[s.id]"
+                  [attr.aria-current]="i === stageIndex() ? 'step' : null" (click)="goTo(i)">
+            <span class="dot" aria-hidden="true">{{ completed()[s.id] ? '✓' : i + 1 }}</span>
+            <span class="label">{{ s.title }}</span>
+          </button>
+        </li>
+      }
+    </ol>
+
+    <div class="demo-grid">
+      <div class="stage card" #stageEl aria-live="polite">
+        <div class="card-accent" aria-hidden="true"></div>
+        <header class="stage-head">
+          <span class="icon-box" aria-hidden="true">{{ stage().icon }}</span>
+          <div>
+            <div class="step-count">Step {{ stageIndex() + 1 }} of {{ stages.length }}</div>
+            <h3>{{ stage().title }}</h3>
+            <p class="muted">{{ stage().hint }}</p>
+          </div>
+        </header>
+
+        @switch (stage().id) {
+          @case ('challenge') {
+            <div class="mock">
+              <div class="field">
+                <span class="field-label">Title</span>
+                <div class="fake-input">{{ challengeTitle }}</div>
+              </div>
+              <div class="field">
+                <span class="field-label">Description</span>
+                <div class="fake-input textarea">{{ challengeDescription }}</div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="demo-tag-input">Tags</label>
+                <div class="tag-box" [class.locked]="posted()">
+                  @for (tag of tags(); track tag) {
+                    <span class="tag-chip">#{{ tag }}
+                      @if (!posted()) {
+                        <button type="button" [attr.aria-label]="'Remove tag ' + tag" (click)="removeTag(tag)">✕</button>
+                      }
+                    </span>
+                  }
+                  @if (!posted()) {
+                    <input id="demo-tag-input" type="text" [attr.maxlength]="maxTagLength" placeholder="Type a tag and press Enter"
+                           [value]="tagInput()" (input)="tagInput.set($any($event.target).value)" (keydown)="onTagKey($event)">
+                  }
+                </div>
+                @if (tagError(); as err) { <span class="field-error" role="alert">{{ err }}</span> }
+              </div>
+              @if (posted()) {
+                <div class="success">🎯 Posted! Others can now add ideas, comment, and vote on it.</div>
+              } @else {
+                <div class="row">
+                  <button type="button" class="btn primary" (click)="postChallenge()">Post challenge</button>
+                  <button type="button" class="btn secondary" [disabled]="!tagInput().trim()" (click)="addTag()">Add tag</button>
+                </div>
+              }
+            </div>
+          }
+
+          @case ('ideas') {
+            <div class="mock">
+              <ul class="ideas">
+                @for (idea of rankedIdeas(); track idea.id; let i = $index) {
+                  <li class="idea" [class.top]="i === 0">
+                    <div class="voter">
+                      <button type="button" class="vote" [class.on]="idea.voted" [attr.aria-pressed]="idea.voted"
+                              [attr.aria-label]="(idea.voted ? 'Remove upvote from ' : 'Upvote ') + idea.title"
+                              (click)="voteIdea(idea)">▲</button>
+                      <strong class="score">{{ idea.score }}</strong>
+                    </div>
+                    <div>
+                      <div class="idea-title">{{ idea.title }}</div>
+                      <p class="idea-desc">{{ idea.description }}</p>
+                      <div class="muted small">by &#64;{{ idea.author }} @if (idea.mine) { <span class="pill">your idea</span> }</div>
+                    </div>
+                  </li>
+                }
+              </ul>
+              @if (ownVoteBlocked()) {
+                <div class="warn" role="alert">You cannot vote on your own content — the community decides.</div>
+              }
+              <div class="row">
+                <button type="button" class="btn secondary" [disabled]="communityVoted()" (click)="letCommunityVote()">
+                  {{ communityVoted() ? '✓ Community has voted' : '👥 Let the community vote' }}
+                </button>
+                <span class="muted small">Tip: click ▲ again to take your upvote back.</span>
+              </div>
+            </div>
+          }
+
+          @case ('draft') {
+            <div class="mock">
+              <div class="draft">
+                <div class="draft-label">Draft article · {{ proposal() === 'accepted' ? 'revision 2' : 'revision 1' }}</div>
+                @if (proposal() === 'pending') {
+                  <p>{{ draftKept }}<del>{{ draftRemoved }}</del> <ins>{{ draftAdded }}</ins></p>
+                } @else if (proposal() === 'accepted') {
+                  <p>{{ draftKept }}<mark>{{ draftAdded }}</mark></p>
+                } @else {
+                  <p>{{ draftKept }}{{ draftRemoved }}</p>
+                }
+              </div>
+              @if (proposal() === 'pending') {
+                <div class="proposal-bar">
+                  <span><strong>Proposal by &#64;maya</strong>&nbsp;<span class="muted small">· cites a 2024 watershed study</span></span>
+                  <div class="row">
+                    <button type="button" class="btn primary" (click)="resolveProposal(true)">Accept &amp; merge</button>
+                    <button type="button" class="btn ghost" (click)="resolveProposal(false)">Reject</button>
+                  </div>
+                </div>
+              } @else {
+                <div class="success">
+                  {{ proposal() === 'accepted' ? '✅ Merged. Every revision is kept so anyone can audit how the text evolved.' : '✖️ Rejected. The proposal stays on record; anyone can propose a better edit.' }}
+                  <button type="button" class="link-btn" (click)="proposal.set('pending')">Undo</button>
+                </div>
+              }
+            </div>
+          }
+
+          @case ('support') {
+            <div class="mock">
+              <p class="quote">“{{ draftKept }}{{ proposal() === 'rejected' ? draftRemoved : draftAdded }}”</p>
+              <div class="tally" aria-label="Support versus oppose">
+                <div class="bar"><span [style.width.%]="tally().pct"></span></div>
+                <div class="tally-row">
+                  <span><strong>{{ tally().support }}</strong> support</span>
+                  <span>{{ tally().pct }}%</span>
+                  <span><strong>{{ tally().oppose }}</strong> oppose</span>
+                </div>
+              </div>
+              <div class="row">
+                <button type="button" class="btn" [class.primary]="draftVote() === 1" [attr.aria-pressed]="draftVote() === 1"
+                        (click)="castDraftVote(1)">✓ Support</button>
+                <button type="button" class="btn" [class.danger]="draftVote() === -1" [attr.aria-pressed]="draftVote() === -1"
+                        (click)="castDraftVote(-1)">✕ Oppose</button>
+              </div>
+            </div>
+          }
+
+          @case ('actions') {
+            <div class="mock">
+              <ul class="actions">
+                @for (a of actionStates(); track a.key) {
+                  <li class="action" [class.active]="a.active">
+                    <span class="a-icon" aria-hidden="true">{{ a.icon }}</span>
+                    <div class="a-body">
+                      <div class="a-title">
+                        {{ a.title }}
+                        @if (a.active) { <span class="tag on">Active</span> }
+                        @else if (!activated() && a.key === leader()) { <span class="tag lead">Most recommended</span> }
+                      </div>
+                    </div>
+                    <span class="a-count"><strong>{{ a.votes }}</strong></span>
+                    <button type="button" class="btn sm" [class.primary]="a.mine" [attr.aria-pressed]="a.mine"
+                            [disabled]="activated() !== null" (click)="recommend(a.key)">{{ a.mine ? '✓ Recommended' : 'Recommend' }}</button>
+                    @if (a.active) {
+                      <div class="a-tools muted small">Tools unlocked: {{ a.includes.join(' · ') }}</div>
+                    }
+                  </li>
+                }
+              </ul>
+              @if (!activated()) {
+                <div class="row">
+                  <button type="button" class="btn primary" [disabled]="!leader()" (click)="approveLeader()">🛡️ Simulate admin approval</button>
+                  <span class="muted small">
+                    {{ leader() ? 'An admin reviews the clear favourite and switches its tools on.' : 'It’s a tie — recommend one to break it.' }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        }
+
+        <div class="mobile-status" aria-hidden="true">
+          <div class="ms-rep">
+            <span class="avatar sm">M</span>
+            <span><strong>&#64;maya</strong> · <strong>{{ authorRep() }}</strong> rep</span>
+            <span class="rank" [attr.data-rank]="authorRank()">{{ authorRank() }}</span>
+          </div>
+          <div class="bar slim"><span [style.width.%]="rankProgress()"></span></div>
+          @for (last of log().slice(0, 1); track last.id) {
+            <div class="ms-last">{{ last.icon }} {{ last.text }}</div>
+          }
+        </div>
+
+        <footer class="stage-nav">
+          <button type="button" class="btn ghost" [disabled]="stageIndex() === 0" (click)="goTo(stageIndex() - 1)">← Back</button>
+          @if (stageIndex() < stages.length - 1) {
+            <button type="button" class="btn primary next" (click)="goTo(stageIndex() + 1)">Next: {{ stages[stageIndex() + 1].title }} →</button>
+          }
+        </footer>
+
+        @if (allDone()) {
+          <div class="finale" role="status">
+            🎉 That’s the whole loop. On the real platform the community keeps tracking the action until the change lands.
+          </div>
+        }
+      </div>
+
+      <aside class="side">
+        <div class="card rep">
+          <div class="card-accent" aria-hidden="true"></div>
+          <div class="side-title">Reputation</div>
+          <div class="rep-user">
+            <span class="avatar" aria-hidden="true">M</span>
+            <div>
+              <strong>&#64;maya</strong>
+              <div class="muted small">author of the buffer-strip idea</div>
+            </div>
+            <span class="rank" [attr.data-rank]="authorRank()">{{ authorRank() }}</span>
+          </div>
+          <div class="rep-score"><strong>{{ authorRep() }}</strong> rep</div>
+          <div class="bar slim" aria-hidden="true"><span [style.width.%]="rankProgress()"></span></div>
+          <div class="muted small">
+            @if (nextRank(); as n) { {{ n.min - authorRep() }} to {{ n.title }} } @else { Top rank reached }
+          </div>
+        </div>
+
+        <div class="card log">
+          <div class="side-title">Behind the scenes</div>
+          @if (log().length === 0) {
+            <p class="muted small">Your actions will show up here, along with what the platform records.</p>
+          } @else {
+            <ul aria-live="polite">
+              @for (entry of log(); track entry.id) {
+                <li><span aria-hidden="true">{{ entry.icon }}</span>{{ entry.text }}</li>
+              }
+            </ul>
+          }
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
