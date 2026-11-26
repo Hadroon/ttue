@@ -270,7 +270,7 @@ export async function handleCreateDonationSession(req: Request): Promise<Respons
             currency: config.stripe.currency,
             unit_amount: amount,
             product_data: {
-              name: targetTitle ? `Earth Forum donation – ${targetTitle}`.slice(0, 250) : "Support Earth Forum",
+              name: targetTitle ? `Time to unite Earth donation – ${targetTitle}`.slice(0, 250) : "Support Time to unite Earth",
             },
           },
           quantity: 1,

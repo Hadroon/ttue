@@ -1,4 +1,4 @@
-# Database Reset Script for Earth Forum
+# Database Reset Script for Time to unite Earth
 # This script completely resets the database by:
 # 1. Stopping Docker containers
 # 2. Removing the database volume
@@ -7,7 +7,7 @@
 # 5. Seeding initial data
 
 Write-Host "==================================" -ForegroundColor Cyan
-Write-Host "Earth Forum Database Reset Script" -ForegroundColor Cyan
+Write-Host "Time to unite Earth Database Reset Script" -ForegroundColor Cyan
 Write-Host "==================================" -ForegroundColor Cyan
 Write-Host ""
 

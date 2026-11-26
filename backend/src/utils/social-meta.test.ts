@@ -25,8 +25,8 @@ describe("injectSocialMeta", () => {
 
   test("adds default tags for ordinary pages", async () => {
     const out = await render("/challenges");
-    expect(out).toContain("<title>Earth Forum</title>");
-    expect(out).toContain('<meta property="og:title" content="Earth Forum">');
+    expect(out).toContain("<title>Time to unite Earth</title>");
+    expect(out).toContain('<meta property="og:title" content="Time to unite Earth">');
     expect(out).toContain('<meta property="og:image" content="https://forum.example/favicon.png">');
     expect(out.indexOf("og:title")).toBeLessThan(out.indexOf("</head>"));
   });
@@ -34,7 +34,7 @@ describe("injectSocialMeta", () => {
   test("uses the challenge title and plain-text description", async () => {
     rows = [{ title: 'Clean "water"', description: "<p>Rivers are <b>polluted</b> &amp; dying.</p>", category: "Environment" }];
     const out = await render("/article-workbench?challengeId=7&section=ideas");
-    expect(out).toContain('<meta property="og:title" content="Clean &quot;water&quot; | Earth Forum">');
+    expect(out).toContain('<meta property="og:title" content="Clean &quot;water&quot; | Time to unite Earth">');
     expect(out).toContain('<meta property="og:description" content="Rivers are polluted &amp; dying.">');
     expect(out).toContain('<meta property="og:url" content="https://forum.example/article-workbench?challengeId=7&amp;section=ideas">');
     expect(out).toContain('<meta property="og:type" content="article">');
@@ -43,18 +43,18 @@ describe("injectSocialMeta", () => {
   test("labels draft bill links", async () => {
     rows = [{ title: "Clean water", description: "Text", category: "Environment" }];
     const out = await render("/article-workbench?challengeId=7&section=draft");
-    expect(out).toContain('content="Draft bill: Clean water | Earth Forum"');
+    expect(out).toContain('content="Draft bill: Clean water | Time to unite Earth"');
   });
 
   test("falls back to defaults for an unknown challenge or invalid id", async () => {
-    expect(await render("/article-workbench?challengeId=999")).toContain('og:title" content="Earth Forum"');
-    expect(await render("/article-workbench?challengeId=abc")).toContain('og:title" content="Earth Forum"');
+    expect(await render("/article-workbench?challengeId=999")).toContain('og:title" content="Time to unite Earth"');
+    expect(await render("/article-workbench?challengeId=abc")).toContain('og:title" content="Time to unite Earth"');
   });
 
   test("uses the profile bio for profile links", async () => {
     rows = [{ username: "ada", displayName: "Ada L.", bio: "Civic hacker" }];
     const out = await render("/profile/ada");
-    expect(out).toContain('og:title" content="Ada L. on Earth Forum"');
+    expect(out).toContain('og:title" content="Ada L. on Time to unite Earth"');
     expect(out).toContain('og:description" content="Civic hacker"');
   });
 

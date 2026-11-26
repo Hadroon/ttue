@@ -1,6 +1,6 @@
 # End User License Agreement and Terms of Use
 
-**Time to unite Earth (Earth Forum)**
+**Time to unite Earth (Time to unite Earth)**
 
 **Last updated:** 17 November 2026
 
@@ -10,7 +10,7 @@
 
 This End User License Agreement and Terms of Use (the **"Agreement"**) is a legal agreement between you and **Wnagru Ltd.**, a limited company registered in Hungary, registered at **1057 Budapest, Magyar str. 52, Hungary** (**"we"**, **"us"**, **"our"**).
 
-We operate the website and web application available at **https://timetounite.earth/**, known as **Time to unite Earth** or **Earth Forum**, together with its application programming interfaces, features, content and any related services (the **"Service"**). The Service is a civic collaboration platform where people can:
+We operate the website and web application available at **https://timetounite.earth/**, known as **Time to unite Earth** or **Time to unite Earth**, together with its application programming interfaces, features, content and any related services (the **"Service"**). The Service is a civic collaboration platform where people can:
 
 - post **challenges** and **proposals**, share **ideas**, and **comment** and **vote**;
 - collaboratively write and revise **draft texts** (for example draft bills or blueprints), with revision history;

@@ -1,4 +1,4 @@
-# Earth Forum
+# Time to unite Earth
 
 A modern web application with a Bun backend and Angular 20 frontend, deployable on DigitalOcean App Platform.
 

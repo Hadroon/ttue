@@ -50,7 +50,7 @@ async function seed() {
         username: 'seed_user',
         email: 'seed@earthforum.com',
         passwordHash: 'not-a-real-hash',
-        displayName: 'Earth Forum Seed User',
+        displayName: 'Time to unite Earth Seed User',
         reputation: 100
       })
       .onConflictDoNothing()

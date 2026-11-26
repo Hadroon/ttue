@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { challenges, users } from "../db/schema";
 
-const SITE_NAME = "Earth Forum";
+const SITE_NAME = "Time to Unite Earth";
 const DEFAULT_DESCRIPTION = "Turn real-world problems into shared solutions: discuss challenges, propose ideas and draft bills together.";
 const MAX_DESCRIPTION = 200;
 

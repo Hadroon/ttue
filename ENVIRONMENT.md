@@ -1,6 +1,6 @@
 # Environment Configuration Guide
 
-This guide explains how to use different environments in the Earth Forum project.
+This guide explains how to use different environments in the Time to unite Earth project.
 
 ## Overview
 

@@ -1,6 +1,6 @@
 # Database Reset Scripts
 
-This directory contains scripts to completely reset the Earth Forum database.
+This directory contains scripts to completely reset the Time to unite Earth database.
 
 ## Available Scripts
 

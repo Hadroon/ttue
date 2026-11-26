@@ -1,5 +1,5 @@
 #!/bin/bash
-# Database Reset Script for Earth Forum (Bash version for Linux/Mac)
+# Database Reset Script for Time to unite Earth (Bash version for Linux/Mac)
 # This script completely resets the database by:
 # 1. Stopping Docker containers
 # 2. Removing the database volume
@@ -10,7 +10,7 @@
 set -e  # Exit on error
 
 echo "=================================="
-echo "Earth Forum Database Reset Script"
+echo "Time to unite Earth Database Reset Script"
 echo "=================================="
 echo ""
 

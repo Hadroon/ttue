@@ -59,7 +59,7 @@ export class ShareButton {
       return [];
     }
     const u = encodeURIComponent(url);
-    const title = this.effectiveTitle() || 'Earth Forum';
+    const title = this.effectiveTitle() || 'Time to unite Earth';
     const t = encodeURIComponent(title);
     const summary = this.plainText();
     const withSummary = summary ? `${title}\n\n${summary}\n\n${url}` : `${title} ${url}`;

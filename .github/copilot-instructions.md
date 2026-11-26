@@ -1,4 +1,4 @@
-# Earth Forum - Copilot Instructions
+# Time to unite Earth - Copilot Instructions
 
 ## Architecture Overview
 This is a forum application with **Bun-powered backend** serving **Angular 20 frontend**. The backend acts as both API server (`/api/*`) and static file server for the Angular SPA.
