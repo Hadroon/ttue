@@ -20,6 +20,7 @@ export class ChallengeIdeas implements OnInit {
   @Input() allIdeas: Idea[] = [];
   @Input() compact: boolean = true;
   @Input() totalCount?: number;
+  @Input() showStepBadge: boolean = true;
   @Output() voteIdea = new EventEmitter<string>();
 
   isExpanded = false;

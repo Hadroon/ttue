@@ -258,6 +258,10 @@
   gap: 8px;
 }
 
+.idea-card-header .share-tools {
+  margin-left: auto;
+}
+
 .idea-vote-row {
   display: flex;
   align-items: flex-start;

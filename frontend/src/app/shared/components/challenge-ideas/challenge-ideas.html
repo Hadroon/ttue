@@ -9,7 +9,7 @@
   } @else {
     <div class="ideas-header">
       <div class="ideas-count">
-        <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon>
+        <!-- <mat-icon class="material-symbols-outlined">emoji_objects</mat-icon> -->
         <span class="count-text">
           Ideas emerging from this challenge · {{ totalCount ?? filteredIdeas.length }}
         </span>
@@ -54,7 +54,9 @@
             <div class="marked-banner">⚠ Reviewed by moderator</div>
           }
           <div class="idea-card-header">
-            <span class="step-badge-solution">2. Leading Solution</span>
+            @if (showStepBadge) {
+              <span class="step-badge-solution">2. Leading Solution</span>
+            }
             <span class="share-tools">
               <app-share-button
                 [title]="idea.title"
