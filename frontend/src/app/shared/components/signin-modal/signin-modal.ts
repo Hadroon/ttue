@@ -60,8 +60,6 @@ export class SigninModalComponent implements OnInit {
 
   onGoogleLoginSuccess(event: { user: any; token: string; isNewUser: boolean }) {
     this.authService.setLoggedInUser(event.user, event.token);
-    console.log('User logged in:', event.user);
-    console.log('ref:', this.dialogRef);
     this.dialogRef.close({ success: true, user: event.user });
   }
 

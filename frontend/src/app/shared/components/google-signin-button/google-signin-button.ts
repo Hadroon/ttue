@@ -166,13 +166,11 @@ export class GoogleSigninButtonComponent implements OnInit, AfterViewInit, OnDes
 
     this.apiService.loginWithGoogle(response.credential).subscribe({
       next: (result) => {
-        console.log('Google login result:', result);
         this.isLoading.set(false);
         // Handle both response formats: direct data or wrapped in data property
         const loginData = (result as any).data || result;
         
         if (loginData && loginData.user && loginData.token) {
-          console.log('Emitting loginSuccess with:', loginData);
           this.loginSuccess.emit({
             user: loginData.user,
             token: loginData.token,
