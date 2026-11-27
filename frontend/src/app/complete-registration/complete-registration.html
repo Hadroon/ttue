@@ -1,0 +1,74 @@
+<app-header></app-header>
+
+<main id="main" role="main">
+  <section class="register-section">
+    <div class="card">
+      <div class="card-accent"></div>
+
+      @switch (state()) {
+        @case ('checking') {
+          <p class="muted">Checking your link...</p>
+        }
+        @case ('invalid') {
+          <h1>Link expired</h1>
+          <p class="error" role="alert">{{ error() || 'This sign-up link is invalid or has expired. Please sign up again to get a new one.' }}</p>
+          <button type="button" class="btn secondary" (click)="openSignIn()">Sign in or sign up</button>
+        }
+        @case ('ready') {
+          <h1>Finish signing up</h1>
+          <p class="verified">✓ <strong>{{ email() }}</strong> is confirmed</p>
+
+          <form (ngSubmit)="onSubmit()">
+            <!-- Lets password managers store the email with the new password -->
+            <input type="email" name="email" [value]="email()" autocomplete="username" hidden>
+
+            <label>
+              <span>Username</span>
+              <input name="username" type="text" [(ngModel)]="username" (input)="onUsernameInput()" (blur)="checkUsername()"
+                     autocomplete="off" autocapitalize="none" spellcheck="false" required minlength="3" maxlength="30"
+                     [attr.aria-invalid]="!!usernameError()" aria-describedby="username-help">
+              @if (usernameError()) {
+                <small class="field-error" id="username-help" role="alert">{{ usernameError() }}</small>
+              } @else if (usernameOk()) {
+                <small class="field-ok" id="username-help">✓ Available</small>
+              } @else {
+                <small id="username-help">3-30 letters, numbers or underscores. Shown publicly on your posts.</small>
+              }
+            </label>
+
+            <label>
+              <span>Password</span>
+              <div class="password-row">
+                <input name="password" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="password"
+                       autocomplete="new-password" required minlength="8" maxlength="72"
+                       [attr.aria-invalid]="!!passwordError()" aria-describedby="password-help">
+                <button type="button" class="toggle" (click)="showPassword.set(!showPassword())"
+                        [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'" [attr.aria-pressed]="showPassword()">
+                  {{ showPassword() ? 'Hide' : 'Show' }}
+                </button>
+              </div>
+              @if (passwordError()) {
+                <small class="field-error" id="password-help" role="alert">{{ passwordError() }}</small>
+              } @else {
+                <small id="password-help">At least 8 characters. A few random words make a strong, memorable password. Don't reuse one from another site.</small>
+              }
+            </label>
+
+            @if (error()) {
+              <p class="error" role="alert">{{ error() }}</p>
+            }
+            <button type="submit" class="btn primary" [disabled]="busy() || username.trim().length < 3 || password.length < 8">
+              {{ busy() ? 'Creating account...' : 'Create account' }}
+            </button>
+            <p class="note">
+              By creating an account you agree to our <a href="/terms" target="_blank" rel="noopener">Terms of Use</a>
+              and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+            </p>
+          </form>
+        }
+      }
+    </div>
+  </section>
+</main>
+
+<app-footer />

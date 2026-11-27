@@ -8,6 +8,20 @@
       "when": 1793451787003,
       "tag": "0000_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795715604647,
+      "tag": "0001_password_reset",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795768492989,
+      "tag": "0002_email_verification",
+      "breakpoints": true
     }
   ]
 }

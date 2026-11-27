@@ -1,15 +1,97 @@
-<h2 mat-dialog-title>{{ data?.title || 'Sign In' }}</h2>
+<h2 mat-dialog-title>{{ title() }}</h2>
 
 <mat-dialog-content>
-  @if (data && data.message) {
+  @if (mode() === 'signin' && data && data.message) {
     <p class="modal-message">{{ data.message }}</p>
   }
-  <div class="app-google-signin-button-cont">
-    <app-google-signin-button
-      (loginSuccess)="onGoogleLoginSuccess($event)"
-      (loginError)="onGoogleLoginError($event)">
-    </app-google-signin-button>
-  </div>
+
+  @if (mode() !== 'forgot') {
+    <div class="app-google-signin-button-cont">
+      <app-google-signin-button
+        (loginSuccess)="onGoogleLoginSuccess($event)"
+        (loginError)="onGoogleLoginError($event)">
+      </app-google-signin-button>
+    </div>
+    <div class="divider"><span>or</span></div>
+  }
+
+  @switch (mode()) {
+    @case ('signin') {
+      <form class="auth-form" (ngSubmit)="onSignIn()">
+        <label>
+          <span>Email or username</span>
+          <input name="identifier" type="text" [(ngModel)]="identifier" autocomplete="username" required maxlength="254">
+        </label>
+        <label>
+          <span>Password</span>
+          <input name="password" type="password" [(ngModel)]="password" autocomplete="current-password" required maxlength="72">
+        </label>
+        @if (formError()) {
+          <p class="form-error" role="alert">{{ formError() }}</p>
+        }
+        <button type="submit" class="btn primary" [disabled]="busy() || !identifier.trim() || !password">
+          {{ busy() ? 'Signing in...' : 'Sign in' }}
+        </button>
+        <div class="form-links">
+          @if (passwordResetEnabled()) {
+            <button type="button" class="link-btn" (click)="setMode('forgot')">Forgot password?</button>
+          }
+          @if (registrationEnabled()) {
+            <button type="button" class="link-btn" (click)="setMode('register')">Create an account</button>
+          }
+        </div>
+      </form>
+    }
+    @case ('register') {
+      @if (registerSent()) {
+        <p class="form-success" role="status">
+          We've sent a confirmation link to <strong>{{ email }}</strong>. Open it within 24 hours to choose your username and password.
+          If it doesn't arrive in a few minutes, check your spam folder.
+        </p>
+      } @else {
+        <form class="auth-form" (ngSubmit)="onRegister()">
+          <label>
+            <span>Email</span>
+            <input name="email" type="email" [(ngModel)]="email" autocomplete="email" required maxlength="254">
+          </label>
+          <p class="form-hint">We'll email you a link to confirm your address. Then you'll choose a username and password.</p>
+          @if (formError()) {
+            <p class="form-error" role="alert">{{ formError() }}</p>
+          }
+          <button type="submit" class="btn primary" [disabled]="busy() || !email.trim()">
+            {{ busy() ? 'Sending...' : 'Sign up with email' }}
+          </button>
+        </form>
+      }
+      <div class="form-links">
+        <button type="button" class="link-btn" (click)="setMode('signin')">Already have an account? Sign in</button>
+      </div>
+    }
+    @case ('forgot') {
+      @if (forgotSent()) {
+        <p class="form-success" role="status">
+          If an account exists for <strong>{{ email }}</strong>, we've sent a link to reset your password. It's valid for 1 hour.
+        </p>
+      } @else {
+        <form class="auth-form" (ngSubmit)="onForgotPassword()">
+          <p class="form-hint">Enter your account email and we'll send you a link to choose a new password. This also works for accounts created with Google.</p>
+          <label>
+            <span>Email</span>
+            <input name="email" type="email" [(ngModel)]="email" autocomplete="email" required maxlength="254">
+          </label>
+          @if (formError()) {
+            <p class="form-error" role="alert">{{ formError() }}</p>
+          }
+          <button type="submit" class="btn primary" [disabled]="busy() || !email.trim()">
+            {{ busy() ? 'Sending...' : 'Send reset link' }}
+          </button>
+        </form>
+      }
+      <div class="form-links">
+        <button type="button" class="link-btn" (click)="setMode('signin')">Back to sign in</button>
+      </div>
+    }
+  }
 
   <p class="terms-note">
     By signing in you agree to our <a href="/terms" target="_blank" rel="noopener">Terms of Use</a>

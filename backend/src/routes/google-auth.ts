@@ -158,13 +158,18 @@ export async function handleGoogleAuth(req: Request): Promise<Response> {
     if (user) {
       // User exists - update Google info if needed
       if (!user.googleId) {
-        // Link Google account to existing email-based account
+        // Link Google account to existing email-based account. Email/password sign-ups aren't
+        // verified, so someone may have registered this address first; Google proves ownership,
+        // so drop any password (and its sessions) set before the address was verified.
+        const dropPassword = !user.emailVerified && !!user.passwordHash;
         const [updatedUser] = await db
           .update(users)
           .set({
             googleId: googleUser.sub,
             authProvider: user.authProvider === "local" ? "local" : "google",
             avatarUrl: user.avatarUrl || googleUser.picture,
+            emailVerified: true,
+            ...(dropPassword ? { passwordHash: null, passwordChangedAt: new Date() } : {}),
             updatedAt: new Date(),
           })
           .where(eq(users.id, user.id))
@@ -195,6 +200,7 @@ export async function handleGoogleAuth(req: Request): Promise<Response> {
           avatarUrl: googleUser.picture,
           googleId: googleUser.sub,
           authProvider: "google",
+          emailVerified: true,
           passwordHash: null, // No password for Google users
         })
         .returning();

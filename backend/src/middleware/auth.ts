@@ -30,9 +30,15 @@ export async function authenticate(req: Request): Promise<{ user: { userId: numb
     );
   }
 
-  // A valid token may reference a user that no longer exists (e.g. after a DB reset)
-  const [row] = await db.select({ id: users.id }).from(users).where(eq(users.id, user.userId)).limit(1);
-  if (!row) {
+  // A valid token may reference a user that no longer exists (e.g. after a DB reset),
+  // or predate a password change, which signs out all earlier sessions
+  const [row] = await db
+    .select({ id: users.id, passwordChangedAt: users.passwordChangedAt })
+    .from(users)
+    .where(eq(users.id, user.userId))
+    .limit(1);
+  const revoked = row?.passwordChangedAt && (user.iat ?? 0) < Math.floor(row.passwordChangedAt.getTime() / 1000);
+  if (!row || revoked) {
     return new Response(
       JSON.stringify({ error: "Invalid or expired token" }),
       { status: 401, headers: { "Content-Type": "application/json" } }

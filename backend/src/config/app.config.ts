@@ -36,6 +36,12 @@ export interface AppConfig {
     passwordReset: boolean;
     emailVerification: boolean;
   };
+  email: {
+    resendApiKey?: string;
+    from: string;
+  };
+  // Public URL of the app (DOMAIN), used for links in emails
+  appUrl: string;
   adminEmails: string[];
   devLogin: {
     enabled: boolean;
@@ -83,6 +89,11 @@ function getConfig(): AppConfig {
       passwordReset: process.env.FEATURE_PASSWORD_RESET !== 'false',
       emailVerification: process.env.FEATURE_EMAIL_VERIFICATION !== 'false',
     },
+    email: {
+      resendApiKey: process.env.RESEND_API_KEY || undefined,
+      from: process.env.EMAIL_FROM || 'Time to unite Earth <onboarding@resend.dev>',
+    },
+    appUrl: (process.env.DOMAIN || 'http://localhost:4200').replace(/\/+$/, ''),
     adminEmails: process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()).filter(Boolean) ?? [],
     // Passwordless mock-user login for local testing; requires an explicit opt-in AND NODE_ENV=development
     devLogin: {
@@ -121,6 +132,10 @@ export function logConfig() {
       ...config.stripe,
       secretKey: config.stripe.secretKey ? '[REDACTED]' : undefined,
       webhookSecret: config.stripe.webhookSecret ? '[REDACTED]' : undefined,
+    },
+    email: {
+      ...config.email,
+      resendApiKey: config.email.resendApiKey ? '[REDACTED]' : undefined,
     },
     database: {
       ...config.database,

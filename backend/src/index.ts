@@ -4,7 +4,9 @@ import { join } from "path";
 import { config, logConfig } from "./config/app.config";
 import { db, testConnection } from "./db";
 import { sql } from "drizzle-orm";
-import { handleRegister, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
+import { handleLogin, handleGetProfile, handleUpdateProfile, handleGetAuthConfig } from "./routes/auth";
+import { handleForgotPassword, handleResetPassword } from "./routes/password-reset";
+import { handleStartRegistration, handleVerifyRegistration, handleCompleteRegistration, handleUsernameAvailable } from "./routes/registration";
 import { handleGoogleAuth, handleGetGoogleConfig } from "./routes/google-auth";
 import { handleDevLogin, handleGetDevLoginConfig } from "./routes/dev-auth";
 import { handleGetDonationConfig, handleCreateDonationSession, handleConfirmDonation, handleStripeWebhook } from "./routes/donations";
@@ -63,12 +65,30 @@ serve({
           headers: { "Content-Type": "application/json" },
         });
       }
-      // Auth routes
+      // Auth routes. Email sign-up: register (email only) -> emailed link -> register/complete
       if (url.pathname === "/api/auth/register" && req.method === "POST") {
-        return handleRegister(req);
+        return handleStartRegistration(req);
+      }
+      if (url.pathname === "/api/auth/register/verify" && req.method === "GET") {
+        return handleVerifyRegistration(req);
+      }
+      if (url.pathname === "/api/auth/register/complete" && req.method === "POST") {
+        return handleCompleteRegistration(req);
+      }
+      if (url.pathname === "/api/auth/username-available" && req.method === "GET") {
+        return handleUsernameAvailable(req);
       }
       if (url.pathname === "/api/auth/login" && req.method === "POST") {
         return handleLogin(req);
+      }
+      if (url.pathname === "/api/auth/config" && req.method === "GET") {
+        return handleGetAuthConfig();
+      }
+      if (url.pathname === "/api/auth/forgot-password" && req.method === "POST") {
+        return handleForgotPassword(req);
+      }
+      if (url.pathname === "/api/auth/reset-password" && req.method === "POST") {
+        return handleResetPassword(req);
       }
       if (url.pathname === "/api/auth/profile" && req.method === "GET") {
         return handleGetProfile(req);

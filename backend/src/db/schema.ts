@@ -14,6 +14,8 @@ export const users = pgTable("users", {
   websiteUrl: text("website_url"),
   googleId: text("google_id").unique(), // Google OAuth ID
   authProvider: text("auth_provider").default("local").notNull(), // 'local', 'google' or 'dev' (local mock users)
+  emailVerified: boolean("email_verified").default(false).notNull(), // Set by Google sign-in or a completed password reset
+  passwordChangedAt: timestamp("password_changed_at"), // JWTs issued before this are rejected
   reputation: integer("reputation").default(0).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
   lastLoginAt: timestamp("last_login_at"),
@@ -24,6 +26,28 @@ export const users = pgTable("users", {
   usernameIdx: index("username_idx").on(table.username),
   emailIdx: index("email_idx").on(table.email),
   googleIdIdx: index("google_id_idx").on(table.googleId),
+}));
+
+// One-time password reset tokens; only the SHA-256 hash of the emailed token is stored
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index("password_reset_tokens_user_idx").on(table.userId),
+}));
+
+// Pending email sign-ups; the user row is only created once the emailed link is used
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  emailIdx: index("email_verification_tokens_email_idx").on(table.email),
 }));
 
 // Follower -> followee relationships between users

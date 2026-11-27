@@ -4,7 +4,11 @@ import { eq, sql } from "drizzle-orm";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth";
 import { authenticate } from "../middleware/auth";
 import { config } from "../config/app.config";
-import { TEXT_LIMITS, checkTextLimits, lengthError } from "../utils/text-limits";
+import { clientIp, rateLimit, resetRateLimit, tooManyRequests } from "../utils/rate-limit";
+
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+}
 
 // Shift last login into previous_login_at so "since last login" stays stable during the session
 export async function recordLogin(userId: number): Promise<void> {
@@ -14,133 +18,61 @@ export async function recordLogin(userId: number): Promise<void> {
     .where(eq(users.id, userId));
 }
 
-// Register new user
-export async function handleRegister(req: Request): Promise<Response> {
-  try {
-    const { username, email, password, displayName } = await req.json();
-
-    // Validate input
-    if (!username || !email || !password) {
-      return new Response(
-        JSON.stringify({ error: "Username, email, and password are required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const limitError = checkTextLimits({
-      Username: [username, TEXT_LIMITS.username],
-      Email: [email, TEXT_LIMITS.email],
-      "Display name": [displayName, TEXT_LIMITS.displayName],
-    });
-    if (limitError) return lengthError(limitError);
-
-    // Check if user already exists
-    const existingUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.username, username))
-      .limit(1);
-
-    if (existingUser.length > 0) {
-      return new Response(
-        JSON.stringify({ error: "Username already taken" }),
-        { status: 409, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Check if email already exists
-    const existingEmail = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-
-    if (existingEmail.length > 0) {
-      return new Response(
-        JSON.stringify({ error: "Email already registered" }),
-        { status: 409, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Hash password
-    const passwordHash = await hashPassword(password);
-
-    // Auto-grant admin if email is in the configured admin list
-    const isAdminEmail = config.adminEmails.includes(email.toLowerCase());
-
-    // Create user
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        username,
-        email,
-        passwordHash,
-        displayName: displayName || username,
-        isAdmin: isAdminEmail,
-      })
-      .returning({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        displayName: users.displayName,
-        reputation: users.reputation,
-        isAdmin: users.isAdmin,
-        createdAt: users.createdAt,
-      });
-
-    // Generate token
-    const token = generateToken(newUser.id, newUser.username);
-
-    return new Response(
-      JSON.stringify({ 
-        user: newUser,
-        token,
-      }),
-      { status: 201, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    console.error("Registration error:", error);
-    return new Response(
-      JSON.stringify({ error: "Registration failed" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+/**
+ * Tells the frontend which email/password features are available.
+ */
+export async function handleGetAuthConfig(): Promise<Response> {
+  return json({
+    registration: config.features.registration,
+    passwordReset: config.features.passwordReset,
+  });
 }
 
-// Login user
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+let dummyHash: Promise<string> | null = null;
+
+// Login user with username or email
 export async function handleLogin(req: Request): Promise<Response> {
   try {
-    const { username, password } = await req.json();
+    const body = await req.json();
+    const identifier = body.identifier ?? body.email ?? body.username;
+    const { password } = body;
 
     // Validate input
-    if (!username || !password) {
-      return new Response(
-        JSON.stringify({ error: "Username and password are required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    if (typeof identifier !== "string" || !identifier.trim() || typeof password !== "string" || !password) {
+      return json({ error: "Email or username and password are required" }, 400);
     }
 
-    // Find user
+    const lookup = identifier.trim().toLowerCase();
+    // Throttle password guessing per client and per account
+    const ipKey = `login-ip:${clientIp(req)}`;
+    const accountKey = `login-account:${lookup}`;
+    if (!rateLimit(ipKey, 30, LOGIN_WINDOW_MS) || !rateLimit(accountKey, 10, LOGIN_WINDOW_MS)) {
+      return tooManyRequests();
+    }
+
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.username, username))
+      .where(lookup.includes("@")
+        ? sql`lower(${users.email}) = ${lookup}`
+        : sql`lower(${users.username}) = ${lookup}`)
       .limit(1);
 
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid credentials" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
+    // Hash against a dummy when there's no password so response time doesn't reveal which accounts exist.
+    // Accounts created via Google have no password until one is set through "Forgot password".
+    dummyHash ??= hashPassword("not-a-real-password");
+    const passwordOk = await comparePassword(password, user?.passwordHash ?? (await dummyHash));
+    if (!user || !user.passwordHash || !passwordOk) {
+      return json({ error: "Invalid email/username or password" }, 401);
     }
+    resetRateLimit(accountKey);
 
-    // Verify password
-    const isValidPassword = await comparePassword(password, user.passwordHash);
-    if (!isValidPassword) {
-      return new Response(
-        JSON.stringify({ error: "Invalid credentials" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
+    if (!user.emailVerified) {
+      return json({
+        error: "Please confirm your email address first. Use \"Forgot password?\" to get a confirmation link.",
+        code: "email_not_verified",
+      }, 403);
     }
 
     // Auto-promote to admin if email matches the configured admin list

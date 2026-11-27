@@ -1,0 +1,28 @@
+.register-section { display: flex; justify-content: center; padding: 72px 16px; }
+
+.card { position: relative; overflow: hidden; width: 100%; max-width: 440px; padding: 32px 28px 24px; background: #fff; border: 1px solid rgba(226,232,240,.8); border-radius: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+.card-accent { position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(to right, #14b8a6, #2563eb); }
+
+h1 { margin: 0 0 8px; font-size: 24px; letter-spacing: -.01em; color: #0f172a; }
+.verified { margin: 0 0 20px; color: #0f766e; font-size: 14px; }
+.muted { margin: 0; color: #6b7280; }
+
+form { display: flex; flex-direction: column; gap: 16px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #374151; }
+input { min-width: 0; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; font-weight: 400; }
+input:focus { outline: 2px solid var(--brand); outline-offset: -1px; border-color: transparent; }
+input[aria-invalid="true"] { border-color: #b91c1c; }
+small { font-weight: 400; color: #6b7280; font-size: 12px; line-height: 1.4; }
+.field-error { color: #b91c1c; }
+.field-ok { color: #0f766e; }
+
+.password-row { display: flex; gap: 6px; }
+.password-row input { flex: 1; }
+.toggle { padding: 0 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #f9fafb; color: #374151; font: inherit; font-size: 13px; cursor: pointer; }
+.toggle:hover { background: #f3f4f6; }
+
+.btn { justify-content: center; }
+.error { margin: 0 0 12px; color: #b91c1c; font-size: 14px; }
+form .error { margin: 0; }
+.note { margin: 0; color: #6b7280; font-size: 12px; text-align: center; line-height: 1.5; }
+.note a { color: #0f766e; }

@@ -648,24 +648,66 @@ export class ApiService {
   // Authentication methods
 
   /**
-   * Login user
+   * Login with email or username and password
    */
-  login(email: string, password: string) {
-    return this.http.post<ApiResponse<{ user: User; token: string }>>(`${this.baseUrl}/auth/login`, {
-      email,
+  login(identifier: string, password: string) {
+    return this.http.post<{ user: User; token: string }>(`${this.baseUrl}/auth/login`, {
+      identifier,
       password
     });
   }
 
   /**
-   * Register new user
+   * Start email sign-up: sends a confirmation link (responds the same whether or not the email is registered)
    */
-  register(username: string, email: string, password: string) {
-    return this.http.post<ApiResponse<{ user: User; token: string }>>(`${this.baseUrl}/auth/register`, {
+  startRegistration(email: string) {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/register`, { email });
+  }
+
+  /**
+   * Check an emailed sign-up link; returns the confirmed email
+   */
+  verifyRegistration(token: string) {
+    return this.http.get<{ email: string }>(`${this.baseUrl}/auth/register/verify`, { params: { token } });
+  }
+
+  /**
+   * Finish sign-up with the chosen username and password; signs the user in
+   */
+  completeRegistration(token: string, username: string, password: string) {
+    return this.http.post<{ user: User; token: string; isNewUser: boolean }>(`${this.baseUrl}/auth/register/complete`, {
+      token,
       username,
-      email,
       password
     });
+  }
+
+  /**
+   * Whether a username can be chosen
+   */
+  checkUsername(username: string) {
+    return this.http.get<{ available: boolean; error?: string }>(`${this.baseUrl}/auth/username-available`, { params: { username } });
+  }
+
+  /**
+   * Which email/password features the backend allows
+   */
+  getAuthConfig() {
+    return this.http.get<{ registration: boolean; passwordReset: boolean }>(`${this.baseUrl}/auth/config`);
+  }
+
+  /**
+   * Email a password reset link (responds the same whether or not the account exists)
+   */
+  forgotPassword(email: string) {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/forgot-password`, { email });
+  }
+
+  /**
+   * Set a new password with the emailed token; signs the user in
+   */
+  resetPassword(token: string, password: string) {
+    return this.http.post<{ user: User; token: string }>(`${this.baseUrl}/auth/reset-password`, { token, password });
   }
 
   /**

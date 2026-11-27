@@ -20,6 +20,14 @@ export const routes: Routes = [
     loadComponent: () => import('./privacy/privacy').then(({ Privacy }) => Privacy)
   },
   {
+    path: 'reset-password',
+    loadComponent: () => import('./reset-password/reset-password').then(({ ResetPassword }) => ResetPassword)
+  },
+  {
+    path: 'complete-registration',
+    loadComponent: () => import('./complete-registration/complete-registration').then(({ CompleteRegistration }) => CompleteRegistration)
+  },
+  {
     path: 'article-workbench',
     loadComponent: () => import('./article-workbench/article-workbench').then(({ ArticleWorkbench }) => ArticleWorkbench)
   },
